@@ -32,14 +32,21 @@ pnpm install
 
 Run from the repository root:
 
-| Command          | Description                                         |
-| ---------------- | --------------------------------------------------- |
-| `pnpm dev`       | Start the reference app at http://localhost:3000.   |
-| `pnpm build`     | Build all workspace projects that define `build`.   |
-| `pnpm typecheck` | Type-check all workspace projects.                  |
-| `pnpm test`      | Run all workspace tests.                            |
+| Command          | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| `pnpm dev`       | Start the reference app at http://localhost:3000.        |
+| `pnpm build`     | Build all workspace projects that define `build`.        |
+| `pnpm typecheck` | Type-check all workspace projects.                       |
+| `pnpm test`      | Run all workspace tests.                                 |
+| `pnpm lint`      | Check linting, formatting, and import order (read-only). |
+| `pnpm lint:fix`  | Apply safe lint fixes and formatting.                    |
+| `pnpm verify`    | Run lint, typecheck, test, and build in order.           |
 
-Linting and formatting are planned for milestone M1.1.
+Linting and formatting use [Biome](https://biomejs.dev/) (`biome.json`). Biome does not depend on
+the TypeScript compiler, so it works with TypeScript 7, which typescript-eslint does not support yet.
+React, Next.js, and test rules are enabled explicitly per path in `biome.json`, because Biome does
+not detect them from nested `package.json` files when run from the repository root. Biome is pinned
+to an exact version; upgrade it deliberately.
 
 ## Workspace conventions
 

@@ -4,6 +4,8 @@ packages:
 
 # Shared dependency versions, referenced from package.json files as "catalog:".
 catalog:
+  # Pinned exactly: formatter output can change between Biome releases.
+  "@biomejs/biome": 2.5.15
   "@types/node": ^24.0.0
   "@types/react": ^19.3.0
   "@types/react-dom": ^19.3.0

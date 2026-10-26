@@ -10,6 +10,12 @@
     "dev": "pnpm --filter portfolio dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:"
   }
 }
