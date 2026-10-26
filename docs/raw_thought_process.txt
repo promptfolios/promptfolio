@@ -1,0 +1,98 @@
+Original brainstorming notes for Promptfolio, lightly cleaned for readability.
+These notes capture the initial idea and motivation. PROMPTFOLIO_SPEC.md and
+docs/ROADMAP.md are the source of truth for scope and requirements.
+
+----
+
+I'm thinking of a portfolio that is entirely a chat window, like ChatGPT, Claude, or Gemini.
+
+Its knowledge base is just me: bio, education, experience, skills, projects, social media, etc.
+
+It would answer questions about me only. It would not be a single chatbot popup; it would be a
+complete chat workspace with a multi-chat explorer and a few minimal tools, such as an email
+sender to contact me, in the MVP.
+
+It could have some preloaded chats that appear in the chat explorer by default for first-time
+users. For example (just hypothetical): chat 1 - about me, chat 2 - my tech skills, chat 3 - my
+social media handles.
+
+The main purpose is to learn how models, harnesses, and agents work and to gain some knowledge of
+the AI domain; right now I don't know much about AI. A secondary advantage is that the idea is
+probably unique (maybe not), or at least rare.
+
+I'm not sure how useful the project will be. Portfolios are not apps we use regularly; they are
+visit-once-and-forget. So I'm unsure about the ROI: if I build it fully and no one uses it after
+opening it once, or the portfolio never reaches its target audience, it probably doesn't make
+sense to build it just for the sake of learning AI. Maybe there are other, more practical projects
+for learning AI.
+
+I also wonder whether I could make it something that is used more frequently, and whether it is
+even worth going in that direction.
+
+----
+
+Some existing AI portfolios (for example https://www.atharv-patil.dev/) differ from my approach:
+their sidebar contains static pages, not real chat histories.
+
+In my case, they would be actual chats. The chat explorer would have 4-5 prompts seeded for all
+users by default, and the results of those prompts would be fetched just like other, non-seeded
+chats, though the server could handle them differently. Responses to seeded prompts could be
+static or dynamic depending on my current status, with some staleness mechanism so they are not
+regenerated on every request. The purpose of the dynamic part is to always return a response that
+reflects my current status, such as new tech skills I have learned, or new experience and projects
+I have worked on over time.
+
+To achieve this, I would need more tooling on the server side, such as data sources (GitHub, X,
+LinkedIn, etc.) that are checked over time to discover new data about me.
+
+The basic projects, if I'm right, are fed static data such as Markdown or JSON files
+(for example https://github.com/patilatharv/ai-portfolio/blob/main/src/data/portfolioData.json)
+beforehand and are probably never updated. I, on the other hand, would have zero or only a few
+Markdown files on the server, and I won't keep updating them by hand; that would defeat the idea.
+
+----
+
+Another concept I'm thinking about is the LIBRARY nature of this project. I like building things
+that are useful to other developers too, not just me. I would like it to be a library so other
+developers can create their own "promptfolios" (prompt + portfolio; this was the name I had in
+mind, although other projects with the same name also exist).
+
+This direction rules out bundling static Markdown files in the library itself; library code won't
+contain data about a particular person, because that's not how libraries work. Instead, the
+library would have some kind of DATA SOURCES configuration: a developer building their own
+promptfolio can optionally add static files to the data source configuration along with their
+social media handles. That is all I can think of for data sources for now, but there could be more.
+
+This makes the data reliable and trustworthy. A plus point is that we can claim information is
+true based on valid data sources, not self-made, fake information.
+
+I think of the project as an "SLM" (my own made-up term, meaning small language model; it may not
+make sense, as I'm not an AI expert) rather than an LLM. The purpose is to respond to a very narrow
+set of questions, unlike an LLM, which is capable of many things.
+
+----
+
+A recruiter shouldn't have to conduct an entire interview with an AI just to discover someone's
+experience. That thought led me to one more feature, though I'm not sure it fits in the MVP because
+it is fairly complex. AI interviews are a current trend: some job boards provide an AI interview
+feature where job seekers are interviewed by an AI bot or agent. My feature would be the opposite:
+visitors and recruiters would interview my bot first, like an UNO reverse card!
+
+The project itself is already something like an interview broker for me, since visitors are
+effectively interviewing my broker via chat. This feature would be similar, except it could be
+voice-based (which makes it harder to implement in the MVP). The exact implementation is a long
+way off. It could be a normal voice-input option in the chat window, or a hands-free voice chat
+like https://chatgpt.com/features/voice/.
+
+It can probably never replace the normal interview process (or maybe it will in the next decade;
+always dream big), but it could be a helper. For example, an in-chat tool to "match/evaluate the
+promptfolio against a job description", similar to LinkedIn's job match feature
+(https://www.linkedin.com/help/linkedin/answer/a7120158), where a visitor or recruiter asks the
+chat to evaluate the owner (the person whose profile the promptfolio shows) against a job
+description provided as plain text, a job link, etc.
+
+----
+
+From an implementation point of view, I don't like huge amounts of boilerplate, so I would like to
+reuse existing libraries whenever possible. TanStack AI recently launched 1.0 and could probably
+help, as could the Vercel AI SDK.
