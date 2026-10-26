@@ -94,6 +94,10 @@ Do not independently implement deferred features such as job-description matchin
 - Do not commit, push, publish packages, deploy, or rewrite Git history without explicit authorization.
 - Do not perform destructive Git operations without permission.
 - After a milestone is reviewed and approved, suggest a suitable commit message.
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`.
+  - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+  - Scopes: published packages use their package name without the `@promptfolio/` prefix (for example, `core`, `ai`); apps and other internal areas use their repository path (for example, `apps/portfolio`, `docs`). Omit the scope for repository-wide changes.
+  - Commit-message linting (commitlint) is not configured yet; see M1.1 in `docs/ROADMAP.md`.
 
 ## 10. Communication
 

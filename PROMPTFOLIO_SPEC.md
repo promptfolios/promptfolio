@@ -204,6 +204,12 @@ Use a PNPM TypeScript workspace. Keep apps and packages in separate top-level ar
 - `packages/...` — reusable domain, source, AI, and UI functionality as justified by real boundaries.
 - `docs/` — product roadmap and important design decisions.
 
+#### Role of the packages and the reference application
+
+- **Packages are stack-agnostic building blocks.** The `@promptfolio/*` packages do not ship a complete UI or a backend server. They provide profile, source, AI, and related functionality that a developer can integrate into the UI framework, server, and hosting platform of their choice.
+- **`apps/portfolio` is the full-stack reference implementation.** It shows developers how to build a promptfolio with the packages, and it is the environment used to develop and test the packages over time.
+- **The reference application is profile-independent.** It contains no hard-coded personal data. A developer should be able to clone it, supply their own profile data and environment variables, and deploy their own promptfolio website without changing application or package code. Profile-specific data and secrets are supplied through configuration, data files, and environment variables.
+
 This is a conceptual starting point, not a mandate to create every possible package immediately. Decide package boundaries during repository discovery and the approved foundation milestone. A small number of cohesive packages is preferable to many thin packages.
 
 Potential responsibilities may eventually include:

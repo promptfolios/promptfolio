@@ -38,6 +38,18 @@ This document describes the suggested milestone sequence and future directions. 
 
 **Exit criteria:** Workspace install and relevant checks succeed; the app imports a package through its public API. Do not create speculative packages.
 
+### M1.1 — Linting and formatting
+
+**Objective:** Add consistent linting and formatting after the workspace foundation exists. Deferred from M1 to keep M1 small.
+
+**Activities:**
+- Choose lint and format tooling (for example, ESLint with typescript-eslint plus Prettier, or Biome) after verifying compatibility with the installed TypeScript version.
+- Add root `lint` and `format` scripts and integrate them into the verification commands.
+- Fix or explicitly document any existing violations.
+- Optionally add commit-message linting (commitlint) for the Conventional Commits convention in `CLAUDE.md`; not before it is approved.
+
+**Exit criteria:** `lint` and format checks run across the workspace and pass, or remaining issues are documented.
+
 ### M2 — Profile schema and structured source
 
 **Objective:** Define a canonical, validated profile representation and load a small local profile.
