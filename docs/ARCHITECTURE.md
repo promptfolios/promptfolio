@@ -10,13 +10,13 @@ in [`ROADMAP.md`](ROADMAP.md#status).
 ┌──────────────────────────── apps/portfolio  (Next.js reference app) ────────────────────────┐
 │                                                                                              │
 │  profile/                                    src/                                            │
-│   ├─ example.profile.json  (committed,        ├─ app/page.tsx   (temporary diagnostic page)  │
-│   │   fictional)                              │      │ calls                                 │
-│   └─ *.local.json          (gitignored,       │      ▼                                       │
-│       real data)                              └─ server/profile.ts  (server-only: fs + env)  │
-│                                                      │                                       │
-│  .env.local ── PROMPTFOLIO_PROFILE_FILE ─────────────┘                                       │
-└──────────────────────────────────────────────────────┼───────────────────────────────────────┘
+│   ├─ example.profile.json  (committed,        ├─ app/page.tsx  (server: load profile, then   │
+│   │   fictional)                              │      │          render workspace or issues)  │
+│   └─ *.local.json          (gitignored,       │      ├──► server/profile.ts (fs + env)       │
+│       real data)                              │      └──► components/chat-workspace.tsx      │
+│                                               │              (client, see "Chat workspace")  │
+│  .env.local ── PROMPTFOLIO_PROFILE_FILE ──────┘                                              │
+└──────────────────────────────────────────────────────┬───────────────────────────────────────┘
                                                        │ import from "@promptfolio/core"
                                                        │ (public entry point only)
                                                        ▼
@@ -53,6 +53,31 @@ loadStructuredProfile(data, { sourceId, label, observedAt })        (@promptfoli
 { ok: true, profile: Profile, warnings }  ─►  rendered by the app
 ```
 
+## Chat workspace
+
+The UI and thread state come from assistant-ui ([ADR 0007](adr/0007-chat-ui-assistant-ui.md));
+Promptfolio code wires the runtime and supplies adapters and configuration.
+
+```
+ChatWorkspace ("use client", src/components/chat-workspace.tsx)
+ │
+ ├─ useRemoteThreadListRuntime ─── adapter: TitledInMemoryThreadListAdapter   (src/chat/)
+ │     │                            thread list in memory, titled from the first message
+ │     │                            (M6: replace with a persistent adapter)
+ │     └─ runtimeHook ─► useLocalRuntime(model) per thread
+ │                           model: ChatModelAdapter.run({ messages, abortSignal })
+ │                           M3: createPlaceholderModel() — labelled, not AI output
+ │                           M4: replaced by the AI SDK (server route)
+ │
+ ├─ AuiConfig({ suggestions: Suggestions(STARTERS) })            (src/config/starters.ts)
+ │
+ └─ renders <ThreadList/> in the sidebar and <Thread/> in the main area
+       vendored: src/components/assistant-ui/, src/components/ui/, src/hooks/
+```
+
+Message shape: each message has `parts` (for example text, later tool calls), the same model the
+AI SDK uses, so M4 can swap the placeholder model without changing the UI.
+
 ## Canonical profile model
 
 ```
@@ -76,7 +101,7 @@ whose claim a fact is ([ADR 0005](adr/0005-profile-model-and-provenance.md)).
 ## Planned extensions
 
 ```
-apps/portfolio ─► chat UI (M3) ─► /api/chat route (M4) ─► @promptfolio/ai (M4)
+apps/portfolio ─► chat UI (M3, done) ─► /api/chat route (M4) ─► @promptfolio/ai (M4)
                                                               │ AI SDK, tools (M5)
                                                               ▼
                                                        @promptfolio/core
@@ -95,3 +120,4 @@ apps/portfolio ─► chat UI (M3) ─► /api/chat route (M4) ─► @promptfol
 | [0004](adr/0004-biome-lint-and-format.md)             | Biome for linting and formatting              | Accepted |
 | [0005](adr/0005-profile-model-and-provenance.md)      | Canonical profile model and provenance        | Accepted |
 | [0006](adr/0006-profile-data-location.md)             | Profile data location in the reference app    | Accepted |
+| [0007](adr/0007-chat-ui-assistant-ui.md)              | assistant-ui, Tailwind, and shadcn for chat   | Accepted |

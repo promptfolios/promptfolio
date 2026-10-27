@@ -18,6 +18,15 @@ Status: early development. See [`PROMPTFOLIO_SPEC.md`](PROMPTFOLIO_SPEC.md) for 
 
 Dependency direction: apps depend on packages; packages never depend on apps.
 
+The reference app's chat UI uses [assistant-ui](https://www.assistant-ui.com/) with Tailwind CSS
+and shadcn/ui. Component code copied by their CLIs lives in `apps/portfolio/src/components/ui/`,
+`apps/portfolio/src/components/assistant-ui/`, and `apps/portfolio/src/hooks/`; it is treated as
+vendored and excluded from linting (see
+[ADR 0007](docs/adr/0007-chat-ui-assistant-ui.md)).
+
+While the app has no model connected, replies are labelled placeholders. Send `/fail` to simulate
+a failed response and test retry.
+
 ## Requirements
 
 - Node.js 24 or later (see `.node-version`)
