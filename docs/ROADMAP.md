@@ -10,6 +10,18 @@ This document describes the suggested milestone sequence and future directions. 
 - Adjust milestone boundaries when the repository or learning needs make a smaller step more useful.
 - Do not add deferred features just because they appear here.
 
+## Status
+
+| Milestone                                 | Status    | What you can check                                                    |
+| ----------------------------------------- | --------- | --------------------------------------------------------------------- |
+| M0 — Discovery and architecture plan      | Done      | `docs/ARCHITECTURE.md`, `docs/adr/`                                   |
+| M1 — Minimal monorepo foundation          | Done      | `pnpm install`, `pnpm build`; the app imports `@promptfolio/core`     |
+| M1.1 — Linting and formatting             | Done      | `pnpm lint`, `pnpm verify`                                            |
+| M2 — Profile schema and structured source | Done      | `pnpm test`; `pnpm dev` shows the loaded profile or validation issues |
+| M3 — Minimal application shell            | Next      | —                                                                     |
+
+Update this table when a milestone is approved.
+
 ## MVP milestones
 
 ### M0 — Repository discovery and architecture plan

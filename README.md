@@ -4,8 +4,9 @@ Promptfolio is a library-first, AI-powered conversational professional portfolio
 `@promptfolio/*` packages are stack-agnostic building blocks; `apps/portfolio` is a
 profile-independent, full-stack reference application built with them.
 
-Status: early development. See [`PROMPTFOLIO_SPEC.md`](PROMPTFOLIO_SPEC.md) for requirements and
-[`docs/ROADMAP.md`](docs/ROADMAP.md) for the milestone plan.
+Status: early development. See [`PROMPTFOLIO_SPEC.md`](PROMPTFOLIO_SPEC.md) for requirements,
+[`docs/ROADMAP.md`](docs/ROADMAP.md) for the milestone plan and progress, and
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the architecture and decision records.
 
 ## Repository layout
 
