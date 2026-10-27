@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "identity": {
+    "name": "Jordan Example",
+    "headline": "Full-stack engineer focused on TypeScript and developer tools",
+    "summary": "Jordan is a fictional engineer used as sample data for Promptfolio. Jordan builds web applications with TypeScript and React, and enjoys improving developer experience.",
+    "location": "Remote"
+  },
+  "links": [
+    { "label": "Website", "url": "https://example.com/jordan" },
+    { "label": "Code", "url": "https://example.com/jordan/code" }
+  ],
+  "experience": [
+    {
+      "id": "acme-frontend",
+      "organization": "Acme Corp",
+      "title": "Frontend Engineer",
+      "start": "2021-03",
+      "end": "2023-08",
+      "location": "Remote",
+      "summary": "Worked on the customer dashboard team.",
+      "highlights": [
+        "Migrated the dashboard from a legacy framework to React.",
+        "Introduced component tests for shared UI."
+      ],
+      "skills": ["TypeScript", "React", "Testing"]
+    },
+    {
+      "id": "globex-fullstack",
+      "organization": "Globex",
+      "title": "Full-stack Engineer",
+      "start": "2023-09",
+      "summary": "Builds internal developer tools.",
+      "highlights": ["Built a service catalog used by internal teams."],
+      "skills": ["TypeScript", "Node.js", "PostgreSQL"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "service-catalog",
+      "name": "Service Catalog",
+      "description": "An internal catalog of services, their owners, and their documentation.",
+      "roleId": "globex-fullstack",
+      "responsibilities": ["Designed the data model.", "Implemented the API and search."],
+      "outcomes": ["Adopted by internal engineering teams."],
+      "skills": ["TypeScript", "Node.js", "PostgreSQL"]
+    },
+    {
+      "id": "markdown-linter",
+      "name": "Markdown Linter",
+      "description": "A small open-source tool that checks Markdown documents for broken links.",
+      "responsibilities": ["Sole maintainer."],
+      "links": [{ "label": "Repository", "url": "https://example.com/jordan/markdown-linter" }],
+      "skills": ["TypeScript", "Testing"]
+    }
+  ],
+  "skills": [
+    { "name": "TypeScript", "category": "Languages" },
+    { "name": "React", "category": "Frontend" },
+    { "name": "Node.js", "category": "Backend" },
+    { "name": "PostgreSQL", "category": "Databases" },
+    { "name": "Testing", "category": "Practices" }
+  ],
+  "education": [
+    {
+      "id": "example-university",
+      "institution": "Example University",
+      "credential": "BSc",
+      "field": "Computer Science",
+      "start": "2017",
+      "end": "2021"
+    }
+  ]
+}

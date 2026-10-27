@@ -48,6 +48,23 @@ React, Next.js, and test rules are enabled explicitly per path in `biome.json`, 
 not detect them from nested `package.json` files when run from the repository root. Biome is pinned
 to an exact version; upgrade it deliberately.
 
+## Profile data
+
+The reference app loads a profile JSON file from `apps/portfolio/profile/` and validates it with
+`loadStructuredProfile` from `@promptfolio/core`. By default it loads `example.profile.json`, which
+contains fictional sample data.
+
+To use your own profile:
+
+1. Copy `apps/portfolio/profile/example.profile.json` to `apps/portfolio/profile/profile.local.json`
+   and edit it. Files matching `*.local.json` are not committed.
+2. Copy `apps/portfolio/.env.example` to `apps/portfolio/.env.local`. It sets
+   `PROMPTFOLIO_PROFILE_FILE=profile.local.json`.
+3. Run `pnpm dev`. The page lists any validation issues with their paths.
+
+Everything in the profile is treated as public, because it may be shown to visitors or sent to a
+model. Do not include private information.
+
 ## Workspace conventions
 
 - Packages expose their public API only through the `exports` field in `package.json`; importing

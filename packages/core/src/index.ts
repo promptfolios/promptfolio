@@ -1,9 +1,27 @@
 /**
  * Public entry point of `@promptfolio/core`.
  *
- * M1 placeholder: this export only demonstrates that an application can consume
- * the package through its public API. It is replaced by the profile schema in M2.
+ * Only what is exported here is part of the public API.
  */
-export const coreInfo = {
-  name: "@promptfolio/core",
-} as const;
+export {
+  loadStructuredProfile,
+  type ProfileIssue,
+  type ProfileLoadResult,
+  type StructuredProfileSource,
+  skillKey,
+} from "./profile/load";
+export type { ProfileInput } from "./profile/schema";
+export type {
+  ClaimBasis,
+  Education,
+  ExternalLink,
+  PartialDate,
+  Profile,
+  ProfileIdentity,
+  ProfileLink,
+  Project,
+  Provenance,
+  Role,
+  Skill,
+  SourceRef,
+} from "./profile/types";
