@@ -301,5 +301,6 @@ For each approved milestone, confirm:
 - [ ] Changes are limited to the milestone.
 - [ ] Relevant tests/checks were run and results reported accurately.
 - [ ] Important decisions and limitations were explained.
+- [ ] Learning docs added or updated in `docs/learning/` for concepts the milestone introduced or changed.
 - [ ] Diff was reviewed and existing user changes were preserved.
 - [ ] The developer explicitly approves moving to the next milestone.

@@ -28,6 +28,16 @@ For each meaningful module or concept, explain what problem it solves, why the d
 
 For AI-related work, explain relevant concepts in context, such as model requests, streaming, tool calling, retrieval, provenance, caching, evaluation, and authorization. Keep explanations focused on the current milestone. Prefer explicit, understandable code over clever abstractions or large amounts of unrelated theory.
 
+### Learning documentation
+
+Explanations given in chat are lost after the session; durable ones live in `docs/learning/`.
+
+- When a milestone introduces a concept, add a note in `docs/learning/` (one file per concept) and a row in its `README.md` index. When a milestone changes how an existing concept works or where it lives, update that note and its status.
+- Follow the template used by the existing notes: what it is, why it matters in Promptfolio, how it works, where it lives in the code, common pitfalls and misconceptions, and further reading (official documentation only).
+- Keep notes short and specific to this codebase; link to the actual files and mark code that is not built yet as "planned". Do not write generic theory.
+- Notes for concepts described in an approved plan may be written ahead of implementation, marked "planned", and updated when the milestone lands.
+- Learning notes are part of each milestone's deliverables and are reviewed with its diff.
+
 ## 3. Library and application boundaries
 
 - Keep the reference application separate from reusable packages. The application consumes packages; packages must not import application code.
@@ -96,7 +106,7 @@ Do not independently implement deferred features such as job-description matchin
 - After a milestone is reviewed and approved, suggest a suitable commit message.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`.
   - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
-  - Scopes: published packages use their package name without the `@promptfolio/` prefix (for example, `core`, `ai`); apps and other internal areas use their repository path (for example, `apps/portfolio`, `docs`). Omit the scope for repository-wide changes.
+  - Scopes: published packages use their package name without the `@promptfolio/` prefix (for example, `core`, `ai`); apps and other internal areas use their repository path (for example, `apps/portfolio`, `docs`). Learning notes in `docs/learning/` use the `learning` scope (for example, `docs(learning): add streaming note`). Omit the scope for repository-wide changes.
   - Commit-message linting (commitlint) is not configured yet; see M1.1 in `docs/ROADMAP.md`.
 
 ## 10. Communication
