@@ -11,7 +11,8 @@
       "**",
       "!apps/portfolio/src/components/ui",
       "!apps/portfolio/src/components/assistant-ui",
-      "!apps/portfolio/src/hooks"
+      "!apps/portfolio/src/hooks",
+      "!.claude"
     ]
   },
   "css": {

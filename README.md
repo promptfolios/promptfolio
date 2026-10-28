@@ -56,7 +56,8 @@ Linting and formatting use [Biome](https://biomejs.dev/) (`biome.json`). Biome d
 the TypeScript compiler, so it works with TypeScript 7, which typescript-eslint does not support yet.
 React, Next.js, and test rules are enabled explicitly per path in `biome.json`, because Biome does
 not detect them from nested `package.json` files when run from the repository root. Biome is pinned
-to an exact version; upgrade it deliberately.
+to an exact version; upgrade it deliberately. `.claude/` (Claude Code tool configuration, which
+tools may rewrite) is excluded from Biome.
 
 ## Profile data
 
