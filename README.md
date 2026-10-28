@@ -108,3 +108,7 @@ then.
 - Shared dependency versions are defined once in the `catalog` section of `pnpm-workspace.yaml`
   and referenced as `"catalog:"`.
 - Commits follow Conventional Commits; see `CLAUDE.md`.
+- Text files use LF line endings. `.gitattributes` sets `eol=lf`, so Git checks them out with LF
+  even on Windows, where the default would be CRLF; Biome's formatter rejects CRLF. If an older
+  checkout still has CRLF files, delete and re-check them out (`git checkout -- <file>`) or run
+  `pnpm lint:fix`.

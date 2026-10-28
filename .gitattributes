@@ -1,2 +1,3 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Auto-detect text files, store them with LF, and always check them out with LF
+# (regardless of core.autocrlf / core.eol), because Biome expects LF.
+* text=auto eol=lf
