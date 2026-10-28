@@ -13,6 +13,7 @@ Status: early development. See [`PROMPTFOLIO_SPEC.md`](PROMPTFOLIO_SPEC.md) for 
 | Path             | Package             | Purpose                                                       |
 | ---------------- | ------------------- | ------------------------------------------------------------- |
 | `packages/core`  | `@promptfolio/core` | Canonical profile model and framework-agnostic core logic.    |
+| `packages/ai`    | `@promptfolio/ai`   | Server-only chat handler: validation, limits, streaming.      |
 | `apps/portfolio` | `portfolio`         | Reference Next.js application; consumes the packages.         |
 | `docs/`          | —                   | Roadmap, architecture decision records, and background notes. |
 
@@ -24,8 +25,10 @@ and shadcn/ui. Component code copied by their CLIs lives in `apps/portfolio/src/
 vendored and excluded from linting (see
 [ADR 0007](docs/adr/0007-chat-ui-assistant-ui.md)).
 
-While the app has no model connected, replies are labelled placeholders. Send `/fail` to simulate
-a failed response and test retry.
+Replies come from a model through the app's own `/api/chat` route, using the
+[Vercel AI SDK](https://ai-sdk.dev/) with Google Gemini or Anthropic Claude. In this
+milestone the model only knows the owner's name, headline, and summary; other questions get "this
+information is not available here" until profile lookups arrive in M5.
 
 ## Requirements
 
@@ -75,6 +78,26 @@ To use your own profile:
 
 Everything in the profile is treated as public, because it may be shown to visitors or sent to a
 model. Do not include private information.
+
+## Model access
+
+The app supports two providers. Configure them in `apps/portfolio/.env.local` (see
+`.env.example`):
+
+| Provider         | `PROMPTFOLIO_MODEL` value              | Key variable                   |
+| ---------------- | -------------------------------------- | ------------------------------ |
+| Google Gemini    | `google:gemini-3.8-flash` (default)    | `GOOGLE_GENERATIVE_AI_API_KEY` |
+| Anthropic Claude | `anthropic:claude-haiku-5-5` (default) | `ANTHROPIC_API_KEY`            |
+
+`PROMPTFOLIO_MODEL` is `provider:model`; `provider` alone uses its default model. Keep both keys in
+the file and switch providers by changing that one line. If it is unset, the first provider in the
+table whose key is set is used. Never prefix a key with `NEXT_PUBLIC_`: keys are read only on the
+server. Set a monthly spend limit with
+your provider, and check its data terms (some free tiers allow the provider to use prompts).
+
+Without a key the app still builds and renders, but chat replies show an error. The endpoint has
+input limits but no rate limiting yet (planned for M11), so **do not deploy it publicly** before
+then.
 
 ## Workspace conventions
 

@@ -29,6 +29,9 @@ Use **assistant-ui** with its shadcn-based styled components, which brings **Tai
 
 - **Runtime:** `useRemoteThreadListRuntime` with one `useLocalRuntime` per thread. The model is a
   `ChatModelAdapter`; in M3 it is a clearly labelled placeholder, replaced by the AI SDK in M4.
+  *Update (M4):* each thread now runs `useAISDKRuntime(useChat({ transport }))` with the AI SDK's
+  `DefaultChatTransport`; the thread list and adapter are unchanged (see
+  [ADR 0003](0003-ai-sdk-selection.md), "Confirmation at M4").
 - **Thread list:** `TitledInMemoryThreadListAdapter`, which extends assistant-ui's
   `InMemoryThreadListAdapter` to title threads from their first message. Threads reset on reload;
   a persistent adapter is planned for M6.
@@ -59,4 +62,5 @@ Files copied by the shadcn and assistant-ui CLIs are treated as vendored:
 - `next/font/google` downloads the Geist font at build time; builds need network access.
 - The message body sent by assistant-ui's AI SDK transport can include a `system` prompt and
   `tools` from the browser. The M4 server route must ignore these and define its own (untrusted
-  input).
+  input). *Update (M4):* the app uses the AI SDK's `DefaultChatTransport`, which sends neither,
+  and the server accepts only text messages from `user` and `assistant` regardless.

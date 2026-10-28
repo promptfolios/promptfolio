@@ -1,6 +1,6 @@
 # ADR 0003: AI SDK selection
 
-- **Status:** Proposed (to be confirmed at M4, after re-checking current versions)
+- **Status:** Accepted (confirmed at M4, 2026-10-28; see "Confirmation at M4")
 - **Date:** 2026-10-27
 
 ## Context
@@ -38,6 +38,27 @@ Avoid experimental features such as `experimental_sandbox` and `HarnessAgent`.
 - AI SDK types stay inside `@promptfolio/ai`; tool logic in `core` remains SDK-free.
 - Contact confirmation (M10) is enforced by a separate server endpoint and UI action, not by the
   SDK's tool-approval feature, so switching SDKs only affects one package.
+
+## Confirmation at M4
+
+Checked against the installed types of `ai` 7.0.154, `@ai-sdk/anthropic` 4.0.89, and
+`@assistant-ui/ai-sdk` 0.0.15:
+
+- Server: `streamText` with `instructions` (the v7 name; `system` is deprecated),
+  `convertToModelMessages` (async), and `toUIMessageStream` returned through
+  `createUIMessageStreamResponse`. `allowSystemInMessages` defaults to `false`.
+- Client: `useChat` from `@ai-sdk/react` with `DefaultChatTransport`, adapted for assistant-ui by
+  `useAISDKRuntime`. assistant-ui's `useChatRuntime` was not used: it creates its own thread list,
+  and its `AssistantChatTransport` sends a `system` prompt and `tools` from the browser.
+- Providers: `@ai-sdk/google` (4.0.106) and `@ai-sdk/anthropic`, selected by
+  `PROMPTFOLIO_MODEL=provider:model` (defaults `gemini-3.8-flash` and `claude-haiku-5-5`; the
+  same `provider:model` convention as the AI SDK's provider registry). Thinking is
+  set low through `providerOptions`: `google.thinkingConfig.thinkingLevel` and
+  `anthropic.effort`. `@promptfolio/ai` stays provider-agnostic; only the app's
+  `src/server/model.ts` knows the providers.
+- Tests use `MockLanguageModelV4` from `ai/test` and `simulateReadableStream` from `ai`.
+- The UI message stream forwards provider `custom` parts (for example Anthropic's message id and
+  usage) with no option to turn them off; `@promptfolio/ai` filters them out.
 
 ## Consequences
 

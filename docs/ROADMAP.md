@@ -19,7 +19,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M1.1 — Linting and formatting             | Done      | `pnpm lint`, `pnpm verify`                                            |
 | M2 — Profile schema and structured source | Done      | `pnpm test`; `pnpm dev` shows the loaded profile or validation issues |
 | M3 — Minimal application shell            | Done      | `pnpm dev`: chat workspace with starters, threads, placeholder replies |
-| M4 — First AI integration                 | Planned   | [Plan](plans/m4-first-ai-integration.md) (awaiting approval)           |
+| M4 — First AI integration                 | Done      | `pnpm dev` with a Gemini or Claude key: streamed replies; [plan](plans/m4-first-ai-integration.md) |
 
 Update this table when a milestone is approved.
 
