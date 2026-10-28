@@ -18,6 +18,7 @@ that builds it; code links are marked "planned").
 | Validation at boundaries        | [validation-at-boundaries.md](validation-at-boundaries.md)   | M2            | in use  |
 | Chat runtime and threads        | [chat-runtime-and-threads.md](chat-runtime-and-threads.md)   | M3            | in use  |
 | System prompt                   | [system-prompt.md](system-prompt.md)                         | M4            | planned |
+| Context selection               | [context-selection.md](context-selection.md)                 | M4            | planned |
 | Model requests and tokens       | [model-requests-and-tokens.md](model-requests-and-tokens.md) | M4            | planned |
 | Streaming                       | [streaming.md](streaming.md)                                 | M4            | planned |
 

@@ -19,10 +19,10 @@ both the cost and the hard size limit (the context window).
 ## 3. How it works
 
 ```
-turn 1:  [system + profile] [user 1]                              → reply 1
-turn 2:  [system + profile] [user 1] [reply 1] [user 2]           → reply 2
-turn 3:  [system + profile] [user 1] [reply 1] [user 2] [reply 2] [user 3] → reply 3
-          └──────────── input tokens grow every turn ────────────┘   └ output tokens (capped)
+turn 1:  [system + identity] [user 1]                              → reply 1
+turn 2:  [system + identity] [user 1] [reply 1] [user 2]           → reply 2
+turn 3:  [system + identity] [user 1] [reply 1] [user 2] [reply 2] [user 3] → reply 3
+           └──────────── input tokens grow every turn ────────────┘   └ output tokens (capped)
 ```
 
 Where size is bounded:
