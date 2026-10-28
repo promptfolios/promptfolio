@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Server-only package: Node.js globals provide the web Request/Response types.
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

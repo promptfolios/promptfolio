@@ -1,27 +1,37 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
+import { useAISDKRuntime } from "@assistant-ui/ai-sdk";
 import {
   AssistantRuntimeProvider,
   AuiConfig,
   Suggestions,
-  useLocalRuntime,
   useRemoteThreadListRuntime,
 } from "@assistant-ui/react";
+import { DefaultChatTransport } from "ai";
 import { MenuIcon, XIcon } from "lucide-react";
 import { type FC, useEffect, useMemo, useState } from "react";
-import { createPlaceholderModel } from "@/chat/placeholder-model";
 import { TitledInMemoryThreadListAdapter } from "@/chat/thread-list-adapter";
 import { Thread } from "@/components/assistant-ui/elements/thread.aui";
 import { ThreadList } from "@/components/assistant-ui/elements/thread-list.aui";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { STARTERS } from "@/config/starters";
 
-const placeholderModel = createPlaceholderModel();
+/**
+ * Posts `{ id, messages, trigger, messageId }` to our server route. Unlike assistant-ui's
+ * `AssistantChatTransport`, it sends no `system` prompt or `tools`: the server owns both.
+ */
+const transport = new DefaultChatTransport({ api: "/api/chat" });
 const config = AuiConfig({ suggestions: Suggestions(STARTERS) });
 
-/** Runtime for a single thread. Called by the thread-list runtime once per thread. */
+/**
+ * Runtime for a single thread, called by the thread-list runtime once per thread:
+ * an AI SDK chat, adapted for assistant-ui. (`useChatRuntime` would bundle this, but it
+ * manages its own thread list and cannot use our titled adapter.)
+ */
 function useThreadRuntime() {
-  return useLocalRuntime(placeholderModel);
+  const chat = useChat({ transport });
+  return useAISDKRuntime(chat);
 }
 
 export interface ChatWorkspaceProps {

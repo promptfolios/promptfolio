@@ -10,6 +10,7 @@ catalog:
   "@types/node": ^24.0.0
   "@types/react": ^19.3.0
   "@types/react-dom": ^19.3.0
+  ai: ^7.0.154
   next: ^16.4.3
   # Pinned below 8.5.32, which pnpm's minimumReleaseAge rejected as too new (2026-10-27).
   postcss: 8.5.31
