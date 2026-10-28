@@ -17,10 +17,11 @@ that builds it; code links are marked "planned").
 | Record ids                      | [record-ids.md](record-ids.md)                               | M2            | in use  |
 | Validation at boundaries        | [validation-at-boundaries.md](validation-at-boundaries.md)   | M2            | in use  |
 | Chat runtime and threads        | [chat-runtime-and-threads.md](chat-runtime-and-threads.md)   | M3            | in use  |
-| System prompt                   | [system-prompt.md](system-prompt.md)                         | M4            | planned |
-| Context selection               | [context-selection.md](context-selection.md)                 | M4            | planned |
-| Model requests and tokens       | [model-requests-and-tokens.md](model-requests-and-tokens.md) | M4            | planned |
-| Streaming                       | [streaming.md](streaming.md)                                 | M4            | planned |
+| System prompt                   | [system-prompt.md](system-prompt.md)                         | M4            | in use  |
+| Context selection               | [context-selection.md](context-selection.md)                 | M4            | in use  |
+| Model requests and tokens       | [model-requests-and-tokens.md](model-requests-and-tokens.md) | M4            | in use  |
+| Streaming                       | [streaming.md](streaming.md)                                 | M4            | in use  |
+| Server-side secrets             | [server-side-secrets.md](server-side-secrets.md)             | M4            | in use  |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").

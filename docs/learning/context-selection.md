@@ -1,6 +1,6 @@
 # Context selection
 
-First appears in: **M4** (first AI integration). Status: **planned**.
+First appears in: **M4** (first AI integration). Status: **in use** (option A).
 
 ## 1. What it is
 
@@ -46,8 +46,8 @@ flowchart LR
 
 ## 4. Where it lives in the code
 
-- System prompt built from `profile.identity`: **planned** (M4, `@promptfolio/ai`,
-  `src/system-prompt.ts`)
+- System prompt built from `profile.identity` only:
+  [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
 - Profile lookup tools: **planned** (M5)
 - The decision and its alternatives: [M4 plan, Decisions](../plans/m4-first-ai-integration.md#decisions)
 - Identity and provenance types: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)

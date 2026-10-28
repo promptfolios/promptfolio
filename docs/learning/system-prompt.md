@@ -1,6 +1,6 @@
 # System prompt
 
-First appears in: **M4** (first AI integration). Status: **planned**.
+First appears in: **M4** (first AI integration). Status: **in use**.
 
 ## 1. What it is
 
@@ -17,7 +17,7 @@ boundary.
 
 ## 3. How it works
 
-Planned shape for M4: the server builds the system prompt; the browser never supplies it.
+The server builds the system prompt on every request; the browser never supplies it.
 
 ```mermaid
 flowchart LR
@@ -38,12 +38,20 @@ Summary: Builds accessible web apps with TypeScript and React.
 ```
 
 The rules tell the model to say when something is not provided, never to invent facts, and to
-speak about the owner in the third person, never as them.
+speak about the owner in the third person, never as them. Angle brackets in profile text are
+escaped, so a summary containing `</owner_identity>` cannot close the block early.
+
+The prompt is passed to `streamText` as `instructions` (AI SDK v7's name for the system prompt).
+`streamText` also refuses `system` messages inside `messages` by default
+(`allowSystemInMessages: false`), a second guard behind the request allowlist.
 
 ## 4. Where it lives in the code
 
-- Server-side prompt construction: **planned** (M4, `/api/chat` route and `@promptfolio/ai`)
-- Identity input it will render: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
+- Prompt construction: [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
+  (`buildSystemPrompt`), tested in [system-prompt.test.ts](../../packages/ai/src/system-prompt.test.ts)
+- Where it is sent: [packages/ai/src/chat-handler.ts](../../packages/ai/src/chat-handler.ts)
+  (`instructions`); a test checks a client-sent `system` never reaches the model
+- Identity input: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts) (`ProfileIdentity`)
 - Why the client's `system` field must be ignored: [ADR 0007](../adr/0007-chat-ui-assistant-ui.md), consequences
 
 ## 5. Common pitfalls and misconceptions
@@ -61,4 +69,4 @@ speak about the owner in the third person, never as them.
 
 - [AI SDK: prompts (system, messages)](https://ai-sdk.dev/docs/foundations/prompts)
 - [Anthropic: giving Claude a role with a system prompt](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/system-prompts)
-  (the M4 plan chooses Anthropic; the concept is the same across providers)
+  (the concept is the same for Gemini, which receives it as a system instruction)

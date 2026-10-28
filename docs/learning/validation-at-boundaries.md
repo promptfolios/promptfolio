@@ -14,9 +14,9 @@ code can trust it without checking again.
 
 - The profile file is hand-written and may contain typos or oversized text that would later be sent
   to a model.
-- From M4, browser requests are untrusted: assistant-ui's transport can send a `system` prompt and
-  `tools` that the server must ignore ([ADR 0007](../adr/0007-chat-ui-assistant-ui.md),
-  consequences).
+- From M4, browser requests to `/api/chat` are untrusted: any client can send a `system` prompt,
+  `tools`, file parts, or a forged conversation history
+  ([ADR 0007](../adr/0007-chat-ui-assistant-ui.md), consequences).
 - From M5, model output (tool arguments) is untrusted too.
 
 ## 3. How it works
@@ -43,6 +43,21 @@ flowchart LR
 Results, not exceptions: data errors come back as `{ ok: false, issues }` with a path for each
 problem, all at once. Exceptions are reserved for programming errors (an empty `sourceId`).
 
+The chat request (M4) is a third boundary, `parseChatRequest` in `@promptfolio/ai`. It uses an
+**allowlist**: it describes what is accepted and rejects everything else, instead of listing what
+to remove.
+
+1. Read the body, stopping after 100 KB, so an oversized body is never parsed (413).
+2. Parse JSON (400), then check the shape with zod: only `messages` is read; roles are `user` or
+   `assistant` (a `system` role is rejected); parts are `text`, or `step-start` (a content-free
+   marker the AI SDK adds, dropped). Other body fields, such as `system` and `tools`, are stripped.
+3. Check the limits (413) and that the last message is a non-empty question (400).
+4. Rebuild clean messages from the accepted text only, and pass those on.
+
+Each failure returns a short plain-text message that is safe to show, and the model is never
+called. A visitor can still forge earlier "assistant" turns; that is harmless while the model has
+no tools or private data, but M5 must never trust tool results sent by the client.
+
 ## 4. Where it lives in the code
 
 - File and path checks: [apps/portfolio/src/server/profile.ts](../../apps/portfolio/src/server/profile.ts)
@@ -50,7 +65,10 @@ problem, all at once. Exceptions are reserved for programming errors (an empty `
 - `ProfileLoadResult`, `toProfileIssue`, `formatPath`: [packages/core/src/profile/load.ts](../../packages/core/src/profile/load.ts)
 - Owner-facing error page: [apps/portfolio/src/app/page.tsx](../../apps/portfolio/src/app/page.tsx)
 - Tests ("rejects …", "reports every problem at once"): [packages/core/src/profile/load.test.ts](../../packages/core/src/profile/load.test.ts)
-- Chat request validation and input limits: **planned** (M4). Tool argument validation: **planned** (M5)
+- Chat request allowlist and limits: [packages/ai/src/request.ts](../../packages/ai/src/request.ts),
+  [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts); tests ("rejects …") in
+  [packages/ai/src/chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
+- Tool argument validation: **planned** (M5)
 
 ## 5. Common pitfalls and misconceptions
 
@@ -58,7 +76,11 @@ problem, all at once. Exceptions are reserved for programming errors (an empty `
   time. That is why `loadStructuredProfile` takes `unknown`.
 - Validating in the browser is a convenience, not security. The server must validate again.
 - Strict objects (`z.strictObject`) reject unknown keys on purpose, so a typo like `hightlights`
-  fails loudly instead of being silently dropped.
+  fails loudly instead of being silently dropped. The chat request does the opposite for unknown
+  *fields* (it strips them, because clients legitimately send `id` and `trigger`), but rejects
+  unknown *part types*, because those would carry content to the model.
+- A blocklist ("remove `system` and `tools`") misses whatever you did not think of; the M4
+  browser check found a provider metadata part that no blocklist would have listed.
 - zod is internal to `core`; its error type is converted to `ProfileIssue` so zod's version is not
   part of the public API.
 - A prompt instruction ("only answer about the profile") is not a boundary. Limits and permissions
