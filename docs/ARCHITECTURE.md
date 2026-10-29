@@ -11,16 +11,21 @@ flowchart TB
     subgraph app["apps/portfolio (Next.js reference app)"]
         direction TB
         env[".env.local<br/>PROMPTFOLIO_PROFILE_FILE, provider key and model"]
-        files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)"]
+        files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.answers.json (prepared starter answers)"]
         page["src/app/page.tsx<br/>server: load profile, then render workspace or issues"]
         route["src/app/api/chat/route.ts<br/>server: POST /api/chat"]
         serverProfile["src/server/profile.ts<br/>fs + env"]
         serverModel["src/server/model.ts<br/>server-only: PROMPTFOLIO_MODEL = provider:model"]
+        serverAnswers["src/server/prepared-answers.ts<br/>reads profile/*.answers.json"]
+        script["scripts/prepare-answers.ts<br/>owner-run: pnpm --filter portfolio prepare-answers"]
         workspace["src/components/chat-workspace.tsx<br/>client, see Chat workspace"]
         page --> serverProfile
         page --> workspace
         route --> serverProfile
         route --> serverModel
+        route --> serverAnswers
+        serverAnswers -- reads --> files
+        script -- writes --> files
         env --> serverProfile
         env --> serverModel
         serverProfile -- reads --> files
@@ -29,14 +34,20 @@ flowchart TB
     subgraph aipkg["packages/ai (@promptfolio/ai), server-only"]
         direction TB
         aiIndex["src/index.ts<br/>the only entry point"]
-        handler["chat-handler.ts<br/>handleChatRequest(request, options)<br/>tool loop, output allowlist"]
+        handler["chat-handler.ts<br/>handleChatRequest(request, options)<br/>prepared answer or live turn"]
+        turn["chat-turn.ts<br/>runChatTurn: tool loop, output allowlist"]
+        prepared["prepared-answers.ts<br/>file schema, fingerprints,<br/>selection, generator"]
         request["request.ts<br/>body size cap, allowlist, limits"]
         prompt["system-prompt.ts<br/>buildSystemPrompt(identity)"]
         tools["profile-tools.ts<br/>createProfileTools(profile, budget)"]
         aiIndex --> handler
+        aiIndex --> prepared
         handler --> request
-        handler --> prompt
-        handler --> tools
+        handler --> prepared
+        handler --> turn
+        prepared --> turn
+        turn --> prompt
+        turn --> tools
     end
 
     subgraph core["packages/core (@promptfolio/core)"]
@@ -44,10 +55,12 @@ flowchart TB
         index["src/index.ts<br/>the only entry point (package.json exports)"]
         load["profile/load.ts<br/>loadStructuredProfile(), skillKey()"]
         query["profile/query.ts<br/>findRecordById(), recordsUsingSkill()"]
+        canonical["profile/canonical.ts<br/>canonicalProfileContent()"]
         schema["profile/schema.ts<br/>zod input schema and LIMITS (internal)"]
         types["profile/types.ts<br/>Profile, Role, Project, Skill, Education, Provenance, SourceRef"]
         index --> load
         index --> query
+        index --> canonical
         index --> types
         load --> schema
         query --> load
@@ -55,6 +68,7 @@ flowchart TB
 
     app -- "import from @promptfolio/core<br/>(public entry point only)" --> index
     route -- "import from @promptfolio/ai" --> aiIndex
+    script -- "generatePreparedAnswer" --> aiIndex
     aipkg -- "Profile types, lookups" --> index
 ```
 
@@ -77,10 +91,14 @@ sequenceDiagram
     opt key missing or profile invalid
         R-->>B: 500 generic message (details in the server log)
     end
-    R->>H: handleChatRequest(request, { model, profile, providerOptions })
+    R->>R: loadPreparedAnswers() (missing or invalid file: none)
+    R->>H: handleChatRequest(request, { model, profile, providerOptions, preparedAnswers })
     H->>H: cap body at 100 KB, parse allowlist, check limits
     opt invalid input
         H-->>B: 4xx with a safe message (model is not called)
+    end
+    opt first message matches a prepared answer whose fingerprints are current
+        H-->>B: the stored text through the output allowlist (model is not called)
     end
     H->>P: streamText({ instructions, messages, tools, stopWhen: isStepCount(4), … })
     loop up to 4 steps (the last one must answer in text)
@@ -94,6 +112,11 @@ sequenceDiagram
     B-)H: Stop or disconnect fires request.signal
     H-)P: abortSignal cancels the model request
 ```
+
+A prepared answer is used only for the first message of a conversation, on an exact question
+match, when the profile content and the instructions are unchanged since it was generated;
+otherwise the request is answered live (M7, [ADR 0008](adr/0008-prepared-answers-as-files.md),
+[prepared answers and invalidation](learning/prepared-answers-and-invalidation.md)).
 
 The server owns the instructions and the tools: the client never sends a system prompt or tools,
 and the handler would drop them if it did. Tool calls and results stay on the server; the browser
@@ -152,7 +175,7 @@ flowchart TD
     ls[("localStorage<br/>promptfolio:v1:*<br/>(memory if unavailable)")]
     thread["useThreadRuntime(), once per thread<br/>useAISDKRuntime(useChat({ transport }))"]
     transport["DefaultChatTransport({ api: /api/chat })<br/>sends id, messages, trigger: no system, no tools"]
-    config["AuiConfig({ suggestions: Suggestions(STARTERS) })<br/>src/config/starters.ts"]
+    config["AuiConfig({ suggestions: Suggestions(STARTERS) })<br/>src/config/starters.ts<br/>(a starter sends its prompt as the first message)"]
     ui["ThreadList in the sidebar, Thread in the main area<br/>vendored: src/components/assistant-ui/, src/components/ui/, src/hooks/"]
 
     ws --> list
@@ -204,6 +227,7 @@ flowchart LR
     ui --> route["route /api/chat (M4, done)"]
     route --> ai["@promptfolio/ai (M4, done)<br/>tools and profile lookups (M5, done)"]
     ai --> core["@promptfolio/core"]
+    ai --> prepared["prepared starter answers (M7, done)"]
     github["GitHub adapter (M8)"] -- "produces records with<br/>basis source-observed, kind github" --> core
 ```
 
@@ -218,3 +242,4 @@ flowchart LR
 | [0005](adr/0005-profile-model-and-provenance.md)      | Canonical profile model and provenance        | Accepted |
 | [0006](adr/0006-profile-data-location.md)             | Profile data location in the reference app    | Accepted |
 | [0007](adr/0007-chat-ui-assistant-ui.md)              | assistant-ui, Tailwind, and shadcn for chat   | Accepted |
+| [0008](adr/0008-prepared-answers-as-files.md)         | Prepared starter answers as reviewed files    | Accepted |

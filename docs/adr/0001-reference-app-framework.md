@@ -47,6 +47,9 @@ To limit its downsides:
   in-memory state survives between requests. The answer cache (M7), profile versions (M9), and rate
   limits (M10) will need small external storage, and scheduled refresh will need a cron trigger.
   This applies regardless of framework; storage choices are made in those milestones.
+  *Update (M7):* the answer cache needed no external storage: prepared answers are files deployed
+  with the profile and checked against content fingerprints on every request
+  ([ADR 0008](0008-prepared-answers-as-files.md)).
 - Workspace packages are consumed from TypeScript source. Next.js 16.4 (Turbopack) compiles them
   without `transpilePackages`.
 - Next.js 16.4 type-checks with the project-local `tsc` CLI by default, so TypeScript 7 works for

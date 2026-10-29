@@ -22,6 +22,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M4 — First AI integration                 | Done      | `pnpm dev` with a Gemini or Claude key: streamed replies; [plan](plans/m4-first-ai-integration.md) |
 | M5 — Tools and grounded profile lookup    | Done      | `pnpm dev`: answers cite record ids; tool calls in the server log; [plan](plans/m5-tools-grounded-lookup.md) |
 | M6 — Conversation persistence             | Done      | `pnpm dev`: conversations survive a reload, saved only in this browser; [plan](plans/m6-browser-conversation-persistence.md) |
+| M7 — Seeded conversations and cache       | Done      | `pnpm --filter portfolio prepare-answers`, then a starter answers at once; [plan](plans/m7-prepared-starter-answers.md) |
 
 Update this table when a milestone is approved.
 
@@ -190,6 +191,10 @@ Update this table when a milestone is approved.
 - Add representative source fixtures and failure-path tests.
 - Create a small AI evaluation set for answerable, unanswerable, exaggeration-prone, and injection-related questions.
 - Check citations and show their provenance: match the record ids an answer cites against the records returned in that turn, and append a server-built sources block (id, record, basis, source, observed date) so every stated fact comes with its proof. Design: [M5 plan, Deferred to M11](plans/m5-tools-grounded-lookup.md#deferred-to-m11-server-built-provenance-for-cited-facts).
+  Also decide how identity facts are cited: the model cites the identity block as `[owner_identity]`,
+  which no tool returns, so M7's gate rejects the prepared overview answer and that starter is
+  always answered live (accepted for M7 on 2026-10-29; see the [M7 plan, Review
+  results](plans/m7-prepared-starter-answers.md#review-results)).
 - Verify error states and observability without logging unnecessary personal data.
 - Document known limitations.
 
