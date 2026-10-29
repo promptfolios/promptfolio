@@ -73,7 +73,8 @@ function assertValidSource(source: StructuredProfileSource): void {
   }
 }
 
-function toProfileIssue(issue: z.core.$ZodIssue): ProfileIssue {
+/** Internal to the package; shared with `addObservedRecords`. */
+export function toProfileIssue(issue: z.core.$ZodIssue): ProfileIssue {
   return { path: formatPath(issue.path), message: issue.message };
 }
 
@@ -191,6 +192,8 @@ function normalize(input: ParsedProfileInput, source: StructuredProfileSource): 
     })),
     skills: input.skills.map((skill) => ({ ...skill, provenance: provenance() })),
     education: input.education.map((entry) => ({ ...entry, provenance: provenance() })),
+    // Owners do not write repositories; source adapters add them (`addObservedRecords`).
+    repositories: [],
     sources: [sourceRef],
   };
 }

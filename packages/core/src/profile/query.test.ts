@@ -79,7 +79,12 @@ describe("recordsUsingSkill", () => {
     expect(recordsUsingSkill(profile, "C++").projects).toEqual([]);
     expect(recordsUsingSkill(profile, "C#").projects.map((p) => p.id)).toEqual(["service-catalog"]);
     expect(recordsUsingSkill(profile, "C#").roles).toEqual([]);
-    expect(recordsUsingSkill(profile, "C")).toEqual({ inProfile: false, roles: [], projects: [] });
+    expect(recordsUsingSkill(profile, "C")).toEqual({
+      inProfile: false,
+      roles: [],
+      projects: [],
+      repositories: [],
+    });
   });
 
   it("reports a skill that is not listed, even when a record mentions it", () => {
@@ -93,6 +98,7 @@ describe("recordsUsingSkill", () => {
       inProfile: false,
       roles: [],
       projects: [],
+      repositories: [],
     });
   });
 });

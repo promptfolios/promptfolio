@@ -1,4 +1,4 @@
-import { canonicalProfileContent, type Profile } from "@promptfolio/core";
+import { canonicalProfileContent, isRecordId, type Profile } from "@promptfolio/core";
 import { asSchema, type FlexibleSchema, type UIMessage, type UIMessageChunk } from "ai";
 import { z } from "zod";
 import { type ChatTurnOptions, runChatTurn } from "./chat-turn";
@@ -25,11 +25,8 @@ export const PREPARED_ANSWER_LIMITS = {
 } as const;
 
 const fingerprintSchema = z.string().regex(/^sha256:[0-9a-f]{64}$/, "Expected sha256:<64 hex>");
-// Same rule as record ids in @promptfolio/core.
-const recordIdSchema = z
-  .string()
-  .max(64)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+// The same rule as record ids in @promptfolio/core: a slug or a source key.
+const recordIdSchema = z.string().refine(isRecordId, "Expected a record id");
 
 const preparedAnswerSchema = z.strictObject({
   question: z.string().trim().min(1).max(CHAT_LIMITS.maxMessageChars),
@@ -290,6 +287,7 @@ export function evidenceIdsIn(toolResults: ReadonlyArray<{ output: unknown }>): 
     if (Array.isArray(output.records)) output.records.forEach(add);
     add(output.record);
     add(output.role);
+    add(output.ownerNotes);
   }
   return [...ids];
 }

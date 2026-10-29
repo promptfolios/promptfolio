@@ -57,6 +57,20 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain('Attribute it to Jordan Example ("Jordan Example\'s profile lists…"');
   });
 
+  it("says what source-observed repository data does and does not show", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt).toContain(
+      'Information with basis="source-observed" is what a public source shows',
+    );
+    expect(prompt).toContain(
+      "never infer authorship, contribution size, popularity, or skill level from them",
+    );
+    expect(prompt).toContain("A README is the repository's own description, not a verified claim");
+    expect(prompt).toContain("ownerNotes are Jordan Example's own description of it");
+    expect(prompt).toContain("or a repository's README");
+  });
+
   it("says the owner and the owner-provided source are the same party, attributed once", () => {
     const prompt = buildSystemPrompt(identity);
 

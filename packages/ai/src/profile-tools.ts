@@ -2,9 +2,11 @@ import {
   type ClaimBasis,
   type Education,
   findRecordById,
+  isRecordId,
   type Profile,
   type Project,
   type Provenance,
+  type Repository,
   type Role,
   recordsUsingSkill,
 } from "@promptfolio/core";
@@ -20,8 +22,19 @@ import { z } from "zod";
  * explain, not exceptions. `execute` throws only on a bug.
  */
 
-const SECTIONS = ["experience", "projects", "education", "skills", "links"] as const;
-const SKILL_FILTER_SECTIONS: ReadonlySet<string> = new Set(["experience", "projects"]);
+const SECTIONS = [
+  "experience",
+  "projects",
+  "repositories",
+  "education",
+  "skills",
+  "links",
+] as const;
+const SKILL_FILTER_SECTIONS: ReadonlySet<string> = new Set([
+  "experience",
+  "projects",
+  "repositories",
+]);
 
 export const listInputSchema = z
   .strictObject({
@@ -31,10 +44,13 @@ export const listInputSchema = z
       .min(1)
       .max(100)
       .optional()
-      .describe("Only for experience or projects: keep the records that list this skill."),
+      .describe(
+        "Only for experience, projects, or repositories: keep the records that list this skill " +
+          "(for repositories: as a language or topic).",
+      ),
   })
   .refine((input) => input.skill === undefined || SKILL_FILTER_SECTIONS.has(input.section), {
-    message: "skill can only be used with the experience or projects section",
+    message: "skill can only be used with the experience, projects, or repositories section",
     path: ["skill"],
   });
 
@@ -42,8 +58,10 @@ export const getInputSchema = z.strictObject({
   id: z
     .string()
     .min(1)
-    .max(64)
-    .describe("The exact id of a role, project, or education entry, as returned by a list."),
+    .max(160)
+    .describe(
+      "The exact id of a role, project, education entry, or repository, as returned by a list.",
+    ),
 });
 
 /**
@@ -89,12 +107,13 @@ export function createProfileTools(profile: Profile, { maxCalls }: ProfileToolsO
       description:
         "List the owner's records in one profile section, with ids, descriptions, and dates. " +
         "Use getProfileRecord with an id only for highlights, responsibilities, outcomes, " +
-        "or links.",
+        "links, or a repository's README.",
       inputSchema: listInputSchema,
       execute: async (input) => (withinBudget() ? listRecords(profile, input) : LIMIT_REACHED),
     }),
     getProfileRecord: tool({
-      description: "Get the full details of one role, project, or education entry by its exact id.",
+      description:
+        "Get the full details of one role, project, education entry, or repository by its exact id.",
       inputSchema: getInputSchema,
       execute: async ({ id }) => (withinBudget() ? getRecord(profile, id) : LIMIT_REACHED),
     }),
@@ -130,6 +149,11 @@ function selectSection(
         summary: summarizeProject(project),
         provenance: project.provenance,
       }));
+    case "repositories":
+      return (usage?.repositories ?? profile.repositories).map((repository) => ({
+        summary: summarizeRepository(repository, profile),
+        provenance: repository.provenance,
+      }));
     case "education":
       return profile.education.map((entry) => ({
         summary: summarizeEducation(entry),
@@ -149,12 +173,26 @@ function selectSection(
 }
 
 function getRecord(profile: Profile, id: string) {
-  const match = findRecordById(profile, id);
+  const match = isRecordId(id) ? findRecordById(profile, id) : undefined;
   if (match === undefined) {
     return {
       status: "not_found" as const,
       id,
-      message: "No role, project, or education entry has this id. Do not guess a similar one.",
+      message:
+        "No role, project, education entry, or repository has this id. Do not guess a similar one.",
+    };
+  }
+
+  if (match.kind === "repository") {
+    const { provenance, ...fields } = match.record;
+    // The owner's project with the same id: their own description of this repository.
+    const notes = match.ownerNotes;
+    return {
+      status: "found" as const,
+      kind: match.kind,
+      record: { ...fields, ...evidence(provenance) },
+      ...(notes !== undefined && { ownerNotes: projectDetails(notes) }),
+      sources: sourcesFor(profile, notes === undefined ? [match.record] : [match.record, notes]),
     };
   }
 
@@ -201,6 +239,28 @@ function summarizeProject(project: Project) {
     skills: project.skills,
     ...evidence(project.provenance),
   };
+}
+
+function summarizeRepository(repository: Repository, profile: Profile) {
+  return {
+    id: repository.id,
+    name: repository.name,
+    ...(repository.description !== undefined && { description: repository.description }),
+    url: repository.url,
+    languages: repository.languages,
+    topics: repository.topics,
+    ...(repository.archived && { archived: true }),
+    ...(repository.lastActivity !== undefined && { lastActivity: repository.lastActivity }),
+    ...(repository.license !== undefined && { license: repository.license }),
+    hasOwnerNotes: profile.projects.some((project) => project.id === repository.id),
+    ...evidence(repository.provenance),
+  };
+}
+
+/** A full project with its provenance flattened, as getProfileRecord returns it. */
+function projectDetails(project: Project) {
+  const { provenance, ...fields } = project;
+  return { ...fields, ...evidence(provenance) };
 }
 
 function summarizeEducation(entry: Education) {

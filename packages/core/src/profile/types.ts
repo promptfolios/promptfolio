@@ -68,7 +68,10 @@ export interface ProfileLink extends ExternalLink {
 }
 
 export interface Role {
-  /** Stable, author-assigned id, unique across roles, projects, and education. */
+  /**
+   * Stable, author-assigned id, unique across roles, projects, and education. Either a
+   * lowercase slug (`"acme-frontend"`) or a source key (`"github.com/owner/name"`).
+   */
   id: string;
   organization: string;
   title: string;
@@ -84,7 +87,10 @@ export interface Role {
 }
 
 export interface Project {
-  /** Stable, author-assigned id, unique across roles, projects, and education. */
+  /**
+   * Stable, author-assigned id, unique across roles, projects, and education. A project whose
+   * id is a repository's source key is the owner's description of that repository.
+   */
   id: string;
   name: string;
   description: string;
@@ -116,6 +122,46 @@ export interface Education {
   provenance: Provenance;
 }
 
+/** A language's share of a repository's code, as measured by the source. */
+export interface LanguageShare {
+  name: string;
+  /** Whole percent of the repository's code, 1 to 100. */
+  percent: number;
+}
+
+/**
+ * A public code repository observed in a code-hosting source (for example GitHub).
+ *
+ * Everything here is what the source shows about the repository. It does not establish who
+ * wrote the code, how much, or how well. An owner project with the same id is the owner's
+ * own description of the repository (see `findRecordById`).
+ */
+export interface Repository {
+  /** Source key such as `"github.com/owner/name"`: unique, and the same for every reader. */
+  id: string;
+  name: string;
+  /** `"owner/name"` as the source shows it. */
+  fullName: string;
+  description?: string;
+  url: string;
+  homepage?: string;
+  /** Largest first. Not a statement about the owner's skills. */
+  languages: LanguageShare[];
+  topics: string[];
+  fork: boolean;
+  archived: boolean;
+  created?: PartialDate;
+  /** Month of the most recent push, as reported by the source. */
+  lastActivity?: PartialDate;
+  /** SPDX license id, for example `"MIT"`. */
+  license?: string;
+  /** Beginning of the repository's README as plain text. */
+  readme?: string;
+  /** Whether `readme` was cut short. */
+  readmeTruncated?: boolean;
+  provenance: Provenance;
+}
+
 /** The canonical, validated profile. */
 export interface Profile {
   schemaVersion: 1;
@@ -125,5 +171,7 @@ export interface Profile {
   projects: Project[];
   skills: Skill[];
   education: Education[];
+  /** Repositories observed in code-hosting sources; empty when none is configured. */
+  repositories: Repository[];
   sources: SourceRef[];
 }

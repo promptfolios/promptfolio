@@ -1,0 +1,14 @@
+{
+  "login": "jordan-example",
+  "id": 1001,
+  "type": "User",
+  "html_url": "https://github.com/jordan-example",
+  "name": "Jordan Example",
+  "company": null,
+  "blog": "",
+  "location": "Remote",
+  "email": null,
+  "bio": "Fictional fixture account.",
+  "public_repos": 5,
+  "created_at": "2018-01-01T00:00:00Z"
+}

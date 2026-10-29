@@ -1,0 +1,13 @@
+{
+  "data": {
+    "user": {
+      "pinnedItems": {
+        "nodes": [
+          { "nameWithOwner": "jordan-example/old-but-pinned", "isFork": false, "isPrivate": false },
+          { "nameWithOwner": "some-org/shared-config", "isFork": false, "isPrivate": false },
+          { "nameWithOwner": "jordan-example/markdown-linter", "isFork": false, "isPrivate": false }
+        ]
+      }
+    }
+  }
+}

@@ -9,7 +9,8 @@
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "prepare-answers": "node --env-file-if-exists=.env.local scripts/run-ts.mjs scripts/prepare-answers.ts"
+    "prepare-answers": "node --env-file-if-exists=.env.local scripts/run-ts.mjs scripts/prepare-answers.ts",
+    "fetch-github": "node --env-file-if-exists=.env.local scripts/run-ts.mjs scripts/fetch-github.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.89",
@@ -21,6 +22,7 @@
     "@openrouter/ai-sdk-provider": "^3.1.0",
     "@promptfolio/ai": "workspace:*",
     "@promptfolio/core": "workspace:*",
+    "@promptfolio/source-github": "workspace:*",
     "ai": "catalog:",
     "assistant-stream": "0.3.54",
     "class-variance-authority": "^0.7.1",

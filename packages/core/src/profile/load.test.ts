@@ -155,6 +155,7 @@ describe("loadStructuredProfile: incomplete input", () => {
     expect(result.profile.skills).toEqual([]);
     expect(result.profile.education).toEqual([]);
     expect(result.profile.links).toEqual([]);
+    expect(result.profile.repositories).toEqual([]);
   });
 
   it("warns, but still loads, when a record references an unlisted skill", () => {
@@ -262,6 +263,34 @@ describe("loadStructuredProfile: invalid input", () => {
     role.id = "Acme Frontend";
 
     expect(issuesFor(input).map((issue) => issue.path)).toContain("experience[0].id");
+  });
+
+  it("accepts source keys as ids, such as a project describing a repository", () => {
+    const input = fullInput();
+    const [project] = input.projects;
+    if (!project) throw new Error("fixture");
+    project.id = "github.com/jordan-example/jordan-example.github.io";
+
+    const result = loadStructuredProfile(input, source);
+    if (!result.ok) throw new Error("Expected loading to succeed");
+    expect(result.profile.projects[0]?.id).toBe(project.id);
+  });
+
+  it.each([
+    "GitHub.com/jordan/promptfolio",
+    "github.com",
+    "github.com/",
+    "https://github.com/jordan/promptfolio",
+    "github.com/jordan/..",
+    "github/jordan",
+    `github.com/jordan/${"a".repeat(150)}`,
+  ])("rejects the malformed source key %s", (id) => {
+    const input = fullInput();
+    const [project] = input.projects;
+    if (!project) throw new Error("fixture");
+    project.id = id;
+
+    expect(issuesFor(input).map((issue) => issue.path)).toContain("projects[0].id");
   });
 
   it("rejects a missing record id", () => {

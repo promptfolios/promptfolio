@@ -1,0 +1,17 @@
+{
+  "id": 5,
+  "name": "old-but-pinned",
+  "full_name": "jordan-example/old-but-pinned",
+  "private": false,
+  "visibility": "public",
+  "html_url": "https://github.com/jordan-example/old-but-pinned",
+  "description": "An older project the owner pinned.",
+  "homepage": "",
+  "language": "Rust",
+  "topics": ["cli"],
+  "fork": false,
+  "archived": false,
+  "created_at": "2019-05-01T00:00:00Z",
+  "pushed_at": "2020-03-01T00:00:00Z",
+  "license": null
+}

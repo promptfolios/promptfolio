@@ -156,6 +156,11 @@ describe("parsePreparedAnswers", () => {
     expect(result.ok && result.answers).toHaveLength(1);
   });
 
+  it("accepts source keys as evidence ids", () => {
+    const entry = validEntry({ evidenceIds: ["github.com/jordan-example/markdown-linter"] });
+    expect(parsePreparedAnswers(validFile([entry])).ok).toBe(true);
+  });
+
   it.each([
     ["not an object", "nonsense"],
     ["a wrong format version", { ...validFile(), formatVersion: 2 }],
@@ -468,5 +473,15 @@ describe("citations and evidence", () => {
         { output: "not an object" },
       ]),
     ).toEqual(["a", "b", "c"]);
+  });
+
+  it("accepts a cited repository id that a tool returned", () => {
+    const id = "github.com/jordan-example/markdown-linter";
+    const text = `The public repository checks links [${id}].`;
+    const evidence = evidenceIdsIn([
+      { output: { status: "found", kind: "repository", record: { id }, ownerNotes: { id } } },
+    ]);
+    expect(evidence).toEqual([id]);
+    expect(citedIds(text).every((cited) => evidence.includes(cited))).toBe(true);
   });
 });
