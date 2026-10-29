@@ -9,6 +9,7 @@ const { createChatModel } = await import("./model");
 
 const bothKeys = { GOOGLE_GENERATIVE_AI_API_KEY: "google-key", ANTHROPIC_API_KEY: "anthropic-key" };
 const openRouterKey = { OPENROUTER_API_KEY: "openrouter-key" };
+const gatewayKey = { AI_GATEWAY_API_KEY: "gateway-key" };
 
 describe("createChatModel with PROMPTFOLIO_MODEL", () => {
   it("selects the provider and model from provider:model", () => {
@@ -77,7 +78,7 @@ describe("createChatModel without PROMPTFOLIO_MODEL", () => {
     expect(createChatModel({})).toEqual({
       ok: false,
       problem:
-        "no model API key is set (GOOGLE_GENERATIVE_AI_API_KEY or ANTHROPIC_API_KEY or OPENROUTER_API_KEY)",
+        "no model API key is set (GOOGLE_GENERATIVE_AI_API_KEY or ANTHROPIC_API_KEY or OPENROUTER_API_KEY or AI_GATEWAY_API_KEY)",
     });
     expect(createChatModel({ ANTHROPIC_API_KEY: "   " }).ok).toBe(false);
   });
@@ -195,5 +196,99 @@ describe("createChatModel with OpenRouter", () => {
       reasoning: { effort: "low" },
       tools: [{ type: "function", function: { name: "listProfile" } }],
     });
+  });
+});
+
+describe("createChatModel with AI Gateway", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("selects the provider and model from gateway:vendor/model", () => {
+    const result = createChatModel({
+      ...gatewayKey,
+      PROMPTFOLIO_MODEL: "gateway:anthropic/claude-haiku-5.5",
+    });
+
+    expect(result.ok && [result.provider, result.modelId]).toEqual([
+      "gateway",
+      "anthropic/claude-haiku-5.5",
+    ]);
+  });
+
+  it("uses the $0 default model and per-vendor low reasoning when only the provider is given", () => {
+    const bare = createChatModel({ ...gatewayKey, PROMPTFOLIO_MODEL: "gateway" });
+    const empty = createChatModel({ ...gatewayKey, PROMPTFOLIO_MODEL: "gateway:" });
+
+    expect(bare.ok && bare.modelId).toBe("nvidia/nemotron-3.5-lightning-free");
+    expect(empty.ok && empty.modelId).toBe("nvidia/nemotron-3.5-lightning-free");
+    expect(bare.ok && bare.providerOptions).toEqual({
+      anthropic: { effort: "low" },
+      google: { thinkingConfig: { thinkingLevel: "low" } },
+    });
+  });
+
+  it("reports a missing AI_GATEWAY_API_KEY", () => {
+    expect(createChatModel({ ...openRouterKey, PROMPTFOLIO_MODEL: "gateway" })).toEqual({
+      ok: false,
+      problem: "PROMPTFOLIO_MODEL selects gateway, but AI_GATEWAY_API_KEY is not set",
+    });
+  });
+
+  it("comes last in the fallback order", () => {
+    const only = createChatModel(gatewayKey);
+    const withOpenRouter = createChatModel({ ...gatewayKey, ...openRouterKey });
+
+    expect(only.ok && [only.provider, only.modelId]).toEqual([
+      "gateway",
+      "nvidia/nemotron-3.5-lightning-free",
+    ]);
+    expect(withOpenRouter.ok && withOpenRouter.provider).toBe("openrouter");
+  });
+
+  it("sends the model id, provider options, tools, and key to the gateway", async () => {
+    const requests: { url: string; headers: Headers; body: Record<string, unknown> }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string | URL, init?: RequestInit) => {
+        requests.push({
+          url: String(url),
+          headers: new Headers(init?.headers),
+          body: JSON.parse(String(init?.body)),
+        });
+        return new Response(JSON.stringify({ error: { message: "stubbed", type: "test" } }), {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        });
+      }),
+    );
+    const created = createChatModel({
+      ...gatewayKey,
+      PROMPTFOLIO_MODEL: "gateway:anthropic/claude-haiku-5.5",
+    });
+    if (!created.ok) throw new Error(created.problem);
+
+    const result = streamText({
+      model: created.model,
+      providerOptions: created.providerOptions,
+      prompt: "Hello",
+      tools: {
+        listProfile: tool({ description: "List the profile", inputSchema: z.object({}) }),
+      },
+      maxRetries: 0,
+      onError: () => {},
+    });
+    await result.consumeStream();
+
+    expect(requests).toHaveLength(1);
+    const [request] = requests;
+    expect(request?.url).toBe("https://ai-gateway.vercel.sh/v4/ai/language-model");
+    expect(request?.headers.get("authorization")).toBe("Bearer gateway-key");
+    expect(request?.headers.get("ai-language-model-id")).toBe("anthropic/claude-haiku-5.5");
+    expect(request?.body).toMatchObject({
+      providerOptions: { anthropic: { effort: "low" } },
+      tools: [{ type: "function", name: "listProfile" }],
+    });
+    expect(request?.body.providerOptions).not.toHaveProperty("gateway");
   });
 });

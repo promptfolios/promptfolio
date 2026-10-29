@@ -3,9 +3,9 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { ChatProviderOptions } from "@promptfolio/ai";
-import type { LanguageModel } from "ai";
+import { createGateway, type LanguageModel } from "ai";
 
-export type ChatProviderName = "google" | "anthropic" | "openrouter";
+export type ChatProviderName = "google" | "anthropic" | "openrouter" | "gateway";
 
 interface ProviderConfig {
   /** Environment variable holding the provider's API key. */
@@ -42,10 +42,29 @@ const PROVIDERS: Record<ChatProviderName, ProviderConfig> = {
     // drops it for models without reasoning.
     providerOptions: { openrouter: { reasoning: { effort: "low" } } },
   },
+  gateway: {
+    keyVar: "AI_GATEWAY_API_KEY",
+    // A $0 model. None of its upstreams agrees not to train on prompts, so
+    // `gateway.disallowPromptTraining` is not set: the gateway would refuse every request.
+    defaultModelId: "nvidia/nemotron-3.5-lightning-free",
+    // The key is passed explicitly, so an ambient VERCEL_OIDC_TOKEN is never used.
+    createModel: (apiKey, modelId) => createGateway({ apiKey })(modelId),
+    // The gateway runs the upstream provider and passes its options through by vendor name.
+    // Models from other vendors keep their default reasoning.
+    providerOptions: {
+      anthropic: { effort: "low" },
+      google: { thinkingConfig: { thinkingLevel: "low" } },
+    },
+  },
 };
 
 /** Used when PROMPTFOLIO_MODEL is not set: the first provider whose key is set. */
-const FALLBACK_ORDER: readonly ChatProviderName[] = ["google", "anthropic", "openrouter"];
+const FALLBACK_ORDER: readonly ChatProviderName[] = [
+  "google",
+  "anthropic",
+  "openrouter",
+  "gateway",
+];
 
 /** Environment variables, as in `process.env`. */
 export type ChatModelEnv = Readonly<Record<string, string | undefined>>;
