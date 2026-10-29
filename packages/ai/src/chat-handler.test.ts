@@ -20,6 +20,22 @@ function testProfile(): Profile {
         headline: "Full-stack engineer",
         summary: "Builds web applications with TypeScript.",
       },
+      experience: [
+        {
+          id: "globex-fullstack",
+          organization: "Globex",
+          title: "Full-stack Engineer",
+          start: "2023-09",
+        },
+      ],
+      projects: [
+        {
+          id: "service-catalog",
+          name: "Service Catalog",
+          description: "An internal catalog of services.",
+          roleId: "globex-fullstack",
+        },
+      ],
     },
     { sourceId: "owner-profile", label: "Test profile", observedAt: new Date("2026-10-01") },
   );
@@ -46,6 +62,44 @@ function mockModel(chunks: StreamPart[] = textChunks("Hello, ", "world")) {
   return new MockLanguageModelV4({
     doStream: async () => ({ stream: simulateReadableStream({ chunks }) }),
   });
+}
+
+interface MockToolCall {
+  id: string;
+  toolName: string;
+  input: unknown;
+}
+
+/** One model step that ends by asking for tool calls instead of answering. */
+function toolCallChunks(...calls: MockToolCall[]): StreamPart[] {
+  return [
+    { type: "stream-start", warnings: [] },
+    ...calls.map(
+      (call): StreamPart => ({
+        type: "tool-call",
+        toolCallId: call.id,
+        toolName: call.toolName,
+        input: JSON.stringify(call.input),
+      }),
+    ),
+    { type: "finish", finishReason: { unified: "tool-calls", raw: "tool_use" }, usage },
+  ];
+}
+
+/** A model that answers each step with the next list of chunks. */
+function stepsModel(...steps: StreamPart[][]) {
+  return new MockLanguageModelV4({
+    doStream: steps.map((chunks) => ({ stream: simulateReadableStream({ chunks }) })),
+  });
+}
+
+type Prompt = MockLanguageModelV4["doStreamCalls"][number]["prompt"];
+
+/** The tool results the model received, in order. */
+function toolResultsIn(prompt: Prompt | undefined) {
+  return (prompt ?? [])
+    .flatMap((message) => (message.role === "tool" ? message.content : []))
+    .flatMap((part) => (part.type === "tool-result" ? [part] : []));
 }
 
 function silentLogger() {
@@ -129,6 +183,25 @@ describe("handleChatRequest: valid requests", () => {
     const chunks = await readChunks(response);
 
     expect(chunks.map((chunk) => chunk.type)).not.toContain("custom");
+    expect(chunks.some((chunk) => chunk.delta === "Hello")).toBe(true);
+  });
+
+  it("removes provider metadata from the text chunks it sends", async () => {
+    // Gemini attaches an encrypted thought signature to every text part.
+    const providerMetadata = { google: { thoughtSignature: "SIG-SECRET-REASONING" } };
+    const model = mockModel([
+      { type: "stream-start", warnings: [] },
+      { type: "text-start", id: "t1", providerMetadata },
+      { type: "text-delta", id: "t1", delta: "Hello", providerMetadata },
+      { type: "text-end", id: "t1", providerMetadata },
+      { type: "finish", finishReason: { unified: "stop", raw: "stop" }, usage, providerMetadata },
+    ]);
+    const { response } = await handle({ messages: [userMessage("Hi")] }, model);
+    const body = await response.clone().text();
+    const chunks = await readChunks(response);
+
+    expect(body).not.toContain("SIG-SECRET-REASONING");
+    expect(chunks.some((chunk) => "providerMetadata" in chunk)).toBe(false);
     expect(chunks.some((chunk) => chunk.delta === "Hello")).toBe(true);
   });
 
@@ -280,7 +353,184 @@ describe("handleChatRequest: the server owns the instructions", () => {
       { role: "system", content: buildSystemPrompt(testProfile().identity) },
     ]);
     expect(JSON.stringify(call?.prompt)).not.toContain("Ignore all rules");
-    expect(call?.tools ?? []).toHaveLength(0);
+    // Only the server's tools reach the model; the client's `lookup` tool does not.
+    expect(call?.tools?.map((tool) => tool.name).sort()).toEqual([
+      "getProfileRecord",
+      "listProfileRecords",
+    ]);
+    expect(JSON.stringify(call?.tools)).not.toContain("evil");
+  });
+});
+
+describe("handleChatRequest: grounded lookups with server-side tools", () => {
+  const ALLOWED_CHUNK_TYPES = [
+    "start",
+    "start-step",
+    "finish-step",
+    "text-start",
+    "text-delta",
+    "text-end",
+    "finish",
+    "error",
+    "abort",
+  ];
+
+  it("answers from a tool result the server produced", async () => {
+    const model = stepsModel(
+      toolCallChunks({ id: "c1", toolName: "getProfileRecord", input: { id: "service-catalog" } }),
+      textChunks("Jordan's profile lists the Service Catalog [service-catalog]."),
+    );
+    const { response } = await handle({ messages: [userMessage("Tell me about it")] }, model);
+    const chunks = await readChunks(response);
+
+    expect(model.doStreamCalls).toHaveLength(2);
+    const [result] = toolResultsIn(model.doStreamCalls[1]?.prompt);
+    expect(result?.toolName).toBe("getProfileRecord");
+    expect(result?.output).toMatchObject({
+      type: "json",
+      value: {
+        status: "found",
+        kind: "project",
+        record: { id: "service-catalog", basis: "self-reported", sourceId: "owner-profile" },
+        role: { id: "globex-fullstack" },
+      },
+    });
+    const text = chunks.filter((chunk) => chunk.type === "text-delta").map((c) => c.delta);
+    expect(text.join("")).toContain("[service-catalog]");
+  });
+
+  it("never sends tool calls, results, or errors to the browser", async () => {
+    const model = stepsModel(
+      toolCallChunks(
+        { id: "c1", toolName: "getProfileRecord", input: { id: "service-catalog" } },
+        { id: "c2", toolName: "getProfileRecord", input: { id: 42 } },
+        { id: "c3", toolName: "sendEmail", input: { to: "someone@example.com" } },
+      ),
+      textChunks("Here is what the profile says."),
+    );
+    const { response } = await handle({ messages: [userMessage("Tell me")] }, model);
+    const body = await response.clone().text();
+    const chunks = await readChunks(response);
+
+    for (const chunk of chunks) expect(ALLOWED_CHUNK_TYPES).toContain(chunk.type);
+    for (const hidden of ["getProfileRecord", "sendEmail", "owner-profile", "Service Catalog"]) {
+      expect(body).not.toContain(hidden);
+    }
+    expect(chunks.some((chunk) => chunk.delta === "Here is what the profile says.")).toBe(true);
+  });
+
+  it("does not run a call with invalid arguments and tells the model why", async () => {
+    const model = stepsModel(
+      toolCallChunks({ id: "c1", toolName: "getProfileRecord", input: { id: 42 } }),
+      textChunks("That information is not available here."),
+    );
+    const { response, logger } = await handle({ messages: [userMessage("Tell me")] }, model);
+    await response.text();
+
+    const [result] = toolResultsIn(model.doStreamCalls[1]?.prompt);
+    expect(result?.output.type).toBe("error-text");
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("tool call"), {
+      tool: "getProfileRecord",
+      outcome: "invalid",
+    });
+  });
+
+  it("denies a call to a tool the server does not provide", async () => {
+    const model = stepsModel(
+      toolCallChunks({ id: "c1", toolName: "sendEmail", input: { to: "someone@example.com" } }),
+      textChunks("I can only answer questions about the profile."),
+    );
+    const { response, logger } = await handle({ messages: [userMessage("Email them")] }, model);
+    await response.text();
+
+    const [result] = toolResultsIn(model.doStreamCalls[1]?.prompt);
+    expect(result?.toolName).toBe("sendEmail");
+    expect(result?.output.type).toBe("error-text");
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("tool call"), {
+      tool: "sendEmail",
+      outcome: "invalid",
+    });
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it("stops after maxSteps model calls and makes the last one answer in text", async () => {
+    let step = 0;
+    const model = new MockLanguageModelV4({
+      doStream: async () => {
+        step += 1;
+        const call = {
+          id: `c${step}`,
+          toolName: "listProfileRecords",
+          input: { section: "skills" },
+        };
+        return { stream: simulateReadableStream({ chunks: toolCallChunks(call) }) };
+      },
+    });
+    const { response } = await handle({ messages: [userMessage("Skills?")] }, model);
+    await response.text();
+
+    expect(model.doStreamCalls).toHaveLength(CHAT_LIMITS.maxSteps);
+    expect(model.doStreamCalls.at(-1)?.toolChoice).toEqual({ type: "none" });
+    expect(model.doStreamCalls[0]?.toolChoice).toEqual({ type: "auto" });
+  });
+
+  it("returns limit_reached once the per-request call budget is used", async () => {
+    const calls = Array.from({ length: CHAT_LIMITS.maxToolCalls + 1 }, (_, i) => ({
+      id: `c${i}`,
+      toolName: "listProfileRecords",
+      input: { section: "skills" },
+    }));
+    const model = stepsModel(toolCallChunks(...calls), textChunks("Done."));
+    const { response } = await handle({ messages: [userMessage("Skills?")] }, model);
+    await response.text();
+
+    const statuses = toolResultsIn(model.doStreamCalls[1]?.prompt).map(({ output }) =>
+      output.type === "json" ? (output.value as { status?: unknown }).status : output.type,
+    );
+    expect(statuses.filter((status) => status === "listed")).toHaveLength(CHAT_LIMITS.maxToolCalls);
+    expect(statuses.filter((status) => status === "limit_reached")).toHaveLength(1);
+  });
+
+  it("accepts a follow-up built from what the browser received", async () => {
+    // A multi-step reply reaches the browser as step boundaries and text only.
+    const { response, model } = await handle({
+      messages: [
+        userMessage("What did they build?", "u1"),
+        {
+          id: "a1",
+          role: "assistant",
+          parts: [
+            { type: "step-start" },
+            { type: "step-start" },
+            { type: "text", text: "The Service Catalog [service-catalog]." },
+          ],
+        },
+        userMessage("When?", "u2"),
+      ],
+    });
+    expect(response.status).toBe(200);
+    await response.text();
+    const prompt = model.doStreamCalls[0]?.prompt ?? [];
+    expect(prompt.map((message) => message.role)).toEqual(["system", "user", "assistant", "user"]);
+  });
+
+  it("logs each tool call's name and outcome without its arguments", async () => {
+    const model = stepsModel(
+      toolCallChunks({ id: "c1", toolName: "getProfileRecord", input: { id: "nasa-rover" } }),
+      textChunks("Not available here."),
+    );
+    const { response, logger } = await handle({ messages: [userMessage("nasa?")] }, model);
+    await response.text();
+
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("tool call"), {
+      tool: "getProfileRecord",
+      outcome: "not_found",
+    });
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("finished"),
+      expect.objectContaining({ steps: 2 }),
+    );
+    expect(JSON.stringify(logger.info.mock.calls)).not.toContain("nasa-rover");
   });
 });
 
