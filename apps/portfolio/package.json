@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepare-answers": "node --env-file-if-exists=.env.local scripts/run-ts.mjs scripts/prepare-answers.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.89",
@@ -41,6 +42,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "jiti": "2.7.0",
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",

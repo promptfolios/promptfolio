@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "answers": [
+    {
+      "question": "What are the most relevant projects?",
+      "text": "According to Jordan Example's self-reported profile, the projects listed are:\n\n* **Service Catalog**: An internal catalog of services, their owners, and their documentation [service-catalog].\n* **Markdown Linter**: A small open-source tool that checks Markdown documents for broken links [markdown-linter].",
+      "profileFingerprint": "sha256:5cc221e70555d82b36f489e137424dd1c33f529f1a1d43fb6562a87827e879c7",
+      "instructionsFingerprint": "sha256:db337b08221136e685984b482b86428cb0e89ea7178cb716a694d85b80305792",
+      "evidenceIds": ["service-catalog", "markdown-linter"],
+      "model": "google:gemini-3.5-flash-lite",
+      "generatedAt": "2026-10-29T09:37:54.740Z"
+    },
+    {
+      "question": "What are the main technical skills?",
+      "text": "According to Jordan Example's self-reported profile, the main technical skills include:\n\n* **Languages:** TypeScript\n* **Frontend:** React\n* **Backend:** Node.js\n* **Databases:** PostgreSQL\n* **Practices:** Testing",
+      "profileFingerprint": "sha256:5cc221e70555d82b36f489e137424dd1c33f529f1a1d43fb6562a87827e879c7",
+      "instructionsFingerprint": "sha256:db337b08221136e685984b482b86428cb0e89ea7178cb716a694d85b80305792",
+      "evidenceIds": [],
+      "model": "google:gemini-3.5-flash-lite",
+      "generatedAt": "2026-10-29T09:37:56.782Z"
+    },
+    {
+      "question": "Summarize the work experience.",
+      "text": "According to Jordan Example's self-reported profile, Jordan's work experience includes:\n\n- **Frontend Engineer** at Acme Corp (March 2021 – August 2023) [acme-frontend]: Worked on the customer dashboard team.\n- **Full-stack Engineer** at Globex (September 2023 – Present) [globex-fullstack]: Builds internal developer tools.",
+      "profileFingerprint": "sha256:5cc221e70555d82b36f489e137424dd1c33f529f1a1d43fb6562a87827e879c7",
+      "instructionsFingerprint": "sha256:db337b08221136e685984b482b86428cb0e89ea7178cb716a694d85b80305792",
+      "evidenceIds": ["acme-frontend", "globex-fullstack"],
+      "model": "google:gemini-3.5-flash-lite",
+      "generatedAt": "2026-10-29T09:38:03.489Z"
+    },
+    {
+      "question": "What open-source work is there?",
+      "text": "Jordan Example's self-reported profile lists one open-source project: the Markdown Linter, which is a small open-source tool that checks Markdown documents for broken links [markdown-linter].",
+      "profileFingerprint": "sha256:5cc221e70555d82b36f489e137424dd1c33f529f1a1d43fb6562a87827e879c7",
+      "instructionsFingerprint": "sha256:db337b08221136e685984b482b86428cb0e89ea7178cb716a694d85b80305792",
+      "evidenceIds": ["service-catalog", "markdown-linter"],
+      "model": "google:gemini-3.5-flash-lite",
+      "generatedAt": "2026-10-29T09:38:07.569Z"
+    }
+  ]
+}

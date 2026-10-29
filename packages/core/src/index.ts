@@ -3,6 +3,7 @@
  *
  * Only what is exported here is part of the public API.
  */
+export { canonicalProfileContent } from "./profile/canonical";
 export {
   loadStructuredProfile,
   type ProfileIssue,

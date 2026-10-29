@@ -144,6 +144,9 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
+      jiti:
+        specifier: 2.7.0
+        version: 2.7.0
       postcss:
         specifier: 'catalog:'
         version: 8.5.31

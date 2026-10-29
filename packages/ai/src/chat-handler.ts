@@ -1,53 +1,32 @@
-import type { Profile } from "@promptfolio/core";
+import { createUIMessageStreamResponse } from "ai";
+import { type ChatTurnOptions, forVisitor, runChatTurn } from "./chat-turn";
 import {
-  convertToModelMessages,
-  createUIMessageStreamResponse,
-  isStepCount,
-  type LanguageModel,
-  streamText,
-  toUIMessageStream,
-  type UIMessageChunk,
-} from "ai";
-import { CHAT_LIMITS } from "./limits";
-import { createProfileTools } from "./profile-tools";
+  type PreparedAnswer,
+  preparedAnswerStream,
+  selectPreparedAnswer,
+} from "./prepared-answers";
 import { parseChatRequest } from "./request";
-import { buildSystemPrompt } from "./system-prompt";
 
-type StreamTextOptions = Parameters<typeof streamText>[0];
+export {
+  type ChatLogger,
+  type ChatProviderOptions,
+  type ChatTimeouts,
+  genericErrorMessage,
+} from "./chat-turn";
 
-/** Provider-specific settings, passed through unchanged (for example `{ anthropic: { effort: "low" } }`). */
-export type ChatProviderOptions = NonNullable<StreamTextOptions["providerOptions"]>;
-
-/** Provider timeouts in milliseconds. Defaults to `CHAT_LIMITS.timeouts`. */
-export interface ChatTimeouts {
-  firstChunkMs: number;
-  chunkMs: number;
-  totalMs: number;
-}
-
-/** Where the handler reports errors and usage. Defaults to `console`. */
-export type ChatLogger = Pick<Console, "info" | "error">;
-
-export interface ChatHandlerOptions {
-  /** Any AI SDK language model; the application chooses the provider. */
-  model: LanguageModel;
-  profile: Profile;
-  providerOptions?: ChatProviderOptions;
-  /** Defaults to `CHAT_LIMITS.maxOutputTokens`. */
-  maxOutputTokens?: number;
-  timeouts?: ChatTimeouts;
-  logger?: ChatLogger;
-}
-
-/** Shown to visitors for any failure that is not their input's fault. */
-export function genericErrorMessage(requestId: string): string {
-  return `The assistant could not answer right now. Please try again later. (ref ${requestId})`;
+export interface ChatHandlerOptions extends ChatTurnOptions {
+  /**
+   * Answers prepared for the conversation starters (see `generatePreparedAnswer`). A first
+   * message that matches one is answered without a model call, but only while the answer
+   * is current for this profile. Absent or empty: every request is answered live.
+   */
+  preparedAnswers?: readonly PreparedAnswer[];
 }
 
 /**
- * Handles one chat turn: validates the request, builds the server-owned system prompt,
- * lets the model look up profile records with server-side tools, and streams the reply
- * back as an AI SDK UI message stream. Tool activity stays on the server.
+ * Handles one chat turn: validates the request, then either serves a current prepared
+ * answer or lets the model look up profile records with server-side tools, and streams the
+ * reply back as an AI SDK UI message stream. Tool activity stays on the server.
  *
  * Framework-agnostic: takes a web `Request` and returns a web `Response`.
  * Server-only: the model carries the provider credentials.
@@ -56,162 +35,42 @@ export async function handleChatRequest(
   request: Request,
   options: ChatHandlerOptions,
 ): Promise<Response> {
-  const { model, profile, providerOptions, logger = console } = options;
+  const { profile, preparedAnswers = [], logger = console } = options;
   const requestId = crypto.randomUUID().slice(0, 8);
 
   const parsed = await parseChatRequest(request);
   if (!parsed.ok) return textResponse(parsed.status, parsed.message);
 
-  const result = streamText({
-    model,
-    instructions: buildSystemPrompt(profile.identity),
-    messages: await convertToModelMessages(parsed.messages),
-    // Only the server's tools exist; the client cannot add any (see parseChatRequest).
-    tools: createProfileTools(profile, { maxCalls: CHAT_LIMITS.maxToolCalls }),
-    stopWhen: isStepCount(CHAT_LIMITS.maxSteps),
-    // The last allowed step must answer in text instead of ending on another tool call.
-    prepareStep: ({ stepNumber }) =>
-      stepNumber === CHAT_LIMITS.maxSteps - 1 ? { toolChoice: "none" } : undefined,
-    // Per step: a turn with lookups makes several model calls.
-    maxOutputTokens: options.maxOutputTokens ?? CHAT_LIMITS.maxOutputTokens,
-    providerOptions,
-    timeout: options.timeouts ?? CHAT_LIMITS.timeouts,
-    maxRetries: CHAT_LIMITS.maxRetries,
-    abortSignal: request.signal,
-    onError: ({ error }) => {
-      // Full details stay in the server log; visitors only see the generic message.
-      logger.error(`[chat ${requestId}] model error`, error);
-    },
-    onEnd: (event) => {
-      logger.info(`[chat ${requestId}] finished`, {
-        finishReason: event.finishReason,
-        steps: event.stepNumber + 1,
-        // Aggregated across all steps (v7 renamed `totalUsage` to `usage`).
-        usage: event.usage,
-      });
-    },
-    onAbort: () => {
-      // The AI SDK reports its own timeouts as aborts too.
-      if (request.signal.aborted) logger.info(`[chat ${requestId}] aborted by the client`);
-      else logger.error(`[chat ${requestId}] model timed out`);
-    },
-  });
-
-  const stream = toUIMessageStream({
-    stream: result.stream,
-    sendReasoning: false,
-    onError: () => genericErrorMessage(requestId),
-  })
-    .pipeThrough(logToolCalls(requestId, logger))
-    .pipeThrough(forVisitor(request.signal, requestId));
-  return createUIMessageStreamResponse({ stream });
-}
-
-/**
- * The only chunk types the browser receives: enough to render a streamed text answer.
- * Everything else is dropped, including:
- *
- * - tool calls, results, and errors: tool activity stays on the server, so the browser
- *   never learns tool names, schemas, or result fields, and never has tool parts to send
- *   back (the request allowlist rejects them);
- * - `custom` chunks: provider-specific metadata such as Anthropic's message id and usage;
- * - any chunk type a future AI SDK version adds, until it is allowed here on purpose.
- */
-const VISITOR_CHUNK_TYPES: ReadonlySet<UIMessageChunk["type"]> = new Set([
-  "start",
-  "start-step",
-  "finish-step",
-  "text-start",
-  "text-delta",
-  "text-end",
-  "finish",
-  "error",
-  "abort",
-]);
-
-/**
- * Filters the UI message stream before it reaches the browser:
- *
- * - passes only `VISITOR_CHUNK_TYPES`;
- * - removes `providerMetadata` from the chunks it passes. Allowed text chunks can still carry
- *   provider data, such as Gemini's encrypted `thoughtSignature` on every `text-delta`; the
- *   browser does not need it, and the request allowlist would drop it on the way back anyway;
- * - turns an `abort` the visitor did not cause (a timeout) into the generic error. The browser
- *   treats `abort` like pressing Stop, so the reply would otherwise end silently.
- */
-function forVisitor(
-  clientSignal: AbortSignal,
-  requestId: string,
-): TransformStream<UIMessageChunk, UIMessageChunk> {
-  return new TransformStream({
-    transform(chunk, controller) {
-      if (!VISITOR_CHUNK_TYPES.has(chunk.type)) return;
-      if (chunk.type === "abort" && !clientSignal.aborted) {
-        controller.enqueue({ type: "error", errorText: genericErrorMessage(requestId) });
-        return;
-      }
-      controller.enqueue(withoutProviderMetadata(chunk));
-    },
-  });
-}
-
-function withoutProviderMetadata(chunk: UIMessageChunk): UIMessageChunk {
-  if (!("providerMetadata" in chunk)) return chunk;
-  const { providerMetadata: _providerMetadata, ...rest } = chunk;
-  return rest;
-}
-
-/**
- * Logs each tool call's name and outcome on the server, and passes every chunk through.
- * Arguments are not logged, because they may echo visitor text.
- *
- * An invalid call (unknown tool or arguments that fail the schema) arrives as a
- * `tool-input-error` followed by a `tool-output-error`; it is logged once, as `invalid`.
- * A `tool-output-error` on its own means `execute` threw, which is a bug.
- */
-function logToolCalls(
-  requestId: string,
-  logger: ChatLogger,
-): TransformStream<UIMessageChunk, UIMessageChunk> {
-  const toolNames = new Map<string, string>();
-  const invalidCalls = new Set<string>();
-  return new TransformStream({
-    transform(chunk, controller) {
-      switch (chunk.type) {
-        case "tool-input-available":
-          toolNames.set(chunk.toolCallId, chunk.toolName);
-          break;
-        case "tool-input-error":
-          invalidCalls.add(chunk.toolCallId);
-          logger.info(`[chat ${requestId}] tool call`, {
-            tool: chunk.toolName,
-            outcome: "invalid",
-          });
-          break;
-        case "tool-output-available":
-          logger.info(`[chat ${requestId}] tool call`, {
-            tool: toolNames.get(chunk.toolCallId),
-            outcome: outcomeOf(chunk.output),
-          });
-          break;
-        case "tool-output-error":
-          if (!invalidCalls.has(chunk.toolCallId)) {
-            logger.error(`[chat ${requestId}] tool failed`, {
-              tool: toolNames.get(chunk.toolCallId),
-            });
-          }
-          break;
-      }
-      controller.enqueue(chunk);
-    },
-  });
-}
-
-function outcomeOf(output: unknown): string {
-  if (typeof output === "object" && output !== null && "status" in output) {
-    return String(output.status);
+  if (preparedAnswers.length > 0) {
+    const selection = await selectPreparedAnswer(
+      parsed.messages,
+      parsed.trigger,
+      preparedAnswers,
+      profile,
+    );
+    // Follow-ups are never candidates; logging them would only add noise.
+    if (selection.outcome === "hit" || selection.reason !== "not-first-turn") {
+      // The outcome and reason only: never the question, which may be visitor text.
+      logger.info(
+        `[chat ${requestId}] prepared answer`,
+        selection.outcome === "hit"
+          ? { outcome: "hit" }
+          : { outcome: "miss", reason: selection.reason },
+      );
+    }
+    if (selection.outcome === "hit") {
+      const stream = preparedAnswerStream(selection.answer.text).pipeThrough(
+        forVisitor(request.signal, requestId),
+      );
+      return createUIMessageStreamResponse({ stream });
+    }
   }
-  return "unknown";
+
+  const { stream } = await runChatTurn(parsed.messages, options, {
+    requestId,
+    signal: request.signal,
+  });
+  return createUIMessageStreamResponse({ stream });
 }
 
 function textResponse(status: number, message: string): Response {

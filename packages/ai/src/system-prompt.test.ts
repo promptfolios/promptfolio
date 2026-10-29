@@ -57,6 +57,14 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain('Attribute it to Jordan Example ("Jordan Example\'s profile lists…"');
   });
 
+  it("says the owner and the owner-provided source are the same party, attributed once", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt).toContain("Jordan Example is the profile owner");
+    expect(prompt).toContain('"self-reported" and "owner-provided" mean the same thing');
+    expect(prompt).toContain("Attribute once per answer in plain words");
+  });
+
   it("asks the model to explain its evidence and never forbids describing lookups", () => {
     const prompt = buildSystemPrompt(identity);
 

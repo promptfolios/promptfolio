@@ -19,16 +19,27 @@ const messageSchema = z.object({
   parts: z.array(partSchema),
 });
 
+/** Why the client sent the request: a new message, or a new answer to the last one. */
+export type ChatTrigger = "submit-message" | "regenerate-message";
+
 /**
- * The accepted request body. Only `messages` is read; every other field the client
- * sends (such as `system`, `tools`, `trigger`, or `messageId`) is stripped by zod.
+ * The accepted request body. Only `messages` and `trigger` are read; every other field the
+ * client sends (such as `system`, `tools`, or `messageId`) is stripped by zod.
+ *
+ * `trigger` is metadata, not content: a missing or unknown value means `submit-message`
+ * instead of rejecting the request. It only decides whether a prepared answer may be used.
  */
 const bodySchema = z.object({
   messages: z.array(messageSchema).min(1).max(CHAT_LIMITS.maxMessages),
+  trigger: z
+    .enum(["submit-message", "regenerate-message"])
+    .optional()
+    .catch(undefined)
+    .transform((trigger): ChatTrigger => trigger ?? "submit-message"),
 });
 
 export type ParseChatRequestResult =
-  | { ok: true; messages: UIMessage[] }
+  | { ok: true; messages: UIMessage[]; trigger: ChatTrigger }
   | { ok: false; status: number; message: string };
 
 /**
@@ -73,7 +84,7 @@ export async function parseChatRequest(request: Request): Promise<ParseChatReque
     return reject(400, "The conversation must end with a question.");
   }
 
-  return { ok: true, messages };
+  return { ok: true, messages, trigger: parsed.data.trigger };
 }
 
 function reject(status: number, message: string): ParseChatRequestResult {
