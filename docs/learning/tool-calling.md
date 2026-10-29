@@ -72,7 +72,7 @@ source, basis, date) whenever a visitor asks.
 - Pure lookups without the AI SDK (`findRecordById`, `recordsUsingSkill`):
   [packages/core/src/profile/query.ts](../../packages/core/src/profile/query.ts)
 - The loop (`tools`, `stopWhen`, `prepareStep`), the output allowlist (`forVisitor`), and tool-call
-  logging (`logToolCalls`): [packages/ai/src/chat-handler.ts](../../packages/ai/src/chat-handler.ts);
+  logging (`logToolCalls`): [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts);
   multi-step tests with `MockLanguageModelV4` in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
 - Limits (`maxSteps`, `maxToolCalls`): [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts)
 - Design and decisions: [M5 plan](../plans/m5-tools-grounded-lookup.md)
@@ -91,7 +91,9 @@ source, basis, date) whenever a visitor asks.
   and a lookup turn makes two or three model calls, which also counts against provider rate
   limits.
 - A tool result is not proof. A cited id shows which record the model *claims* to have used; a
-  check that the cited ids were actually returned is planned for M11.
+  check that the cited ids were actually returned is planned for M11. Prepared answers (M7) already
+  get a narrow version: the generator collects the ids the tools returned in that turn
+  (`evidenceIdsIn`) and rejects an answer that cites any other id.
 
 ## 6. Further reading
 

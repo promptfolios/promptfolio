@@ -48,7 +48,7 @@ id) was found in the server output, confirming the search reached it.
 - Reading the key: [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts),
   tested in [model.test.ts](../../apps/portfolio/src/server/model.test.ts)
 - The route: [apps/portfolio/src/app/api/chat/route.ts](../../apps/portfolio/src/app/api/chat/route.ts)
-- Generic error messages: [packages/ai/src/chat-handler.ts](../../packages/ai/src/chat-handler.ts)
+- Generic error messages: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
   (`genericErrorMessage`), with leak tests in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
 - Example configuration: [apps/portfolio/.env.example](../../apps/portfolio/.env.example)
 

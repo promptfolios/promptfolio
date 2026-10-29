@@ -60,7 +60,9 @@ Each finished reply logs its token usage on the server, for example
 - Profile size limits: [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts) (`LIMITS`)
 - Chat limits: [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts) (`CHAT_LIMITS`), enforced in
   [packages/ai/src/request.ts](../../packages/ai/src/request.ts)
-- Provider call and usage logging: [packages/ai/src/chat-handler.ts](../../packages/ai/src/chat-handler.ts)
+- Provider call and usage logging: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
+- Prepared starter answers (no model call on a hit): [packages/ai/src/prepared-answers.ts](../../packages/ai/src/prepared-answers.ts);
+  see [prepared answers and invalidation](prepared-answers-and-invalidation.md)
 - Provider selection, model ids, and thinking settings:
   [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts)
 - SDK choice: [ADR 0003](../adr/0003-ai-sdk-selection.md); model choice:
@@ -74,6 +76,8 @@ Each finished reply logs its token usage on the server, for example
   surprise costs on long threads.
 - Calling the provider from client code exposes the API key in the bundle.
 - A successful, fluent response is not evidence that it is correct.
+- The cheapest model call is the one not made. Since M7, a current prepared answer to a starter
+  makes no call at all; generating the five answers costs about 10 calls, once per profile change.
 
 ## 6. Further reading
 

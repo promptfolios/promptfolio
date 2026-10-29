@@ -78,7 +78,11 @@ flowchart LR
   is opened in a `useState` initializer that falls back to memory on the server; the browser runs
   its own initializer during hydration.
 - A saved answer is shown as it was. If the profile changes later, old answers are not updated;
-  new answers are looked up again (stale prepared answers are M7 and M9 topics).
+  new answers are looked up again. This includes prepared starter answers (M7): they arrive as
+  ordinary text, are saved like any answer, and their thread is continued live. The server only
+  stops *serving* a prepared answer once it is out of date; copies already saved stay as they were.
+- Saved assistant text counts against the server's 4,000-character limit per message when the
+  thread is continued, which is why prepared answers are capped at that length.
 
 ## 6. Further reading
 

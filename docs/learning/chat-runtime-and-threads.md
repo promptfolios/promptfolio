@@ -71,8 +71,9 @@ message once it settles. Both write through one `ThreadStore`; see
   render reloads the list and drops cached threads.
 - `unstable_useAdapters` and `withFormat` are experimental assistant-ui APIs; check the adapter
   tests and a reload in the browser after upgrading assistant-ui.
-- A starter is just a pre-filled first message, not a cached answer. Cached starter answers are
-  **planned** for M7.
+- A starter is still a real first message; the browser does not know about prepared answers.
+  Since M7 the server answers it from a prepared answer when one is current for the profile, and
+  live otherwise; see [prepared answers and invalidation](prepared-answers-and-invalidation.md).
 
 ## 6. Further reading
 
