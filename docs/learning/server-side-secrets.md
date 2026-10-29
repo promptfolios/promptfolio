@@ -21,17 +21,19 @@ each owner configures.
 ```mermaid
 flowchart LR
     browser["browser<br/>no key"] -- "POST /api/chat" --> route["route.ts (server)"]
-    env[".env.local<br/>GOOGLE_GENERATIVE_AI_API_KEY, ANTHROPIC_API_KEY,<br/>or OPENROUTER_API_KEY"] --> model["server/model.ts<br/>import #quot;server-only#quot;"]
+    env[".env.local<br/>GOOGLE_GENERATIVE_AI_API_KEY, ANTHROPIC_API_KEY,<br/>OPENROUTER_API_KEY, or AI_GATEWAY_API_KEY"] --> model["server/model.ts<br/>import #quot;server-only#quot;"]
     route --> model
-    model -- "key in a request header" --> provider["Gemini, Claude, or OpenRouter API"]
+    model -- "key in a request header" --> provider["Gemini, Claude, OpenRouter,<br/>or AI Gateway API"]
 ```
 
 Three layers keep the key on the server:
 
 1. **Where it is read.** Only `src/server/model.ts` reads the provider keys
-   (`GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY`, and since M7.1 `OPENROUTER_API_KEY`),
-   inside a request handler. Next.js
-   inlines only variables prefixed `NEXT_PUBLIC_` into client code; these are not.
+   (`GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY`, since M7.1 `OPENROUTER_API_KEY`, and
+   since M7.2 `AI_GATEWAY_API_KEY`), inside a request handler. Next.js
+   inlines only variables prefixed `NEXT_PUBLIC_` into client code; these are not. The gateway
+   key is passed to `createGateway` explicitly, so the adapter never falls back to an ambient
+   `VERCEL_OIDC_TOKEN`.
 2. **What may import it.** `model.ts` starts with `import "server-only"`, so if a client component
    ever imports it, the build fails instead of shipping the module to the browser.
 3. **What leaves the server.** Provider errors can contain request details. Visitors get a generic

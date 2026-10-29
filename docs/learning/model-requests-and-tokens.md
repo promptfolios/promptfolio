@@ -76,6 +76,22 @@ differently there:
   no answer. `maxOutputTokens` was raised to 2,000 per call. The cap counts only generated
   tokens; the conversation sent in is input and does not reduce it.
 
+Since M7.2, `gateway:vendor/model` (with `AI_GATEWAY_API_KEY`) uses **Vercel AI Gateway**. It
+works differently from OpenRouter's adapter:
+
+- It is a *remote provider*: the adapter sends the AI SDK call itself (prompt, tools,
+  `providerOptions`, limits) to Vercel, which runs the matching upstream AI SDK provider. So
+  upstream options pass through by vendor name (`anthropic.effort`, Google's `thinkingConfig`),
+  and gateway routing options go under `providerOptions.gateway`.
+- Its free tier is a **monthly dollar credit** for a subset of models, with unpublished per-model
+  rate limits, rather than a daily request cap. `$0` models, such as the default
+  `nvidia/nemotron-3.5-lightning-free`, cost nothing at all.
+- `providerOptions.gateway.disallowPromptTraining: true` routes only to upstreams that agree not
+  to train on prompts. The default `$0` model has no such upstream, so the gateway would refuse
+  every request with the filter on; it is off. Use the default with the example profile only.
+- Nemotron gets no low-reasoning option (only `anthropic` and `google` keys are set), so it reasons
+  at its default level, under the 2,000-token cap.
+
 Each finished reply logs its token usage on the server, for example
 `[chat 691a183c] finished { finishReason: 'stop', usage: { inputTokens: 42, outputTokens: 12, … } }`.
 
@@ -91,7 +107,8 @@ Each finished reply logs its token usage on the server, for example
   [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts)
 - SDK choice: [ADR 0003](../adr/0003-ai-sdk-selection.md); model choice:
   [M4 plan, Decisions](../plans/m4-first-ai-integration.md#decisions); OpenRouter:
-  [M7.1 plan](../plans/m7-1-openrouter-provider.md)
+  [M7.1 plan](../plans/m7-1-openrouter-provider.md); AI Gateway:
+  [M7.2 plan](../plans/m7-2-ai-gateway-provider.md)
 
 ## 5. Common pitfalls and misconceptions
 
@@ -112,3 +129,7 @@ Each finished reply logs its token usage on the server, for example
   [reasoning tokens](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens), and
   [tool calling](https://openrouter.ai/docs/guides/features/tool-calling)
 - [AI SDK: OpenRouter provider](https://ai-sdk.dev/providers/community-providers/openrouter)
+- [Vercel AI Gateway: pricing](https://vercel.com/docs/ai-gateway/pricing),
+  [rate limits](https://vercel.com/docs/ai-gateway/rate-limits), and
+  [disallow prompt training](https://vercel.com/docs/ai-gateway/security-and-compliance/disallow-prompt-training)
+- [AI SDK: AI Gateway provider](https://ai-sdk.dev/providers/ai-sdk-providers/ai-gateway)
