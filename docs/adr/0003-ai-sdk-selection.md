@@ -1,7 +1,7 @@
 # ADR 0003: AI SDK selection
 
 - **Status:** Accepted (confirmed at M4, 2026-10-28; see "Confirmation at M4"; OpenRouter added
-  at M7.1, 2026-10-29; see "Update at M7.1")
+  at M7.1 and AI Gateway at M7.2, 2026-10-29; see "Update at M7.1" and "Update at M7.2")
 - **Date:** 2026-10-27
 
 ## Context
@@ -81,7 +81,23 @@ OpenRouter. See the [M7.1 plan](../plans/m7-1-openrouter-provider.md).
   have daily quotas, are added and removed often, and are served by hosts with their own data
   policies, so the default may need replacing and a paid model is advised for the real profile.
 
-## Consequences
+## Update at M7.2
+
+OpenRouter's free models ran out too (most likely the daily cap), so a fourth provider,
+`gateway` (Vercel AI Gateway), was added. See the [M7.2 plan](../plans/m7-2-ai-gateway-provider.md).
+
+- **Not a reversal of this ADR.** The ADR chose direct provider packages *instead of* AI Gateway
+  model strings. The app still never uses plain model strings: the gateway is one optional entry
+  in `src/server/model.ts`, last in the fallback order, created with `createGateway({ apiKey })`.
+  `@promptfolio/ai` does not know about it.
+- **No new dependency.** `ai` already depends on `@ai-sdk/gateway` and re-exports
+  `createGateway`.
+- **Options.** The gateway runs the upstream AI SDK provider, so `anthropic` and `google` options
+  pass through by vendor name. Other vendors keep their default reasoning.
+- **Default model.** `nvidia/nemotron-3.5-lightning-free`, a `$0` model (developer's choice). None
+  of its upstreams agrees not to train on prompts, so `disallowPromptTraining` is off. The
+  example profile is the intended use; a paid model with that filter is advised for the real
+  profile.
 
 - Expect a major upgrade roughly every six months, with deprecations to follow.
 - Revisit TanStack AI if it stabilizes and the AI SDK becomes a poor fit.
