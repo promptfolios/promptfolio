@@ -1,10 +1,11 @@
 import "server-only";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { ChatProviderOptions } from "@promptfolio/ai";
 import type { LanguageModel } from "ai";
 
-export type ChatProviderName = "google" | "anthropic";
+export type ChatProviderName = "google" | "anthropic" | "openrouter";
 
 interface ProviderConfig {
   /** Environment variable holding the provider's API key. */
@@ -16,7 +17,7 @@ interface ProviderConfig {
 
 /**
  * Supported providers. Short portfolio answers need little thinking, and thinking tokens
- * count against the output cap, so both run with low thinking.
+ * count against the output cap, so all run with low thinking.
  */
 const PROVIDERS: Record<ChatProviderName, ProviderConfig> = {
   google: {
@@ -32,10 +33,19 @@ const PROVIDERS: Record<ChatProviderName, ProviderConfig> = {
     // Do not set temperature/top_p/top_k: Anthropic rejects them.
     providerOptions: { anthropic: { effort: "low" } },
   },
+  openrouter: {
+    keyVar: "OPENROUTER_API_KEY",
+    // A free model: no credits needed, but daily quotas apply and free models come and go.
+    defaultModelId: "google/gemma-4-31b-it:free",
+    createModel: (apiKey, modelId) => createOpenRouter({ apiKey }).chat(modelId),
+    // This adapter ignores the call-level `reasoning` option, so it is set here. OpenRouter
+    // drops it for models without reasoning.
+    providerOptions: { openrouter: { reasoning: { effort: "low" } } },
+  },
 };
 
 /** Used when PROMPTFOLIO_MODEL is not set: the first provider whose key is set. */
-const FALLBACK_ORDER: readonly ChatProviderName[] = ["google", "anthropic"];
+const FALLBACK_ORDER: readonly ChatProviderName[] = ["google", "anthropic", "openrouter"];
 
 /** Environment variables, as in `process.env`. */
 export type ChatModelEnv = Readonly<Record<string, string | undefined>>;
@@ -55,8 +65,9 @@ export type ChatModelResult =
  * reach the browser, and importing this module from client code fails the build.
  *
  * `PROMPTFOLIO_MODEL=provider:model` (for example `google:gemini-3.8-flash`) selects both;
- * `provider` alone uses that provider's default model. Without it, the first provider
- * whose key is set is used with its default model.
+ * `provider` alone uses that provider's default model. Only the first `:` separates them, so
+ * OpenRouter ids keep their own suffix (`openrouter:google/gemma-4-31b-it:free`). Without
+ * it, the first provider whose key is set is used with its default model.
  *
  * Checked per request rather than at startup, so the app builds and renders without a key.
  */

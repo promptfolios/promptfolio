@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { streamText, tool } from "ai";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 // `server-only` throws outside a React Server Components build; tests run in plain Node.
 vi.mock("server-only", () => ({}));
@@ -6,6 +8,7 @@ vi.mock("server-only", () => ({}));
 const { createChatModel } = await import("./model");
 
 const bothKeys = { GOOGLE_GENERATIVE_AI_API_KEY: "google-key", ANTHROPIC_API_KEY: "anthropic-key" };
+const openRouterKey = { OPENROUTER_API_KEY: "openrouter-key" };
 
 describe("createChatModel with PROMPTFOLIO_MODEL", () => {
   it("selects the provider and model from provider:model", () => {
@@ -73,7 +76,8 @@ describe("createChatModel without PROMPTFOLIO_MODEL", () => {
   it("reports a missing API key instead of throwing", () => {
     expect(createChatModel({})).toEqual({
       ok: false,
-      problem: "no model API key is set (GOOGLE_GENERATIVE_AI_API_KEY or ANTHROPIC_API_KEY)",
+      problem:
+        "no model API key is set (GOOGLE_GENERATIVE_AI_API_KEY or ANTHROPIC_API_KEY or OPENROUTER_API_KEY)",
     });
     expect(createChatModel({ ANTHROPIC_API_KEY: "   " }).ok).toBe(false);
   });
@@ -87,5 +91,109 @@ describe("createChatModel without PROMPTFOLIO_MODEL", () => {
       "anthropic",
       "claude-haiku-5-5",
     ]);
+  });
+});
+
+describe("createChatModel with OpenRouter", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("selects the model id after the first colon, keeping a :free suffix", () => {
+    const paid = createChatModel({
+      ...openRouterKey,
+      PROMPTFOLIO_MODEL: "openrouter:anthropic/claude-haiku-5.5",
+    });
+    const free = createChatModel({
+      ...openRouterKey,
+      PROMPTFOLIO_MODEL: "openrouter:google/gemma-4-31b-it:free",
+    });
+
+    expect(paid.ok && [paid.provider, paid.modelId]).toEqual([
+      "openrouter",
+      "anthropic/claude-haiku-5.5",
+    ]);
+    expect(free.ok && free.modelId).toBe("google/gemma-4-31b-it:free");
+  });
+
+  it("uses the free default model with low reasoning when only the provider is given", () => {
+    const bare = createChatModel({ ...openRouterKey, PROMPTFOLIO_MODEL: "openrouter" });
+    const empty = createChatModel({ ...openRouterKey, PROMPTFOLIO_MODEL: "openrouter:" });
+
+    expect(bare.ok && bare.modelId).toBe("google/gemma-4-31b-it:free");
+    expect(empty.ok && empty.modelId).toBe("google/gemma-4-31b-it:free");
+    expect(bare.ok && bare.providerOptions).toEqual({
+      openrouter: { reasoning: { effort: "low" } },
+    });
+  });
+
+  it("reports a missing OPENROUTER_API_KEY", () => {
+    expect(createChatModel({ ...bothKeys, PROMPTFOLIO_MODEL: "openrouter" })).toEqual({
+      ok: false,
+      problem: "PROMPTFOLIO_MODEL selects openrouter, but OPENROUTER_API_KEY is not set",
+    });
+  });
+
+  it("comes last in the fallback order", () => {
+    const only = createChatModel(openRouterKey);
+    const withGoogle = createChatModel({ ...openRouterKey, GOOGLE_GENERATIVE_AI_API_KEY: "g" });
+
+    expect(only.ok && [only.provider, only.modelId]).toEqual([
+      "openrouter",
+      "google/gemma-4-31b-it:free",
+    ]);
+    expect(withGoogle.ok && withGoogle.provider).toBe("google");
+  });
+
+  it("sends the model id, low reasoning, tools, and key in the request", async () => {
+    const requests: { url: string; headers: Headers; body: Record<string, unknown> }[] = [];
+    const sse = [
+      {
+        id: "gen-1",
+        model: "m",
+        choices: [{ index: 0, delta: { role: "assistant", content: "Hi" } }],
+      },
+      { id: "gen-1", model: "m", choices: [{ index: 0, delta: {}, finish_reason: "stop" }] },
+    ]
+      .map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`)
+      .concat("data: [DONE]\n\n")
+      .join("");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string | URL, init?: RequestInit) => {
+        requests.push({
+          url: String(url),
+          headers: new Headers(init?.headers),
+          body: JSON.parse(String(init?.body)),
+        });
+        return new Response(sse, { headers: { "content-type": "text/event-stream" } });
+      }),
+    );
+    const created = createChatModel({
+      ...openRouterKey,
+      PROMPTFOLIO_MODEL: "openrouter:google/gemma-4-31b-it:free",
+    });
+    if (!created.ok) throw new Error(created.problem);
+
+    const result = streamText({
+      model: created.model,
+      providerOptions: created.providerOptions,
+      prompt: "Hello",
+      tools: {
+        listProfile: tool({ description: "List the profile", inputSchema: z.object({}) }),
+      },
+      maxRetries: 0,
+    });
+
+    expect(await result.text).toBe("Hi");
+    expect(requests).toHaveLength(1);
+    const [request] = requests;
+    expect(request?.url).toBe("https://openrouter.ai/api/v1/chat/completions");
+    expect(request?.headers.get("authorization")).toBe("Bearer openrouter-key");
+    expect(request?.body).toMatchObject({
+      model: "google/gemma-4-31b-it:free",
+      reasoning: { effort: "low" },
+      tools: [{ type: "function", function: { name: "listProfile" } }],
+    });
   });
 });

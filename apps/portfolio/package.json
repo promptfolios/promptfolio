@@ -18,6 +18,7 @@
     "@assistant-ui/ai-sdk": "^0.0.15",
     "@assistant-ui/react": "^0.15.31",
     "@assistant-ui/react-markdown": "^0.14.24",
+    "@openrouter/ai-sdk-provider": "^3.1.0",
     "@promptfolio/ai": "workspace:*",
     "@promptfolio/core": "workspace:*",
     "ai": "catalog:",

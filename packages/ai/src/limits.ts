@@ -14,9 +14,10 @@ export const CHAT_LIMITS = {
   maxTotalChars: 20_000,
   /**
    * Default cap on generated tokens per model call (step), including any thinking tokens
-   * the model uses. A turn with lookups makes up to `maxSteps` calls.
+   * the model uses. A turn with lookups makes up to `maxSteps` calls. Raised from 1,000 in
+   * M7.1: some free models reason past 1,000 tokens even at low effort, leaving no answer.
    */
-  maxOutputTokens: 1_000,
+  maxOutputTokens: 2_000,
   /**
    * Model calls in one turn: tool calls and their results take a step each, and the last
    * allowed step must answer in text.
