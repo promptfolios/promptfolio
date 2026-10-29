@@ -33,7 +33,7 @@ Where size is bounded:
 | Raw request body                       | 100 KB, before JSON parsing    | `CHAT_LIMITS`, `request.ts` |
 | Messages per request                   | 50                             | `CHAT_LIMITS`, `request.ts` |
 | Characters per message / in total      | 4,000 / 20,000                 | `CHAT_LIMITS`, `request.ts` |
-| Output tokens per reply (incl. thinking) | 1,000                        | `maxOutputTokens`         |
+| Output tokens per model call (incl. thinking) | 2,000 (1,000 before M7.1) | `maxOutputTokens`   |
 | Wait for the first content / between chunks / whole reply | 15 s / 10 s / 25 s | `CHAT_LIMITS.timeouts`, AI SDK `timeout` |
 | Retries after a failed provider call   | 1                              | `CHAT_LIMITS.maxRetries`  |
 | Time per reply on serverless hosts     | 30 s                           | `maxDuration` in `route.ts` |
@@ -52,6 +52,30 @@ Gemini, `effort: "low"` for Claude. These settings are provider-specific, so the
 as `providerOptions` and `@promptfolio/ai` forwards them unchanged. Sampling settings
 (`temperature`, `top_p`, `top_k`) are not sent: Anthropic's API rejects them.
 
+Since M7.1, `openrouter:vendor/model` sends requests through **OpenRouter**, a model router: one
+API and one key (`OPENROUTER_API_KEY`) that forwards each request to one of many upstream
+providers. It was added because Gemini's free tier kept answering 429 and 503. Things that work
+differently there:
+
+- Model ids are OpenRouter's, for example `anthropic/claude-haiku-5.5` rather than
+  `claude-haiku-5-5`. Only the first `:` in `PROMPTFOLIO_MODEL` separates the provider, so
+  `openrouter:google/gemma-4-31b-it:free` keeps the `:free` suffix.
+- The default is that free model. Free models allow 20 requests per minute and 50 per day (1,000
+  per day once 10 credits have been bought), and they are added and removed often. One
+  `prepare-answers` run is 10 to 20 requests. Free models are served by hosts with their own
+  logging and training policies, so prefer a paid model when the real profile is loaded.
+- Low reasoning is `providerOptions.openrouter.reasoning.effort: "low"`. The adapter
+  (`@openrouter/ai-sdk-provider`) ignores the AI SDK's call-level `reasoning` option, and it copies
+  everything under `providerOptions.openrouter` into the request body as is.
+- In a tool loop, thinking models may need their earlier reasoning sent back, unchanged, in the
+  next step of the same turn. The adapter keeps OpenRouter's `reasoning_details` in provider
+  metadata and returns them, which `@ai-sdk/openai-compatible` does not. The output allowlist
+  still keeps reasoning and metadata away from the browser.
+- `effort: "low"` is a hint, not a limit. During M7.1's checks `recursive/flint-v1.0:free` reasoned
+  for 1,219 tokens on one starter, used up the 1,000-token cap, and finished with `length` and
+  no answer. `maxOutputTokens` was raised to 2,000 per call. The cap counts only generated
+  tokens; the conversation sent in is input and does not reduce it.
+
 Each finished reply logs its token usage on the server, for example
 `[chat 691a183c] finished { finishReason: 'stop', usage: { inputTokens: 42, outputTokens: 12, … } }`.
 
@@ -66,7 +90,8 @@ Each finished reply logs its token usage on the server, for example
 - Provider selection, model ids, and thinking settings:
   [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts)
 - SDK choice: [ADR 0003](../adr/0003-ai-sdk-selection.md); model choice:
-  [M4 plan, Decisions](../plans/m4-first-ai-integration.md#decisions)
+  [M4 plan, Decisions](../plans/m4-first-ai-integration.md#decisions); OpenRouter:
+  [M7.1 plan](../plans/m7-1-openrouter-provider.md)
 
 ## 5. Common pitfalls and misconceptions
 
@@ -83,3 +108,7 @@ Each finished reply logs its token usage on the server, for example
 
 - [AI SDK: generating text](https://ai-sdk.dev/docs/ai-sdk-core/generating-text)
 - [Anthropic: token counting](https://docs.claude.com/en/docs/build-with-claude/token-counting)
+- [OpenRouter: limits](https://openrouter.ai/docs/api/reference/limits),
+  [reasoning tokens](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens), and
+  [tool calling](https://openrouter.ai/docs/guides/features/tool-calling)
+- [AI SDK: OpenRouter provider](https://ai-sdk.dev/providers/community-providers/openrouter)
