@@ -29,28 +29,33 @@ flowchart TB
     subgraph aipkg["packages/ai (@promptfolio/ai), server-only"]
         direction TB
         aiIndex["src/index.ts<br/>the only entry point"]
-        handler["chat-handler.ts<br/>handleChatRequest(request, options)"]
+        handler["chat-handler.ts<br/>handleChatRequest(request, options)<br/>tool loop, output allowlist"]
         request["request.ts<br/>body size cap, allowlist, limits"]
         prompt["system-prompt.ts<br/>buildSystemPrompt(identity)"]
+        tools["profile-tools.ts<br/>createProfileTools(profile, budget)"]
         aiIndex --> handler
         handler --> request
         handler --> prompt
+        handler --> tools
     end
 
     subgraph core["packages/core (@promptfolio/core)"]
         direction TB
         index["src/index.ts<br/>the only entry point (package.json exports)"]
         load["profile/load.ts<br/>loadStructuredProfile(), skillKey()"]
+        query["profile/query.ts<br/>findRecordById(), recordsUsingSkill()"]
         schema["profile/schema.ts<br/>zod input schema and LIMITS (internal)"]
         types["profile/types.ts<br/>Profile, Role, Project, Skill, Education, Provenance, SourceRef"]
         index --> load
+        index --> query
         index --> types
         load --> schema
+        query --> load
     end
 
     app -- "import from @promptfolio/core<br/>(public entry point only)" --> index
     route -- "import from @promptfolio/ai" --> aiIndex
-    aipkg -- "Profile types" --> index
+    aipkg -- "Profile types, lookups" --> index
 ```
 
 `core` depends on zod only: no Node.js, browser, React, Next.js, or AI SDK code. `ai` depends on
@@ -77,16 +82,23 @@ sequenceDiagram
     opt invalid input
         H-->>B: 4xx with a safe message (model is not called)
     end
-    H->>P: streamText({ instructions, messages, maxOutputTokens, timeout, abortSignal })
-    P-->>H: token chunks
-    H-->>B: UI message stream (provider custom parts removed)
+    H->>P: streamText({ instructions, messages, tools, stopWhen: isStepCount(4), … })
+    loop up to 4 steps (the last one must answer in text)
+        P-->>H: tool call, for example getProfileRecord { id }
+        H->>H: validate arguments, run the lookup (at most 8 calls per request)
+        H->>P: tool result: record with id, basis, sourceId
+    end
+    P-->>H: answer text with cited ids
+    H-->>B: UI message stream: text and step boundaries only (output allowlist)
     Note over B,H: Provider errors and timeouts (15 s to first content, 25 s total) become a generic message with a ref id
     B-)H: Stop or disconnect fires request.signal
     H-)P: abortSignal cancels the model request
 ```
 
-The server owns the instructions: the client never sends a system prompt, and the handler would
-drop one if it did. See [validation at boundaries](learning/validation-at-boundaries.md) and
+The server owns the instructions and the tools: the client never sends a system prompt or tools,
+and the handler would drop them if it did. Tool calls and results stay on the server; the browser
+receives only the answer. See [tool calling](learning/tool-calling.md),
+[validation at boundaries](learning/validation-at-boundaries.md), and
 [server-side secrets](learning/server-side-secrets.md).
 
 ## Profile loading flow
@@ -151,7 +163,8 @@ flowchart TD
 
 `useChatRuntime` from `@assistant-ui/ai-sdk` would bundle the per-thread part, but it builds its
 own thread list and cannot use the titled adapter, so the workspace composes `useChat` (AI SDK)
-and `useAISDKRuntime` (assistant-ui) itself. Messages have `parts` (text now, tool calls in M5).
+and `useAISDKRuntime` (assistant-ui) itself. Messages have `parts`; the browser only ever receives
+text and step boundaries, because tool activity stays on the server (M5).
 
 ## Canonical profile model
 
@@ -170,8 +183,8 @@ Profile
 provenance = { sourceId → sources.id, basis: self-reported | source-observed | derived, observedAt }
 ```
 
-Record ids are the targets of future tool lookups and citations; `basis` lets the assistant say
-whose claim a fact is ([ADR 0005](adr/0005-profile-model-and-provenance.md)).
+Record ids are the arguments of tool lookups and the targets of citations; `basis` lets the
+assistant say whose claim a fact is ([ADR 0005](adr/0005-profile-model-and-provenance.md)).
 
 ## Planned extensions
 
@@ -179,7 +192,7 @@ whose claim a fact is ([ADR 0005](adr/0005-profile-model-and-provenance.md)).
 flowchart LR
     app["apps/portfolio"] --> ui["chat UI (M3, done)"]
     ui --> route["route /api/chat (M4, done)"]
-    route --> ai["@promptfolio/ai (M4, done)<br/>tools and profile lookups (M5)"]
+    route --> ai["@promptfolio/ai (M4, done)<br/>tools and profile lookups (M5, done)"]
     ai --> core["@promptfolio/core"]
     github["GitHub adapter (M8)"] -- "produces records with<br/>basis source-observed, kind github" --> core
 ```

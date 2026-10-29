@@ -20,6 +20,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M2 — Profile schema and structured source | Done      | `pnpm test`; `pnpm dev` shows the loaded profile or validation issues |
 | M3 — Minimal application shell            | Done      | `pnpm dev`: chat workspace with starters, threads, placeholder replies |
 | M4 — First AI integration                 | Done      | `pnpm dev` with a Gemini or Claude key: streamed replies; [plan](plans/m4-first-ai-integration.md) |
+| M5 — Tools and grounded profile lookup    | Done      | `pnpm dev`: answers cite record ids; tool calls in the server log; [plan](plans/m5-tools-grounded-lookup.md) |
 
 Update this table when a milestone is approved.
 
@@ -187,6 +188,7 @@ Update this table when a milestone is approved.
 - Review untrusted inputs, prompt-injection exposure, tool authorization, rate limits, output limits, and secrets handling.
 - Add representative source fixtures and failure-path tests.
 - Create a small AI evaluation set for answerable, unanswerable, exaggeration-prone, and injection-related questions.
+- Check citations and show their provenance: match the record ids an answer cites against the records returned in that turn, and append a server-built sources block (id, record, basis, source, observed date) so every stated fact comes with its proof. Design: [M5 plan, Deferred to M11](plans/m5-tools-grounded-lookup.md#deferred-to-m11-server-built-provenance-for-cited-facts).
 - Verify error states and observability without logging unnecessary personal data.
 - Document known limitations.
 
