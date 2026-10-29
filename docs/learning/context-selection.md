@@ -1,6 +1,6 @@
 # Context selection
 
-First appears in: **M4** (first AI integration). Status: **in use** (option A).
+First appears in: **M4** (first AI integration). Status: **in use** (option A, plus tools from M5).
 
 ## 1. What it is
 
@@ -37,18 +37,24 @@ B gives better answers today, but A was chosen for four reasons:
    owner's identity; source data arrives as tool results.
 4. **A clear before and after.** M4 abstains on projects; M5 answers with sources.
 
+From M5 the model gets three channels, each with a different level of trust:
+
 ```mermaid
 flowchart LR
-    rules["rules + identity<br/>(system prompt, M4)"] --> model["model"]
-    msgs["visitor messages"] --> model
-    tools["tool results: records with id + basis<br/>(M5, planned)"] -.-> model
+    rules["rules + identity<br/>(system prompt)"] --> model["model"]
+    msgs["visitor messages<br/>(history is client-controlled, not evidence)"] --> model
+    tools["tool results: records with id + basis<br/>(only what the model asked for, this answer only)"] --> model
 ```
+
+Tools keep the context small: a question about one project fetches a summary list and then one
+record, not the whole profile. The model chooses what to look up, but the code decides what can
+be looked up and how often (see [tool calling](tool-calling.md)).
 
 ## 4. Where it lives in the code
 
 - System prompt built from `profile.identity` only:
   [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
-- Profile lookup tools: **planned** (M5)
+- Profile lookup tools: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts)
 - The decision and its alternatives: [M4 plan, Decisions](../plans/m4-first-ai-integration.md#decisions)
 - Identity and provenance types: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
 

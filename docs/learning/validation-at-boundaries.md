@@ -1,6 +1,6 @@
 # Validation at boundaries
 
-First appears in: **M2** (profile loading). Status: **in use**; extended in M4 (chat route).
+First appears in: **M2** (profile loading). Status: **in use**; extended in M4 (chat route) and M5 (tool arguments, output allowlist).
 
 ## 1. What it is
 
@@ -55,8 +55,17 @@ to remove.
 4. Rebuild clean messages from the accepted text only, and pass those on.
 
 Each failure returns a short plain-text message that is safe to show, and the model is never
-called. A visitor can still forge earlier "assistant" turns; that is harmless while the model has
-no tools or private data, but M5 must never trust tool results sent by the client.
+called. A visitor can still forge earlier "assistant" turns; the system prompt tells the model that
+only tool results in the current answer are evidence.
+
+Tool arguments (M5) are a fourth boundary: they are model output. The AI SDK validates them
+against each tool's strict zod schema before `execute` runs; invalid arguments or an unknown tool
+name never reach our code, and the model receives the validation error instead. Valid values are
+still only lookup keys: a wrong id gives `not_found`, never access to anything.
+
+The stream back to the browser mirrors the request allowlist: `forVisitor` passes only the chunk
+types needed to show a text answer, and removes `providerMetadata` from those chunks. Tool calls and results never leave the server, so the browser
+has no tool parts to send back, and the request allowlist keeps rejecting them.
 
 ## 4. Where it lives in the code
 
@@ -68,7 +77,10 @@ no tools or private data, but M5 must never trust tool results sent by the clien
 - Chat request allowlist and limits: [packages/ai/src/request.ts](../../packages/ai/src/request.ts),
   [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts); tests ("rejects …") in
   [packages/ai/src/chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
-- Tool argument validation: **planned** (M5)
+- Tool input schemas (`listInputSchema`, `getInputSchema`): [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
+  tests ("rejects …") in [profile-tools.test.ts](../../packages/ai/src/profile-tools.test.ts), and
+  invalid or unknown calls from the model in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
+- Output allowlist (`VISITOR_CHUNK_TYPES`): [packages/ai/src/chat-handler.ts](../../packages/ai/src/chat-handler.ts)
 
 ## 5. Common pitfalls and misconceptions
 

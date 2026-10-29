@@ -39,7 +39,10 @@ There are three streams, one per hop:
 2. **Server to browser.** `toUIMessageStream()` re-encodes the parts as the AI SDK's *UI message
    stream*: server-sent events whose `data:` lines are small JSON chunks, such as
    `{"type":"text-delta","id":"…","delta":"Jordan is"}`, ending with `finish` and `data: [DONE]`.
-   Promptfolio drops provider `custom` chunks on the way, so provider metadata stays on the server.
+   Promptfolio passes only an allowlist of chunk types (`start`, step boundaries, text, `finish`,
+   `error`, `abort`) and removes `providerMetadata` from the chunks it passes. Provider `custom`
+   metadata, Gemini's encrypted `thoughtSignature` on text chunks, and, from M5, tool calls and
+   tool results stay on the server.
 3. **Inside the browser.** `useChat` reads the chunks and appends to the assistant message's
    `parts`; assistant-ui re-renders the thread as text arrives.
 
@@ -52,14 +55,20 @@ Cancellation and timeouts both end the stream with an `abort` chunk, which the b
 leave the visitor guessing, so the handler turns an `abort` the visitor did not cause
 (`request.signal` not aborted) into the generic `error` chunk.
 
+From M5, one reply can span several model calls (*steps*): a tool call, its result, then the
+answer (see [tool calling](tool-calling.md)). The browser sees `start-step` and `finish-step`
+boundaries and the final text, but nothing in between, so during a lookup the chat shows its
+running state with no text yet. The provider timeouts cover all steps together.
+
 Thread titles use a separate, tiny stream: `generateTitle` returns an `AssistantStream` with a
 single text chunk, because that is the shape assistant-ui expects.
 
 ## 4. Where it lives in the code
 
-- Server stream, error replacement, `custom` filter, timeout-to-error conversion (`forVisitor`):
-  [packages/ai/src/chat-handler.ts](../../packages/ai/src/chat-handler.ts); tests for a mid-stream
-  error and for dropped provider parts in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
+- Server stream, error replacement, chunk allowlist and timeout-to-error conversion
+  (`VISITOR_CHUNK_TYPES`, `forVisitor`): [packages/ai/src/chat-handler.ts](../../packages/ai/src/chat-handler.ts);
+  tests for a mid-stream error, dropped provider parts, and hidden tool chunks in
+  [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
 - Browser side (`useChat` with `DefaultChatTransport`):
   [apps/portfolio/src/components/chat-workspace.tsx](../../apps/portfolio/src/components/chat-workspace.tsx)
 - Cancellation: `request.signal` passed to `streamText` as `abortSignal` (chat-handler.ts)
@@ -77,7 +86,12 @@ single text chunk, because that is the shape assistant-ui expects.
 - Don't build a custom streaming protocol. The spec says to use the SDK's (ADR 0003).
 - Whatever the server streams, the client may store and send back. In M4, Anthropic's `custom`
   metadata part was echoed in the next request and rejected by the allowlist, breaking follow-up
-  questions; tests with a mock model missed it because the mock emitted no such part.
+  questions; tests with a mock model missed it because the mock emitted no such part. That is why
+  M5 turned the filter into an allowlist: new chunk types are dropped until allowed on purpose.
+- Allowing a chunk *type* is not the same as allowing every *field* in it. Gemini attaches an
+  encrypted `thoughtSignature` (an opaque token for its reasoning state) as `providerMetadata` on
+  every `text-delta`, an allowed type, so it reached the browser until M5's review stripped the
+  field too. A mock model without metadata cannot catch this; the test now sends some.
 
 ## 6. Further reading
 

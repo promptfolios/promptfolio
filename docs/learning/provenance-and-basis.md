@@ -34,6 +34,12 @@ profile.sources[0] = { id: "owner-profile", kind: "structured-file",
 Unknown is **absence**, not a fourth basis: a skill that is not listed means "not in the profile",
 never "does not have it".
 
+From M5, every record a tool returns carries its full provenance (`basis`, `sourceId`, and
+`observedAt`), and each result lists its `sources` by label. The system prompt asks the model to
+attribute `self-reported` facts to the owner ("Jordan's profile lists…") and to explain the source
+and basis when a visitor asks how it knows something. This addresses the M4 finding that answers
+sometimes stated self-reported facts as plain fact; the prompt guides this, but nothing enforces it.
+
 ## 4. Where it lives in the code
 
 - `ClaimBasis`, `Provenance`, `SourceRef`: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
@@ -41,7 +47,9 @@ never "does not have it".
 - Source id and observation time chosen by the app: [apps/portfolio/src/server/profile.ts](../../apps/portfolio/src/server/profile.ts)
 - Tests ("stamps every record…", "registers the source…"): [packages/core/src/profile/load.test.ts](../../packages/core/src/profile/load.test.ts)
 - Decision: [ADR 0005](../adr/0005-profile-model-and-provenance.md)
-- `source-observed` records from GitHub: **planned** (M8). Citing provenance in answers: **planned** (M5)
+- Provenance in tool results (`evidence`, `sourcesFor`): [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
+  attribution rules in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
+- `source-observed` records from GitHub: **planned** (M8)
 
 ## 5. Common pitfalls and misconceptions
 

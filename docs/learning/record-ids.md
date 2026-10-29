@@ -13,8 +13,10 @@ are identified by name, compared with `skillKey()` (case and spacing ignored, sy
 Ids are the handles that code and the model use to point at a fact:
 
 - `Project.roleId` links a project to the role it was done under.
-- M5 tools will take an id as an argument ("get project `service-catalog`") and return it.
-- Answers will cite ids so a claim can be traced back to a record.
+- The `getProfileRecord` tool takes an id as its argument, and every summary returned by
+  `listProfileRecords` carries one.
+- Answers cite ids in square brackets (`[service-catalog]`), so a claim can be traced back to a
+  record.
 
 If ids changed whenever a name changed, every one of those links would break.
 
@@ -46,7 +48,10 @@ Validation rules:
   [packages/core/src/profile/load.ts](../../packages/core/src/profile/load.ts)
 - Tests: [packages/core/src/profile/load.test.ts](../../packages/core/src/profile/load.test.ts)
 - Decision: [ADR 0005](../adr/0005-profile-model-and-provenance.md), point 4
-- Ids as tool arguments and citations: **planned** (M5)
+- Lookup by id (`findRecordById`, exact match only): [packages/core/src/profile/query.ts](../../packages/core/src/profile/query.ts)
+- Ids as tool arguments: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
+  citation rule in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts).
+  Checking that cited ids were actually returned: **planned** (M11)
 
 ## 5. Common pitfalls and misconceptions
 

@@ -22,6 +22,7 @@ that builds it; code links are marked "planned").
 | Model requests and tokens       | [model-requests-and-tokens.md](model-requests-and-tokens.md) | M4            | in use  |
 | Streaming                       | [streaming.md](streaming.md)                                 | M4            | in use  |
 | Server-side secrets             | [server-side-secrets.md](server-side-secrets.md)             | M4            | in use  |
+| Tool calling                    | [tool-calling.md](tool-calling.md)                           | M5            | in use  |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").
