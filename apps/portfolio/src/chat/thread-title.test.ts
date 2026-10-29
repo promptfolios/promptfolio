@@ -1,6 +1,6 @@
 import type { ThreadMessage } from "@assistant-ui/react";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TITLE, titleFromMessages } from "./thread-list-adapter";
+import { DEFAULT_TITLE, titleFromMessages } from "./thread-title";
 
 /** Minimal message fixture; the function only reads `role` and `content`. */
 function message(role: "user" | "assistant", text: string): ThreadMessage {

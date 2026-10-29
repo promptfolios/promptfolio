@@ -11,7 +11,9 @@ import {
 import { DefaultChatTransport } from "ai";
 import { MenuIcon, XIcon } from "lucide-react";
 import { type FC, useEffect, useMemo, useState } from "react";
-import { TitledInMemoryThreadListAdapter } from "@/chat/thread-list-adapter";
+import { openBrowserStorage } from "@/chat/browser-storage";
+import { createBrowserThreadListAdapter } from "@/chat/browser-thread-list-adapter";
+import { ThreadStore } from "@/chat/thread-store";
 import { Thread } from "@/components/assistant-ui/elements/thread.aui";
 import { ThreadList } from "@/components/assistant-ui/elements/thread-list.aui";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -41,12 +43,15 @@ export interface ChatWorkspaceProps {
 
 /**
  * The chat workspace: a list of conversations and the active conversation.
- * Thread state and switching are managed by assistant-ui; threads live in memory
- * and reset on reload (persistence is planned for M6).
+ * Thread state and switching are managed by assistant-ui; threads are saved in this
+ * browser's localStorage (in memory when storage is unavailable).
  */
 export function ChatWorkspace({ ownerName, headline }: ChatWorkspaceProps) {
-  // The adapter must stay stable across renders.
-  const [threadListAdapter] = useState(() => new TitledInMemoryThreadListAdapter());
+  // The adapter must stay stable across renders. During server rendering there is no
+  // localStorage, so this falls back to memory; the browser creates its own on hydration.
+  const [threadListAdapter] = useState(() =>
+    createBrowserThreadListAdapter(new ThreadStore({ storage: openBrowserStorage() })),
+  );
   const runtime = useRemoteThreadListRuntime({
     runtimeHook: useThreadRuntime,
     adapter: threadListAdapter,
@@ -104,6 +109,9 @@ export function ChatWorkspace({ ownerName, headline }: ChatWorkspaceProps) {
               <XIcon className="size-5" />
             </button>
             <ThreadList />
+            <p className="text-muted-foreground mt-auto px-2 text-xs">
+              Conversations are saved only in this browser. You can delete them from this list.
+            </p>
           </nav>
           <main className="flex min-w-0 flex-1 flex-col">
             <header className="flex items-center gap-2 border-b px-4 py-2">
