@@ -80,6 +80,14 @@ server accepts when writing, and validates everything it reads back with zod, dr
 entries instead of throwing. This protects the UI, not the server: the server still validates
 every request, because a visitor can edit storage as easily as a request.
 
+M8 adds three untrusted inputs. **GitHub responses** are validated with schemas that drop unknown
+fields (GitHub adds fields over time) and reject wrong types, missing URLs, and oversized bodies;
+**the GitHub configuration** and **the snapshot file** use strict schemas, like the profile, because
+Promptfolio owns their format. Normalization then cleans what is allowed through (control
+characters, homepage only as an http or https URL, topic format, length caps), and
+`addObservedRecords` validates the canonical records once more in core. An invalid configuration
+or snapshot fails the profile load, like an invalid profile file.
+
 ## 4. Where it lives in the code
 
 - File and path checks: [apps/portfolio/src/server/profile.ts](../../apps/portfolio/src/server/profile.ts)
@@ -98,6 +106,10 @@ every request, because a visitor can edit storage as easily as a request.
   read by [apps/portfolio/src/server/prepared-answers.ts](../../apps/portfolio/src/server/prepared-answers.ts)
 - Saved conversations: [apps/portfolio/src/chat/thread-store.ts](../../apps/portfolio/src/chat/thread-store.ts);
   tests in [thread-store.test.ts](../../apps/portfolio/src/chat/thread-store.test.ts)
+- GitHub responses and snapshot (`parseGitHubSnapshot`), configuration (`parseGitHubConfig`):
+  [packages/source-github/src/snapshot.ts](../../packages/source-github/src/snapshot.ts),
+  [config.ts](../../packages/source-github/src/config.ts); observed records in core:
+  [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts)
 
 ## 5. Common pitfalls and misconceptions
 

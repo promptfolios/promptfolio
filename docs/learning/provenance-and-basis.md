@@ -40,6 +40,14 @@ attribute `self-reported` facts to the owner ("Jordan's profile lists…") and t
 and basis when a visitor asks how it knows something. This addresses the M4 finding that answers
 sometimes stated self-reported facts as plain fact; the prompt guides this, but nothing enforces it.
 
+From M8, GitHub repositories are the first `source-observed` records: `addObservedRecords` stamps
+them with `basis: "source-observed"`, the GitHub source id, and the snapshot's `retrievedAt` as
+`observedAt`, and registers a `SourceRef` (`kind: "github"`, the account URL). A repository,
+its README, and its language shares show what the repository contains, not who wrote it, how
+much, or how well; the system prompt tells the model to attribute such facts to GitHub and never
+infer authorship or skill from them. An owner project with the same id as a repository is the
+owner's own (`self-reported`) description of it: both records keep their own provenance.
+
 ## 4. Where it lives in the code
 
 - `ClaimBasis`, `Provenance`, `SourceRef`: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
@@ -49,7 +57,9 @@ sometimes stated self-reported facts as plain fact; the prompt guides this, but 
 - Decision: [ADR 0005](../adr/0005-profile-model-and-provenance.md)
 - Provenance in tool results (`evidence`, `sourcesFor`): [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
   attribution rules in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
-- `source-observed` records from GitHub: **planned** (M8)
+- `source-observed` records from GitHub (`addObservedRecords`): [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts);
+  the attribution rule in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
+- Source and observed basis for GitHub data: [packages/source-github/src/normalize.ts](../../packages/source-github/src/normalize.ts)
 
 ## 5. Common pitfalls and misconceptions
 

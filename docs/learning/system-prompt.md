@@ -68,6 +68,12 @@ The prompt is passed to `streamText` as `instructions` (AI SDK v7's name for the
 `streamText` also refuses `system` messages inside `messages` by default
 (`allowSystemInMessages: false`), a second guard behind the request allowlist.
 
+M8 added one rule for `basis="source-observed"`: attribute such facts to the source ("the public
+GitHub repository shows…"), treat a README as the repository's own description rather than a
+verified claim, never infer authorship, contribution size, popularity, or skill from repositories,
+and read `ownerNotes` as the owner's own description. Changing the prompt changes the instructions
+fingerprint, so prepared answers must be regenerated.
+
 ## 4. Where it lives in the code
 
 - Prompt construction: [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
@@ -76,6 +82,7 @@ The prompt is passed to `streamText` as `instructions` (AI SDK v7's name for the
   (`instructions`); a test checks a client-sent `system` never reaches the model
 - Identity input: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts) (`ProfileIdentity`)
 - Why the client's `system` field must be ignored: [ADR 0007](../adr/0007-chat-ui-assistant-ui.md), consequences
+- The source-observed rule: [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
 
 ## 5. Common pitfalls and misconceptions
 

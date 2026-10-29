@@ -46,6 +46,10 @@ M4 verified layer 1 by building with a fake sentinel key and searching the build
 matches in `.next/static` (client) or anywhere in `.next`. A positive control (the default model
 id) was found in the server output, confirming the search reached it.
 
+`GITHUB_TOKEN` (M8) is optional and read only by the owner-run `fetch-github` command, which passes
+it to `fetchGitHubSnapshot` as an argument. The running app never reads it and never calls GitHub,
+so a deployment does not need it. Error messages from the fetcher never contain it.
+
 ## 4. Where it lives in the code
 
 - Reading the key: [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts),
@@ -54,6 +58,8 @@ id) was found in the server output, confirming the search reached it.
 - Generic error messages: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
   (`genericErrorMessage`), with leak tests in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
 - Example configuration: [apps/portfolio/.env.example](../../apps/portfolio/.env.example)
+- The GitHub token: [apps/portfolio/scripts/fetch-github.ts](../../apps/portfolio/scripts/fetch-github.ts),
+  leak test in [packages/source-github/src/fetch.test.ts](../../packages/source-github/src/fetch.test.ts)
 
 ## 5. Common pitfalls and misconceptions
 

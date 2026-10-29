@@ -57,6 +57,12 @@ flowchart LR
 - **A stream without a model.** A hit is sent as the chunks of a one-step text answer through the
   same `forVisitor` filter, so the browser and its saved threads cannot tell the difference.
 
+GitHub data (M8) is part of the profile content. A refetch that finds the same data only changes
+`retrievedAt`, which the fingerprint ignores, so answers stay current; any changed README excerpt,
+description, topic, language share, license, or month of last push invalidates every prepared
+answer. That is why the adapter keeps dates by month and leaves out star counts, and why the fetch
+command says whether the content changed. Regenerating answers after a refresh is part of M9.
+
 ## 4. Where it lives in the code
 
 - Canonical content: [packages/core/src/profile/canonical.ts](../../packages/core/src/profile/canonical.ts)
@@ -68,6 +74,7 @@ flowchart LR
 - Reading the file: [apps/portfolio/src/server/prepared-answers.ts](../../apps/portfolio/src/server/prepared-answers.ts);
   the owner's script: [apps/portfolio/scripts/prepare-answers.ts](../../apps/portfolio/scripts/prepare-answers.ts)
 - Design and decisions: [M7 plan](../plans/m7-prepared-starter-answers.md)
+- GitHub data in the fingerprint, and the content-change hint: [apps/portfolio/scripts/fetch-github.ts](../../apps/portfolio/scripts/fetch-github.ts)
 
 ## 5. Common pitfalls and misconceptions
 

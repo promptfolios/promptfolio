@@ -25,6 +25,8 @@ that builds it; code links are marked "planned").
 | Tool calling                    | [tool-calling.md](tool-calling.md)                           | M5            | in use  |
 | Browser persistence             | [browser-persistence.md](browser-persistence.md)             | M6            | in use  |
 | Prepared answers and invalidation | [prepared-answers-and-invalidation.md](prepared-answers-and-invalidation.md) | M7 | in use |
+| Source adapters and snapshots   | [source-adapters-and-snapshots.md](source-adapters-and-snapshots.md) | M8 | in use |
+| Calling external APIs           | [calling-external-apis.md](calling-external-apis.md)         | M8            | in use  |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").

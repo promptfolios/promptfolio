@@ -41,6 +41,15 @@ Validation rules:
 | two skills with the same `skillKey`     | issue   |
 | `roleId` or skill name not found        | warning |
 
+From M8 an id has one of two forms. **Slugs** (`acme-frontend`) stay for records only the owner
+writes. **Source keys** (`github.com/jordan/markdown-linter`) identify records observed in a source:
+the location of the record in its source, lowercased, like a Go module path. A source key is unique
+and the same for everyone, so the owner can refer to a repository without a mapping: a project
+whose id equals a repository's id is the owner's description of that repository, and
+`findRecordById` returns the repository with that project as `ownerNotes`. Only projects may share
+an id with a repository; a role or education entry may not. Renaming a repository changes its key.
+This refines ADR 0005's rule against derived ids: for observed records, the source decides the id.
+
 ## 4. Where it lives in the code
 
 - `recordId` regex: [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts)
@@ -52,6 +61,9 @@ Validation rules:
 - Ids as tool arguments: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
   citation rule in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts).
   Checking that cited ids were actually returned: **planned** (M11)
+- Both id forms (`isRecordId`, `isSourceKey`): [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts);
+  repository ids from GitHub (`repositoryKey`): [packages/source-github/src/normalize.ts](../../packages/source-github/src/normalize.ts);
+  id conflicts and annotations: [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts)
 
 ## 5. Common pitfalls and misconceptions
 

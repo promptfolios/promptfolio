@@ -65,6 +65,13 @@ Hiding the *mechanism* is not hiding the *evidence*. Tool names, schemas, and ra
 the server, but the system prompt asks the model to explain where a fact comes from (record id,
 source, basis, date) whenever a visitor asks.
 
+From M8, `listProfileRecords` has a `repositories` section (summaries without the README, with
+`hasOwnerNotes`), and the skill filter also matches a repository's languages and topics, without
+marking the skill as listed. `getProfileRecord` accepts source-key ids and returns a repository
+with its README excerpt and, if the owner annotated it, the owner's project as `ownerNotes`.
+README text is untrusted: it arrives as a string field of a tool result, and the tool set stays two
+read-only tools whatever it says.
+
 ## 4. Where it lives in the code
 
 - Tools, input schemas, call budget: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts),
@@ -76,6 +83,7 @@ source, basis, date) whenever a visitor asks.
   multi-step tests with `MockLanguageModelV4` in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
 - Limits (`maxSteps`, `maxToolCalls`): [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts)
 - Design and decisions: [M5 plan](../plans/m5-tools-grounded-lookup.md)
+- Repository summaries and lookups (`summarizeRepository`, `ownerNotes`): [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts)
 
 ## 5. Common pitfalls and misconceptions
 
