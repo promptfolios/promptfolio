@@ -21,7 +21,7 @@ milestone that needs them arrives:
 | ---------------------------- | ------- | ----------------------------------------------------------------- |
 | `@promptfolio/core`          | M1/M2   | Canonical profile model, validation, provenance, and pure logic.  |
 | `@promptfolio/ai`            | M4      | Server-only model orchestration and tools (planned).              |
-| `@promptfolio/source-github` | M8      | GitHub fetching and normalization (planned; decided at M8).       |
+| `@promptfolio/source-github` | M8      | GitHub fetching, selection, validation, and normalization.        |
 | `@promptfolio/react`         | Maybe   | Reusable UI only if a clear boundary emerges (decided after M3).  |
 
 Rules:
@@ -44,3 +44,7 @@ Rules:
 - Few packages to understand at any time; each new package must justify its boundary.
 - Consumers outside this monorepo cannot use the packages until a build step is added.
 - `core` cannot read files or call APIs itself; applications and adapters supply data to it.
+- *Update (M8):* `@promptfolio/source-github` was created as planned: it depends on `core` and
+  zod only, uses the global `fetch`, and keeps all GitHub-specific knowledge. `core` gained the
+  source-neutral `Repository` record and `addObservedRecords`; the app owns the files and the
+  fetch command ([ADR 0009](0009-github-source-as-fetched-snapshot.md)).

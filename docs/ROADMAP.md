@@ -25,6 +25,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M7 — Seeded conversations and cache       | Done      | `pnpm --filter portfolio prepare-answers`, then a starter answers at once; [plan](plans/m7-prepared-starter-answers.md) |
 | M7.1 — OpenRouter provider                | Done      | `PROMPTFOLIO_MODEL=openrouter` with `OPENROUTER_API_KEY`: a free model answers with tools; [plan](plans/m7-1-openrouter-provider.md) |
 | M7.2 — AI Gateway provider                | Done      | `PROMPTFOLIO_MODEL=gateway` with `AI_GATEWAY_API_KEY` (needs a card on the Vercel team): a $0 model answers; [plan](plans/m7-2-ai-gateway-provider.md) |
+| M8 — GitHub source adapter                | Done      | `pnpm --filter portfolio fetch-github` with `profile/<profile>.github.json`; answers cite `github.com/…` repositories; [plan](plans/m8-github-source-adapter.md) |
 
 Update this table when a milestone is approved.
 
@@ -157,6 +158,19 @@ Update this table when a milestone is approved.
 
 **Exit criteria:** Selected public GitHub data can be normalized into the canonical model with provenance, without leaking GitHub-specific assumptions throughout the app.
 
+Plan and decisions: [M8 plan](plans/m8-github-source-adapter.md), [ADR 0009](adr/0009-github-source-as-fetched-snapshot.md). The owner configures only a GitHub username; repositories are selected automatically, identified by source keys (`github.com/owner/repo`), and fetched by `pnpm --filter portfolio fetch-github` into a snapshot file.
+
+### M8.1 — GitHub contributions (proposed)
+
+**Objective:** Show open-source work outside the owner's own repositories. Split from M8 on 2026-10-29.
+
+**Activities:**
+- Find pull requests by the owner merged into other repositories (search API: `is:pr author:<user> is:merged`; 10 searches per minute without a token, 30 with one).
+- Treat forks and pinned repositories of other owners as contribution candidates, backed by those pull requests.
+- Add a source-observed `contribution` record ("pull request X merged into repository Y") and prompt rules for what a merged pull request does and does not show.
+
+**Exit criteria:** Merged contributions appear as cited, source-observed records without overstating authorship or size. Needs its own plan.
+
 ### M9 — Refresh pipeline and profile versioning
 
 **Objective:** Update source-backed data safely and connect changes to caches.
@@ -168,6 +182,7 @@ Update this table when a milestone is approved.
 - Detect meaningful changes and increment profile version only according to the agreed policy.
 - Connect profile version changes to relevant cache invalidation.
 - Start with manual or startup refresh if sufficient; schedule periodic refresh only when runtime requirements are clear.
+- Schedule the GitHub fetch from M8 (recommended in the [M8 plan](plans/m8-github-source-adapter.md#the-fetch-command-decision-b-schedule-in-m9): a daily GitHub Actions workflow with the built-in `GITHUB_TOKEN` that commits the snapshot when content changed; check the 60-day inactivity rule and whether the host redeploys on such pushes), keep per-repository last known-good data, and regenerate prepared answers after a refresh that changed content.
 
 **Exit criteria:** Refresh outcomes are distinguishable, failed ingestion does not silently erase valid data, and changed facts cannot leave dependent cached answers knowingly stale.
 

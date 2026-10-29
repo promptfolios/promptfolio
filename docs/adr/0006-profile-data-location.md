@@ -32,3 +32,8 @@ file (executable code), and YAML (an extra parser dependency).
   fetched URL) are decided with the deployment approach (M12).
 - The home page is statically prerendered, so in production builds the profile is read at build
   time; refresh behavior is revisited in M9.
+- *Update (M8):* a profile can have a GitHub configuration and snapshot next to it
+  (`<profile>.github.json`, `<profile>.github-snapshot.json`), gitignored for `*.local` profiles
+  like the profile. The fictional example has no GitHub source; a real profile with its GitHub
+  source belongs in the owner's own deployment repository, decided with deployment
+  ([ADR 0009](0009-github-source-as-fetched-snapshot.md)).

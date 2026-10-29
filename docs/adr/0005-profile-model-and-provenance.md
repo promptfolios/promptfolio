@@ -47,3 +47,9 @@ by tools (M5), cited in answers, and tracked by caches (M7, M9).
 - Later sources produce the same record types with `basis: "source-observed"`.
 - Confidence scores, certifications, open-source contributions, and conflict resolution between
   sources are deferred.
+- *Update (M8):* records observed in a source are identified by **source keys** such as
+  `github.com/owner/repo` instead of author-assigned slugs (point 4 still applies to records only
+  the owner writes). Core accepts both forms. A project may share a repository's id as the owner's
+  description of it; both keep their own provenance. The first `source-observed` record kind,
+  `Repository`, was added, and `Profile.repositories` is empty without a code-hosting source
+  ([ADR 0009](0009-github-source-as-fetched-snapshot.md)). Conflict resolution stays deferred.

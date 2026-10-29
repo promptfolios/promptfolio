@@ -10,11 +10,13 @@ in [`ROADMAP.md`](ROADMAP.md#status).
 flowchart TB
     subgraph app["apps/portfolio (Next.js reference app)"]
         direction TB
-        env[".env.local<br/>PROMPTFOLIO_PROFILE_FILE, provider key and model"]
-        files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.answers.json (prepared starter answers)"]
+        env[".env.local<br/>PROMPTFOLIO_PROFILE_FILE, provider key and model,<br/>optional GITHUB_TOKEN (fetch command only)"]
+        files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.answers.json (prepared starter answers)<br/>*.github.json and *.github-snapshot.json (GitHub source)"]
         page["src/app/page.tsx<br/>server: load profile, then render workspace or issues"]
         route["src/app/api/chat/route.ts<br/>server: POST /api/chat"]
         serverProfile["src/server/profile.ts<br/>fs + env"]
+        serverGitHub["src/server/github-source.ts<br/>GitHub configuration and snapshot"]
+        fetchScript["scripts/fetch-github.ts<br/>owner-run: pnpm --filter portfolio fetch-github"]
         serverModel["src/server/model.ts<br/>server-only: PROMPTFOLIO_MODEL = provider:model"]
         serverAnswers["src/server/prepared-answers.ts<br/>reads profile/*.answers.json"]
         script["scripts/prepare-answers.ts<br/>owner-run: pnpm --filter portfolio prepare-answers"]
@@ -29,6 +31,23 @@ flowchart TB
         env --> serverProfile
         env --> serverModel
         serverProfile -- reads --> files
+        serverProfile --> serverGitHub
+        serverGitHub -- reads --> files
+        fetchScript -- writes snapshot --> files
+    end
+
+    subgraph ghpkg["packages/source-github (@promptfolio/source-github)"]
+        direction TB
+        ghIndex["src/index.ts<br/>the only entry point"]
+        ghFetch["fetch.ts<br/>fetchGitHubSnapshot (the only I/O)"]
+        ghSelect["select.ts<br/>pinned, then recent, capped by tier"]
+        ghSnapshot["snapshot.ts<br/>response and snapshot schemas"]
+        ghNormalize["normalize.ts<br/>normalizeGitHubSnapshot (pure)"]
+        ghIndex --> ghFetch
+        ghIndex --> ghNormalize
+        ghFetch --> ghSelect
+        ghFetch --> ghSnapshot
+        ghNormalize --> ghSnapshot
     end
 
     subgraph aipkg["packages/ai (@promptfolio/ai), server-only"]
@@ -56,12 +75,15 @@ flowchart TB
         load["profile/load.ts<br/>loadStructuredProfile(), skillKey()"]
         query["profile/query.ts<br/>findRecordById(), recordsUsingSkill()"]
         canonical["profile/canonical.ts<br/>canonicalProfileContent()"]
+        observed["profile/observed.ts<br/>addObservedRecords()"]
         schema["profile/schema.ts<br/>zod input schema and LIMITS (internal)"]
-        types["profile/types.ts<br/>Profile, Role, Project, Skill, Education, Provenance, SourceRef"]
+        types["profile/types.ts<br/>Profile, Role, Project, Skill, Education,<br/>Repository, Provenance, SourceRef"]
         index --> load
         index --> query
         index --> canonical
+        index --> observed
         index --> types
+        observed --> schema
         load --> schema
         query --> load
     end
@@ -70,10 +92,15 @@ flowchart TB
     route -- "import from @promptfolio/ai" --> aiIndex
     script -- "generatePreparedAnswer" --> aiIndex
     aipkg -- "Profile types, lookups" --> index
+    serverGitHub -- "parse, normalize" --> ghIndex
+    fetchScript -- "fetchGitHubSnapshot" --> ghIndex
+    ghpkg -- "ObservedRecords types" --> index
 ```
 
 `core` depends on zod only: no Node.js, browser, React, Next.js, or AI SDK code. `ai` depends on
 `core`, zod, and the AI SDK (`ai`), but on no provider package: the app passes in a model.
+`source-github` depends on `core` and zod and uses the global `fetch`; only the fetch command
+calls it with the network, the app only parses and normalizes the snapshot file (M8).
 Dependencies point only towards the packages; packages never import the app
 ([ADR 0002](adr/0002-library-first-monorepo-boundaries.md)).
 
@@ -133,7 +160,7 @@ flowchart TD
     subgraph appLoader["apps/portfolio/src/server/profile.ts"]
         direction TB
         choose["1. choose the file from PROMPTFOLIO_PROFILE_FILE<br/>(default: example.profile.json)"]
-        guard["2. reject paths outside profile/"]
+        guard["2. reject anything but a plain file name"]
         read["3. read the file and its modification time"]
         parse["4. parse JSON"]
         choose --> guard --> read --> parse
@@ -152,14 +179,32 @@ flowchart TD
     issues["{ ok: false, issues }"]
     ok["{ ok: true, profile: Profile, warnings }<br/>rendered by the app"]
 
+    subgraph ghSource["apps/portfolio/src/server/github-source.ts (M8)"]
+        direction TB
+        config["5. read profile/*.github.json<br/>none: no GitHub source"]
+        snapshot["6. read profile/*.github-snapshot.json<br/>none: warning, no repositories"]
+        normalizeGh["7. parseGitHubSnapshot, normalizeGitHubSnapshot<br/>(@promptfolio/source-github)"]
+        merge["8. addObservedRecords (@promptfolio/core)<br/>stamp source-observed, keep owner records"]
+        config --> snapshot --> normalizeGh --> merge
+    end
+
     file --> choose
     parse --> validate
     read -- failure --> fileIssues
     parse -- failure --> fileIssues
     validate -- failure --> issues
     dupes -- failure --> issues
-    dangling --> ok
+    dangling --> config
+    config -- "invalid" --> issues
+    snapshot -- "invalid" --> issues
+    merge -- "id conflict" --> issues
+    merge --> ok
 ```
+
+The snapshot is written only by `pnpm --filter portfolio fetch-github` (M8), which calls GitHub,
+selects the owner's repositories automatically, and replaces the file only when every request
+succeeded. Requests never call GitHub. See [ADR 0009](adr/0009-github-source-as-fetched-snapshot.md)
+and [source adapters and snapshots](learning/source-adapters-and-snapshots.md).
 
 ## Chat workspace
 
@@ -211,13 +256,19 @@ Profile
  │                  responsibilities[], outcomes[], links[], skills[] → skills.name, provenance }
  ├─ skills[]      { name (case-insensitive key), category?, provenance }
  ├─ education[]   { id, institution, credential, field?, start?, end?, provenance }
+ ├─ repositories[] { id (source key, e.g. github.com/owner/name), name, fullName, url,
+ │                  description?, homepage?, languages[{ name, percent }], topics[], fork,
+ │                  archived, created?, lastActivity?, license?, readme?, provenance }
  └─ sources[]     { id, kind, label, url?, retrievedAt }
 
 provenance = { sourceId → sources.id, basis: self-reported | source-observed | derived, observedAt }
 ```
 
 Record ids are the arguments of tool lookups and the targets of citations; `basis` lets the
-assistant say whose claim a fact is ([ADR 0005](adr/0005-profile-model-and-provenance.md)).
+assistant say whose claim a fact is ([ADR 0005](adr/0005-profile-model-and-provenance.md)). Ids
+are slugs for records only the owner writes and source keys for records observed in a source; a
+project with a repository's id is the owner's description of that repository, returned with it as
+`ownerNotes` ([ADR 0009](adr/0009-github-source-as-fetched-snapshot.md)).
 
 ## Planned extensions
 
@@ -228,7 +279,9 @@ flowchart LR
     route --> ai["@promptfolio/ai (M4, done)<br/>tools and profile lookups (M5, done)"]
     ai --> core["@promptfolio/core"]
     ai --> prepared["prepared starter answers (M7, done)"]
-    github["GitHub adapter (M8)"] -- "produces records with<br/>basis source-observed, kind github" --> core
+    github["@promptfolio/source-github (M8, done)"] -- "repositories with<br/>basis source-observed" --> core
+    contributions["contributions: forks and merged pull requests (M8.1)"] -.-> github
+    refresh["scheduled refresh, status, versions (M9)"] -.-> github
 ```
 
 ## Decision records
@@ -243,3 +296,4 @@ flowchart LR
 | [0006](adr/0006-profile-data-location.md)             | Profile data location in the reference app    | Accepted |
 | [0007](adr/0007-chat-ui-assistant-ui.md)              | assistant-ui, Tailwind, and shadcn for chat   | Accepted |
 | [0008](adr/0008-prepared-answers-as-files.md)         | Prepared starter answers as reviewed files    | Accepted |
+| [0009](adr/0009-github-source-as-fetched-snapshot.md) | GitHub as a fetched snapshot, source-key ids  | Accepted |
