@@ -23,6 +23,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M5 — Tools and grounded profile lookup    | Done      | `pnpm dev`: answers cite record ids; tool calls in the server log; [plan](plans/m5-tools-grounded-lookup.md) |
 | M6 — Conversation persistence             | Done      | `pnpm dev`: conversations survive a reload, saved only in this browser; [plan](plans/m6-browser-conversation-persistence.md) |
 | M7 — Seeded conversations and cache       | Done      | `pnpm --filter portfolio prepare-answers`, then a starter answers at once; [plan](plans/m7-prepared-starter-answers.md) |
+| M7.1 — OpenRouter provider                | Done      | `PROMPTFOLIO_MODEL=openrouter` with `OPENROUTER_API_KEY`: a free model answers with tools; [plan](plans/m7-1-openrouter-provider.md) |
 
 Update this table when a milestone is approved.
 

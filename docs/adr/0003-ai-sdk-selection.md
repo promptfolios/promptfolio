@@ -1,6 +1,7 @@
 # ADR 0003: AI SDK selection
 
-- **Status:** Accepted (confirmed at M4, 2026-10-28; see "Confirmation at M4")
+- **Status:** Accepted (confirmed at M4, 2026-10-28; see "Confirmation at M4"; OpenRouter added
+  at M7.1, 2026-10-29; see "Update at M7.1")
 - **Date:** 2026-10-27
 
 ## Context
@@ -59,6 +60,26 @@ Checked against the installed types of `ai` 7.0.154, `@ai-sdk/anthropic` 4.0.89,
 - Tests use `MockLanguageModelV4` from `ai/test` and `simulateReadableStream` from `ai`.
 - The UI message stream forwards provider `custom` parts (for example Anthropic's message id and
   usage) with no option to turn them off; `@promptfolio/ai` filters them out.
+
+## Update at M7.1
+
+Gemini's free tier kept answering 429 and 503, which blocked development and the
+`prepare-answers` script. A third provider, `openrouter`, was added with
+`@openrouter/ai-sdk-provider` 3.1.0 (peer `ai ^7.0.0`, `LanguageModelV4`), maintained by
+OpenRouter. See the [M7.1 plan](../plans/m7-1-openrouter-provider.md).
+
+- **Why a router is acceptable here.** This ADR prefers direct provider packages to avoid coupling
+  to one hosting vendor. OpenRouter is a gateway too, but it is optional: one entry in
+  `src/server/model.ts`, last in the fallback order, and the direct providers stay.
+  `@promptfolio/ai` does not know about it.
+- **Why this package and not `@ai-sdk/openai-compatible`.** Only this one sends OpenRouter's
+  documented `reasoning` parameter and returns `reasoning_details` between tool steps, which
+  thinking models can need in the 4-step loop.
+- **Reasoning.** Set through `providerOptions.openrouter.reasoning.effort: "low"`. The adapter
+  ignores the call-level `reasoning` option.
+- **Default model.** A free model, `google/gemma-4-31b-it:free` (developer's choice). Free models
+  have daily quotas, are added and removed often, and are served by hosts with their own data
+  policies, so the default may need replacing and a paid model is advised for the real profile.
 
 ## Consequences
 
