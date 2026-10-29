@@ -21,6 +21,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M3 — Minimal application shell            | Done      | `pnpm dev`: chat workspace with starters, threads, placeholder replies |
 | M4 — First AI integration                 | Done      | `pnpm dev` with a Gemini or Claude key: streamed replies; [plan](plans/m4-first-ai-integration.md) |
 | M5 — Tools and grounded profile lookup    | Done      | `pnpm dev`: answers cite record ids; tool calls in the server log; [plan](plans/m5-tools-grounded-lookup.md) |
+| M6 — Conversation persistence             | Done      | `pnpm dev`: conversations survive a reload, saved only in this browser; [plan](plans/m6-browser-conversation-persistence.md) |
 
 Update this table when a milestone is approved.
 

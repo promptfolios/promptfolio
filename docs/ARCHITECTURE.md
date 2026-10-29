@@ -147,7 +147,9 @@ Promptfolio code wires the runtime and supplies adapters and configuration.
 flowchart TD
     ws["ChatWorkspace<br/>use client, src/components/chat-workspace.tsx"]
     list["useRemoteThreadListRuntime"]
-    adapter["TitledInMemoryThreadListAdapter (src/chat/)<br/>thread list in memory, titled from the first message<br/>M6: replace with a persistent adapter"]
+    adapter["createBrowserThreadListAdapter (src/chat/)<br/>thread list and per-thread history,<br/>titled from the first message"]
+    store["ThreadStore (src/chat/)<br/>validate on read, sanitize and limit on write"]
+    ls[("localStorage<br/>promptfolio:v1:*<br/>(memory if unavailable)")]
     thread["useThreadRuntime(), once per thread<br/>useAISDKRuntime(useChat({ transport }))"]
     transport["DefaultChatTransport({ api: /api/chat })<br/>sends id, messages, trigger: no system, no tools"]
     config["AuiConfig({ suggestions: Suggestions(STARTERS) })<br/>src/config/starters.ts"]
@@ -156,6 +158,8 @@ flowchart TD
     ws --> list
     list -- adapter --> adapter
     list -- runtimeHook --> thread
+    adapter -- "unstable_useAdapters: history" --> thread
+    adapter --> store --> ls
     thread --> transport
     ws --> config
     ws -- renders --> ui
@@ -165,6 +169,12 @@ flowchart TD
 own thread list and cannot use the titled adapter, so the workspace composes `useChat` (AI SDK)
 and `useAISDKRuntime` (assistant-ui) itself. Messages have `parts`; the browser only ever receives
 text and step boundaries, because tool activity stays on the server (M5).
+
+Conversations are saved only in the visitor's browser (M6): the server stores no history and still
+validates every request, so saved history is as untrusted as typed history. The store keeps only
+the shape the server accepts, validates what it reads back, and enforces thread, size, and 30-day
+retention limits. See [browser persistence](learning/browser-persistence.md) and the
+[M6 plan](plans/m6-browser-conversation-persistence.md).
 
 ## Canonical profile model
 

@@ -35,6 +35,11 @@ Use **assistant-ui** with its shadcn-based styled components, which brings **Tai
 - **Thread list:** `TitledInMemoryThreadListAdapter`, which extends assistant-ui's
   `InMemoryThreadListAdapter` to title threads from their first message. Threads reset on reload;
   a persistent adapter is planned for M6.
+  *Update (M6):* replaced by `createBrowserThreadListAdapter`, which saves threads in
+  `localStorage` and supplies per-thread history through `unstable_useAdapters`. assistant-ui's own
+  `createLocalStorageAdapter` was not used: it is exported only from `@assistant-ui/core`, does not
+  validate stored AI SDK messages, and has no size or retention limits (see the
+  [M6 plan](../plans/m6-browser-conversation-persistence.md)).
 - **Starters:** `Suggestions(...)` from `src/config/starters.ts`, shown on the welcome screen;
   selecting one sends its prompt as the first message.
 
