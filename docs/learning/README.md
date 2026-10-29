@@ -23,6 +23,7 @@ that builds it; code links are marked "planned").
 | Streaming                       | [streaming.md](streaming.md)                                 | M4            | in use  |
 | Server-side secrets             | [server-side-secrets.md](server-side-secrets.md)             | M4            | in use  |
 | Tool calling                    | [tool-calling.md](tool-calling.md)                           | M5            | in use  |
+| Browser persistence             | [browser-persistence.md](browser-persistence.md)             | M6            | in use  |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").

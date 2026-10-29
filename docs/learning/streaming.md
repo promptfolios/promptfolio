@@ -72,7 +72,7 @@ single text chunk, because that is the shape assistant-ui expects.
 - Browser side (`useChat` with `DefaultChatTransport`):
   [apps/portfolio/src/components/chat-workspace.tsx](../../apps/portfolio/src/components/chat-workspace.tsx)
 - Cancellation: `request.signal` passed to `streamText` as `abortSignal` (chat-handler.ts)
-- Title stream (`createAssistantStream`): [apps/portfolio/src/chat/thread-list-adapter.ts](../../apps/portfolio/src/chat/thread-list-adapter.ts)
+- Title stream (`createAssistantStream`): [apps/portfolio/src/chat/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.ts)
 - SDK choice: [ADR 0003](../adr/0003-ai-sdk-selection.md)
 
 ## 5. Common pitfalls and misconceptions

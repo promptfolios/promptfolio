@@ -1,6 +1,7 @@
 # Validation at boundaries
 
-First appears in: **M2** (profile loading). Status: **in use**; extended in M4 (chat route) and M5 (tool arguments, output allowlist).
+First appears in: **M2** (profile loading). Status: **in use**; extended in M4 (chat route), M5 (tool arguments, output allowlist), and M6
+(browser storage).
 
 ## 1. What it is
 
@@ -18,6 +19,8 @@ code can trust it without checking again.
   `tools`, file parts, or a forged conversation history
   ([ADR 0007](../adr/0007-chat-ui-assistant-ui.md), consequences).
 - From M5, model output (tool arguments) is untrusted too.
+- From M6, data read back from the browser's `localStorage` is untrusted: it may be malformed, old,
+  oversized, or edited by hand.
 
 ## 3. How it works
 
@@ -67,6 +70,11 @@ The stream back to the browser mirrors the request allowlist: `forVisitor` passe
 types needed to show a text answer, and removes `providerMetadata` from those chunks. Tool calls and results never leave the server, so the browser
 has no tool parts to send back, and the request allowlist keeps rejecting them.
 
+Saved conversations (M6) are a boundary in the browser: `ThreadStore` keeps only the shape the
+server accepts when writing, and validates everything it reads back with zod, dropping invalid
+entries instead of throwing. This protects the UI, not the server: the server still validates
+every request, because a visitor can edit storage as easily as a request.
+
 ## 4. Where it lives in the code
 
 - File and path checks: [apps/portfolio/src/server/profile.ts](../../apps/portfolio/src/server/profile.ts)
@@ -81,6 +89,8 @@ has no tool parts to send back, and the request allowlist keeps rejecting them.
   tests ("rejects …") in [profile-tools.test.ts](../../packages/ai/src/profile-tools.test.ts), and
   invalid or unknown calls from the model in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
 - Output allowlist (`VISITOR_CHUNK_TYPES`): [packages/ai/src/chat-handler.ts](../../packages/ai/src/chat-handler.ts)
+- Saved conversations: [apps/portfolio/src/chat/thread-store.ts](../../apps/portfolio/src/chat/thread-store.ts);
+  tests in [thread-store.test.ts](../../apps/portfolio/src/chat/thread-store.test.ts)
 
 ## 5. Common pitfalls and misconceptions
 
