@@ -15,6 +15,7 @@ export const chatSourcesSchema: z.ZodType<ChatSources> = z.object({
       z.object({
         id: z.string().max(300),
         record: z.string().max(500),
+        url: z.string().max(2048).optional(),
         evidence: z
           .array(
             z.object({

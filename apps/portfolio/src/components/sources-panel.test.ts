@@ -29,7 +29,29 @@ describe("SourcesPanel", () => {
     expect(html).toContain("Owner&#x27;s file");
     expect(html).toContain("2026-10-01");
     expect(html).not.toContain("could not be matched");
+    expect(html).not.toContain("<a ");
   });
+
+  it("links a record that has an address, opening in a new tab", () => {
+    const url = "https://github.com/jordan-example/markdown-linter";
+    const html = render({ sources: [{ ...entry, url }], unverifiedCitations: 0 });
+
+    expect(html).toContain(`href="${url}"`);
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer nofollow"');
+    expect(html).toContain(">Service Catalog</a>");
+  });
+
+  it.each(["javascript:alert(1)", "data:text/html,hi", "not a url"])(
+    "shows the name as plain text for the unsafe address %s",
+    (url) => {
+      const html = render({ sources: [{ ...entry, url }], unverifiedCitations: 0 });
+
+      expect(html).not.toContain("<a ");
+      expect(html).not.toContain(url);
+      expect(html).toContain("Service Catalog");
+    },
+  );
 
   it.each([
     [1, "1 citation could not be matched"],

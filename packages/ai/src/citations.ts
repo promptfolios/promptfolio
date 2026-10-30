@@ -29,6 +29,8 @@ export interface CitedSource {
   id: string;
   /** A short name for the record. */
   record: string;
+  /** Where the visitor can see the record itself, if it has one place: a repository or a commit. */
+  url?: string;
   evidence: SourceEvidence[];
 }
 
@@ -131,6 +133,7 @@ function citedSource(profile: Profile, id: string): CitedSource | undefined {
       return {
         id,
         record,
+        url: match.record.url,
         evidence: provenances.flatMap((item) => (item ? [toEvidence(item)] : [])),
       };
     }

@@ -1,11 +1,28 @@
 import type { FC } from "react";
 import { chatSourcesSchema } from "@/chat/sources";
+import { safeHref } from "@/components/assistant-ui/utils/href";
 
 function unverifiedNote(count: number): string {
   return count === 1
     ? "1 citation could not be matched to a lookup in this answer."
     : `${count} citations could not be matched to a lookup in this answer.`;
 }
+
+/** A record's name, linked to the record itself when it has a safe address. */
+const SourceName: FC<{ record: string; url: string | undefined }> = ({ record, url }) => {
+  const href = safeHref(url);
+  if (href === undefined) return <span className="text-foreground break-words">{record}</span>;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer nofollow"
+      className="break-words text-blue-600 hover:underline dark:text-blue-400"
+    >
+      {record}
+    </a>
+  );
+};
 
 /**
  * Where an answer's cited facts come from, built by the server from profile records. It is drawn
@@ -35,7 +52,7 @@ export const SourcesPanel: FC<{ data: unknown }> = ({ data }) => {
                 tabIndex={-1}
                 className="focus:bg-accent rounded outline-none"
               >
-                <span className="text-foreground break-words">{source.record}</span>
+                <SourceName record={source.record} url={source.url} />
                 {source.evidence.map((evidence) => (
                   <div key={`${evidence.source}:${evidence.basis}`}>
                     {evidence.basis} · {evidence.source} · observed{" "}

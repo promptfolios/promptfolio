@@ -121,6 +121,8 @@ describe("buildChatSources", () => {
     ])?.sources;
 
     expect(sources?.map((source) => source.record)).toEqual(["Engineer, Globex", "BSc, Example U"]);
+    // Neither has one place to point at, so no link.
+    expect(sources?.some((source) => "url" in source)).toBe(false);
   });
 
   it("accepts the identity block without a lookup, with its own provenance", () => {
@@ -142,6 +144,7 @@ describe("buildChatSources", () => {
     const result = buildChatSources(testProfile(), `See [${REPOSITORY_ID}].`, [REPOSITORY_ID]);
 
     expect(result?.sources[0]?.record).toBe("jordan-example/markdown-linter");
+    expect(result?.sources[0]?.url).toBe("https://github.com/jordan-example/markdown-linter");
     expect(result?.sources[0]?.evidence.map(({ basis, source }) => [basis, source])).toEqual([
       ["source-observed", "Public GitHub data"],
       ["self-reported", "Owner's file"],
