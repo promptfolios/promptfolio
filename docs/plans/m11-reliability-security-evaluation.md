@@ -112,7 +112,7 @@ Automated tests use no network, Redis, email, or model.
 
 ### M11.1
 
-Recorded 2026-10-31. Approved by the developer in review on the same day; the checks under "Not run" remain open.
+Recorded 2026-10-31. Approved by the developer in review on the same day.
 
 **Automated:** `pnpm verify` passes: lint, typecheck, 624 tests (`core` 74, `contact` 48, `source-github` 119, `ai` 144, app 239), and the build, with the same two "dynamic filesystem access" warnings as before. No test uses the network, Redis, email, or a model.
 
@@ -135,4 +135,6 @@ The screenshot could not be taken because the app window was hidden, so results 
 
 **Added beyond the file list:** `apps/portfolio/vitest.config.ts`, so route tests can load the `@` alias; `docs/guides/chat-limit-setup.md`, because the limit applies with or without the contact form; and `markdown-image.tsx`, so the image rule can be tested without the vendored Markdown component.
 
-**Not run:** manual check 1 against a real free Redis database, so `EXPIRE ... NX` in a transaction has not been seen on Upstash. If Upstash refused it, every live answer would get a 503. The real firewall 429 and the deployed IP header wait for M12. A prepared answer being served while the limit is reached has handler tests but was not seen in the browser, because the example answers are stale until M11.3 regenerates them.
+**Developer's check on real Upstash (2026-10-31, reported by the developer):** under `next dev` with a real Upstash database and a real model, 19 live requests in the server log, none with `limit unavailable`, so Upstash accepts `INCR` and `EXPIRE ... NX` in one transaction. The developer checked the two keys in the Data Browser and reported the counts, the falling TTL, and the hashed key name as expected. The same log shows the new summary on a real provider 429, with no request or response text. The 31st answer and the site cap were not repeated on Upstash; they ran only against the stand-in.
+
+**Not run:** the real firewall 429 and the deployed IP header wait for M12. A prepared answer being served while the limit is reached has handler tests but was not seen in the browser, because the example answers are stale until M11.3 regenerates them.

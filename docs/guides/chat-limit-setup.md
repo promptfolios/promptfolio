@@ -4,9 +4,9 @@ How to turn on the daily limit on live answers. A public deployment needs it: wi
 outside `next dev`, the assistant refuses live answers. Design and decisions:
 [ADR 0013](../adr/0013-chat-daily-limits.md).
 
-> **Status:** tested against a local stand-in that follows Upstash's documented API. It has not yet run
-> against a real Upstash database, and the firewall rule has not been applied anywhere. Both wait for your
-> approval or for deployment (M12).
+> **Status:** counting has been checked on a real Upstash database under `next dev` (2026-10-31). Reaching the
+> limits has been tested only against a local stand-in. The firewall rule has not been applied anywhere; that
+> happens at deployment (M12).
 
 ## 1. Create a Redis database
 

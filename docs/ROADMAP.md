@@ -28,7 +28,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M8 — GitHub source adapter                | Done      | `pnpm --filter portfolio refresh` (named `fetch-github` until M9) with `profile/<profile>.github.json`; answers cite `github.com/…` repositories; [plan](plans/m8-github-source-adapter.md) |
 | M8.1 — GitHub contributions               | Done      | `pnpm --filter portfolio refresh`: commits in other owners' public repositories become contributions; answers cite `github.com/…/commit/…`; [plan](plans/m8-1-github-contributions.md) |
 | M9 — Refresh pipeline and versions         | Done      | `pnpm --filter portfolio refresh`: exit 0, 2, or 1, `profile/<profile>.refresh-status.json`, snapshot unchanged when nothing changed; workflow template in [the guide](guides/scheduled-refresh.md); [plan](plans/m9-refresh-pipeline-and-versions.md) |
-| M11.1 — Protection and failure paths       | Done      | `pnpm test`; [the guide](guides/chat-limit-setup.md): 30 live answers per visitor and 200 for the site per day, then a limit message; a real Upstash run is still open; [plan](plans/m11-reliability-security-evaluation.md) |
+| M11.1 — Protection and failure paths       | Done      | `pnpm test`; [the guide](guides/chat-limit-setup.md): 30 live answers per visitor and 200 for the site per day, then a limit message; [plan](plans/m11-reliability-security-evaluation.md) |
 
 Update this table when a milestone is approved.
 
