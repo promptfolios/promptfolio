@@ -35,6 +35,8 @@ action, not an SDK feature ([ADR 0003](0003-ai-sdk-selection.md)).
    their IP address, by its first 64 bits for IPv6. `sent` and `unknown` keep the claim, `failed`
    releases it, and a retry of the same email passes. If the limit cannot be checked, nothing is sent.
    A host rule per IP address stays as a guard against bursts, and covers `prepare`.
+   *Update (M11.1):* that rule now covers all of `/api/` at 40 requests per 600 seconds, because Hobby
+   allows one rule ([ADR 0013](0013-chat-daily-limits.md)).
 
 ## Alternatives
 

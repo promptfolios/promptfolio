@@ -20,7 +20,13 @@ flowchart TB
         serverModel["src/server/model.ts<br/>server-only: PROMPTFOLIO_MODEL = provider:model"]
         serverAnswers["src/server/prepared-answers.ts<br/>reads profile/*.answers.json"]
         contactRoutes["src/app/api/contact/prepare and send<br/>server: POST routes"]
-        serverContact["src/server/contact.ts<br/>server-only: contact configuration,<br/>Resend and Redis adapters, visitor hash"]
+        serverContact["src/server/contact.ts<br/>server-only: contact configuration,<br/>Resend and Redis adapters"]
+        serverChatLimit["src/server/chat-limit.ts<br/>server-only: daily limits on live answers"]
+        serverShared["src/server/redis.ts and visitor.ts<br/>server-only: the store's settings, visitor hash"]
+        route --> serverChatLimit
+        env --> serverChatLimit
+        serverChatLimit --> serverShared
+        serverContact --> serverShared
         contactRoutes --> serverContact
         env --> serverContact
         serverContact --> serverProfile
@@ -172,6 +178,10 @@ A prepared answer is used only for the first message of a conversation, on an ex
 match, when the profile content and the instructions are unchanged since it was generated;
 otherwise the request is answered live (M7, [ADR 0008](adr/0008-prepared-answers-as-files.md),
 [prepared answers and invalidation](learning/prepared-answers-and-invalidation.md)).
+
+A live answer first takes one count from the daily limits, 30 per visitor and 200 for the site, held in
+Redis. If the limit is reached the visitor gets a 429, and if it cannot be checked a 503; the model is not
+called in either case (M11.1, [ADR 0013](adr/0013-chat-daily-limits.md)).
 
 The server owns the instructions and the tools: the client never sends a system prompt or tools,
 and the handler would drop them if it did. Tool calls and results stay on the server; the browser

@@ -55,8 +55,8 @@ To limit its downsides:
   Actions workflow ([ADR 0010](0010-refresh-status-and-content-versions.md)).
   *Update (M10.1):* as expected here, the contact limit needed small external storage: Upstash Redis
   holds one email per visitor per day, a host's firewall stops bursts, and the email provider's
-  idempotency key stops duplicates ([ADR 0012](0012-contact-workflow.md)). M11 reviews this together
-  with chat limits.
+  idempotency key stops duplicates ([ADR 0012](0012-contact-workflow.md)). M11.1 uses the same store
+  for daily limits on live chat answers ([ADR 0013](0013-chat-daily-limits.md)).
 - Workspace packages are consumed from TypeScript source. Next.js 16.4 (Turbopack) compiles them
   without `transpilePackages`.
 - Next.js 16.4 type-checks with the project-local `tsc` CLI by default, so TypeScript 7 works for

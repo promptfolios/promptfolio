@@ -44,7 +44,8 @@ server, so never prefix them with `NEXT_PUBLIC_`.
 | `UPSTASH_REDIS_REST_TOKEN` | The REST token from step 2 |
 
 If only some are set, the button stays hidden and the log names what is missing, so the daily limit
-cannot be left out by accident.
+cannot be left out by accident. The two Redis variables alone do not turn the form on, because the
+[chat limit](chat-limit-setup.md) uses the same database.
 
 The home page is prerendered, so `next build` decides whether the button appears. Set the variables
 before building, and rebuild after turning the form on or off. The routes read them on every request, so
@@ -60,14 +61,15 @@ and Redis commands. A host rule stops bursts before they reach the app. On Verce
 [WAF rate limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting), available on all
 plans.
 
-- **Condition:** the path starts with `/api/contact/`.
-- **Limit:** 10 requests per 600 seconds per IP address. One message takes two requests, and corrections
+- **Condition:** the path starts with `/api/`, which covers chat and this form with one rule.
+- **Limit:** 40 requests per 600 seconds per IP address. One message takes two requests, and corrections
   take more.
 - **Action:** the default, 429.
 
 Limits to know: the longest window is 10 minutes on Hobby and Pro, and 1 hour on Enterprise, so this rule
-cannot enforce a daily limit by itself. Hobby projects get one rate-limit rule, so choose this one or a
-chat rule (M11). Counters are per region.
+cannot enforce a daily limit by itself. Hobby projects get one rate-limit rule, which is why it covers all
+of `/api/` ([ADR 0013](../adr/0013-chat-daily-limits.md)). On Pro you could add a stricter rule for
+`/api/contact/`. Counters are per region.
 
 **On a host other than Vercel:** the app identifies visitors from `x-vercel-forwarded-for`, then
 `x-forwarded-for`. Vercel overwrites these, so a client cannot choose them. Elsewhere, a proxy must
