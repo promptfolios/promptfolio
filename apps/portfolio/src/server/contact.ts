@@ -1,6 +1,4 @@
 import "server-only";
-import { createHmac } from "node:crypto";
-import { isIP } from "node:net";
 import {
   CONTACT_LIMITS,
   type ContactOptions,
@@ -8,13 +6,12 @@ import {
   type ContactSendLimiter,
   type ContactSendOutcome,
 } from "@promptfolio/contact";
-import { Redis } from "@upstash/redis";
+import type { Redis } from "@upstash/redis";
 import { Resend } from "resend";
 import { z } from "zod";
 import { loadAppProfile } from "./profile";
-
-/** Environment variables, as in `process.env`. */
-export type ContactEnv = Readonly<Record<string, string | undefined>>;
+import { type AppEnv, createRedisClient, loadRedisConfig, REDIS_VARS } from "./redis";
+import { createVisitorIdentifier, MIN_SECRET_CHARS } from "./visitor";
 
 export interface ContactConfig {
   apiKey: string;
@@ -33,16 +30,13 @@ export type ContactConfigResult =
   /** Partly or wrongly configured. `problem` names a variable, never its value. */
   | { status: "invalid"; problem: string };
 
+/** The form's own settings. Setting any of them turns the form on, which then also needs Redis. */
 const CONTACT_VARS = [
   "RESEND_API_KEY",
   "CONTACT_TO_EMAIL",
   "CONTACT_FROM_EMAIL",
   "CONTACT_TOKEN_SECRET",
-  "UPSTASH_REDIS_REST_URL",
-  "UPSTASH_REDIS_REST_TOKEN",
 ] as const;
-
-const MIN_SECRET_CHARS = 32;
 
 const addressSchema = z.email();
 /** `Name <address>`, the form Resend documents for a sender with a display name. */
@@ -53,17 +47,17 @@ const NAMED_ADDRESS = /^[^<>]*<([^<>\s]+)>$/;
  * the build, so the address and the keys cannot reach the browser through it. Checked per request
  * rather than at startup, so the app builds and renders without it, as with the model keys.
  */
-export function loadContactConfig(env: ContactEnv = process.env): ContactConfigResult {
-  const [apiKey, recipientAddress, from, tokenSecret, redisUrl, redisToken] = CONTACT_VARS.map(
-    (name) => env[name]?.trim(),
+export function loadContactConfig(env: AppEnv = process.env): ContactConfigResult {
+  const [apiKey, recipientAddress, from, tokenSecret] = CONTACT_VARS.map((name) =>
+    env[name]?.trim(),
   );
-  if (!apiKey && !recipientAddress && !from && !tokenSecret && !redisUrl && !redisToken) {
-    return { status: "off" };
-  }
+  // Redis alone does not turn the form on: the chat limit uses the same database.
+  if (!apiKey && !recipientAddress && !from && !tokenSecret) return { status: "off" };
+
   // The Redis settings are required: a missed variable must not quietly remove the daily limit.
-  if (!apiKey || !recipientAddress || !from || !tokenSecret || !redisUrl || !redisToken) {
-    const missing = CONTACT_VARS.filter((name) => !env[name]?.trim()).join(", ");
-    return { status: "invalid", problem: `not set: ${missing}` };
+  const missing = [...CONTACT_VARS, ...REDIS_VARS].filter((name) => !env[name]?.trim());
+  if (!apiKey || !recipientAddress || !from || !tokenSecret || missing.length > 0) {
+    return { status: "invalid", problem: `not set: ${missing.join(", ")}` };
   }
   if (!addressSchema.safeParse(recipientAddress).success) {
     return { status: "invalid", problem: "CONTACT_TO_EMAIL is not an email address" };
@@ -81,18 +75,24 @@ export function loadContactConfig(env: ContactEnv = process.env): ContactConfigR
       problem: `CONTACT_TOKEN_SECRET must have at least ${MIN_SECRET_CHARS} characters`,
     };
   }
-  // Any host: a local Redis proxy in development is on `localhost`, which `z.httpUrl` refuses.
-  if (!z.url({ protocol: /^https?$/ }).safeParse(redisUrl).success) {
-    return { status: "invalid", problem: "UPSTASH_REDIS_REST_URL is not a URL" };
-  }
+  const redis = loadRedisConfig(env);
+  if (redis.status === "invalid") return redis;
+  if (redis.status !== "ok") return { status: "invalid", problem: "not set: Redis settings" };
   return {
     status: "ok",
-    config: { apiKey, recipientAddress, from, tokenSecret, redisUrl, redisToken },
+    config: {
+      apiKey,
+      recipientAddress,
+      from,
+      tokenSecret,
+      redisUrl: redis.config.url,
+      redisToken: redis.config.token,
+    },
   };
 }
 
 /** Whether to show the Contact button. The browser learns this and nothing else about the setup. */
-export function isContactEnabled(env: ContactEnv = process.env): boolean {
+export function isContactEnabled(env: AppEnv = process.env): boolean {
   const result = loadContactConfig(env);
   if (result.status === "invalid") console.error(`[contact] not configured: ${result.problem}`);
   return result.status === "ok";
@@ -164,49 +164,6 @@ export function createRedisLimiter(redis: LimiterRedis): ContactSendLimiter {
   };
 }
 
-const MAPPED_IPV4 = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i;
-
-/**
- * The part of an address that identifies one connection, or `undefined` if it is not an address.
- * One IPv6 connection often controls a whole /64 block, so only those first 64 bits count.
- */
-export function visitorNetwork(address: string): string | undefined {
-  const plain = address.trim().split("%")[0] ?? "";
-  const mapped = MAPPED_IPV4.exec(plain)?.[1];
-  if (mapped) return mapped;
-
-  const version = isIP(plain);
-  if (version === 4) return plain;
-  if (version !== 6) return undefined;
-
-  const groupsOf = (part: string | undefined) => (part ? part.split(":") : []);
-  const [start, end] = plain.split("::");
-  const head = groupsOf(start);
-  // A dotted tail stands for two groups; only the count matters, as it is past the first 64 bits.
-  const tail = groupsOf(end).flatMap((group) => (group.includes(".") ? ["0", "0"] : [group]));
-  const zeros = Array<string>(8 - head.length - tail.length).fill("0");
-  return [...head, ...zeros, ...tail]
-    .slice(0, 4)
-    .map((group) => Number.parseInt(group, 16).toString(16))
-    .join(":");
-}
-
-/**
- * Identifies a visitor by a keyed hash of their IP address, so the store never holds the address.
- * Vercel overwrites these headers, so a client cannot choose them. Another host must do the same.
- * `x-forwarded-for` is the fallback for `next dev` and `next start`. The label keeps this hash
- * apart from the token signatures made with the same secret.
- */
-export function createVisitorIdentifier(secret: string) {
-  return async (request: Request): Promise<string | undefined> => {
-    const header =
-      request.headers.get("x-vercel-forwarded-for") ?? request.headers.get("x-forwarded-for");
-    const network = header ? visitorNetwork(header.split(",")[0] ?? "") : undefined;
-    if (!network) return undefined;
-    return createHmac("sha256", secret).update(`contact-visitor:${network}`).digest("base64url");
-  };
-}
-
 /**
  * The shared part of both routes: configuration, the owner's name for the review screen, the
  * sender, and the daily limit. Problems are logged for the owner; visitors only see that nothing
@@ -232,17 +189,9 @@ export async function withContactOptions(
     recipient: { name: profile.profile.identity.name, address: recipientAddress },
     from,
     sender: createResendSender(new Resend(apiKey)),
-    limiter: createRedisLimiter(
-      new Redis({
-        url: redisUrl,
-        token: redisToken,
-        // Values are compared as stored. No retries: one landing after the timeout could block a
-        // visitor who was told nothing was sent.
-        automaticDeserialization: false,
-        retry: { retries: 0 },
-      }),
-    ),
-    identifyVisitor: createVisitorIdentifier(tokenSecret),
+    limiter: createRedisLimiter(createRedisClient({ url: redisUrl, token: redisToken })),
+    // The label keeps this hash apart from the token signatures made with the same secret.
+    identifyVisitor: createVisitorIdentifier(tokenSecret, "contact-visitor"),
     tokenSecret,
   });
 }

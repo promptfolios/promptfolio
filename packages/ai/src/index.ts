@@ -11,6 +11,7 @@ export {
   genericErrorMessage,
   handleChatRequest,
 } from "./chat-handler";
+export type { ChatLimit, ChatTurnDecision, ChatTurnLimiter } from "./chat-limit";
 export { CHAT_LIMITS } from "./limits";
 export {
   type GeneratePreparedAnswerOptions,

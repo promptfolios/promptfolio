@@ -1,8 +1,10 @@
+import { inspect } from "node:util";
 import { loadStructuredProfile, type Profile } from "@promptfolio/core";
 import { APICallError, simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
 import { type ChatLogger, genericErrorMessage, handleChatRequest } from "./chat-handler";
+import type { ChatLimit, ChatTurnLimiter } from "./chat-limit";
 import { CHAT_LIMITS } from "./limits";
 import { buildSystemPrompt } from "./system-prompt";
 
@@ -129,6 +131,7 @@ async function readChunks(response: Response): Promise<Array<Record<string, unkn
 
 async function handle(body: unknown, model = mockModel(), logger = silentLogger()) {
   const response = await handleChatRequest(chatRequest(body), {
+    limit: null,
     model,
     profile: testProfile(),
     logger,
@@ -208,6 +211,7 @@ describe("handleChatRequest: valid requests", () => {
   it("passes the output cap, provider options, and abort signal to the model", async () => {
     const model = mockModel();
     const response = await handleChatRequest(chatRequest({ messages: [userMessage("Hi")] }), {
+      limit: null,
       model,
       profile: testProfile(),
       providerOptions: { anthropic: { effort: "low" } },
@@ -324,10 +328,14 @@ describe("handleChatRequest: rejected input never reaches the model", () => {
     const model = mockModel();
     const request = new Request("http://localhost/api/chat", {
       method: "POST",
-      headers: { "content-length": String(CHAT_LIMITS.maxBodyBytes + 1) },
+      headers: {
+        "content-type": "application/json",
+        "content-length": String(CHAT_LIMITS.maxBodyBytes + 1),
+      },
       body: "{}",
     });
     const response = await handleChatRequest(request, {
+      limit: null,
       model,
       profile: testProfile(),
       logger: silentLogger(),
@@ -595,6 +603,7 @@ describe("handleChatRequest: slow or overloaded providers fail fast", () => {
   async function handleWithTimeouts(model: MockLanguageModelV4, timeouts = fastTimeouts) {
     const logger = silentLogger();
     const response = await handleChatRequest(chatRequest({ messages: [userMessage("Hi")] }), {
+      limit: null,
       model,
       profile: testProfile(),
       timeouts,
@@ -652,6 +661,7 @@ describe("handleChatRequest: slow or overloaded providers fail fast", () => {
     });
     const logger = silentLogger();
     const response = await handleChatRequest(request, {
+      limit: null,
       model,
       profile: testProfile(),
       timeouts: { firstChunkMs: 5_000, chunkMs: 5_000, totalMs: 5_000 },
@@ -684,4 +694,248 @@ describe("handleChatRequest: slow or overloaded providers fail fast", () => {
       /^The assistant could not answer right now\./,
     );
   }, 10_000);
+});
+
+describe("handleChatRequest: request origin and type", () => {
+  function requestWith(headers: Record<string, string>) {
+    return new Request("http://localhost/api/chat", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ messages: [userMessage("Hi")] }),
+    });
+  }
+
+  it.each([
+    [
+      "a cross-site browser request",
+      { "content-type": "application/json", "sec-fetch-site": "cross-site" },
+      403,
+    ],
+    ["a form-style content type", { "content-type": "text/plain" }, 415],
+    ["no JSON content type", { "content-type": "application/x-www-form-urlencoded" }, 415],
+  ])("refuses %s before the model", async (_label, headers, status) => {
+    const model = mockModel();
+    const response = await handleChatRequest(requestWith(headers), {
+      limit: null,
+      model,
+      profile: testProfile(),
+      logger: silentLogger(),
+    });
+
+    expect(response.status).toBe(status);
+    expect(model.doStreamCalls).toHaveLength(0);
+  });
+
+  it.each(["same-origin", "same-site", "none"])("accepts sec-fetch-site: %s", async (site) => {
+    const response = await handleChatRequest(
+      requestWith({ "content-type": "application/json; charset=utf-8", "sec-fetch-site": site }),
+      { model: mockModel(), profile: testProfile(), limit: null, logger: silentLogger() },
+    );
+
+    expect(response.status).toBe(200);
+  });
+});
+
+describe("handleChatRequest: long assistant answers", () => {
+  const longAnswer = (chars: number) => ({
+    id: "a1",
+    role: "assistant",
+    parts: [{ type: "text", text: "x".repeat(chars) }],
+  });
+
+  it("accepts a follow-up after an answer longer than the visitor message limit", async () => {
+    const { response, model } = await handle({
+      messages: [
+        userMessage("Tell me everything.", "u1"),
+        longAnswer(CHAT_LIMITS.maxMessageChars + 1),
+        userMessage("And then?", "u2"),
+      ],
+    });
+    await response.text();
+
+    expect(response.status).toBe(200);
+    expect(model.doStreamCalls).toHaveLength(1);
+  });
+
+  it("still bounds them by the conversation's total", async () => {
+    const { response, model } = await handle({
+      messages: [
+        userMessage("Tell me everything.", "u1"),
+        longAnswer(CHAT_LIMITS.maxTotalChars),
+        userMessage("And then?", "u2"),
+      ],
+    });
+
+    expect(response.status).toBe(413);
+    expect(model.doStreamCalls).toHaveLength(0);
+  });
+});
+
+describe("handleChatRequest: what the log keeps of a model error", () => {
+  const VISITOR_TEXT = "VISITOR-PRIVATE-QUESTION";
+
+  function failingModel(error: Error) {
+    return new MockLanguageModelV4({
+      doStream: async () => {
+        throw error;
+      },
+    });
+  }
+
+  function apiError(isRetryable: boolean) {
+    return new APICallError({
+      message: `Bad request about ${VISITOR_TEXT} with ${SECRET}`,
+      url: `https://provider.example/v1?key=${SECRET}`,
+      requestBodyValues: { messages: [{ role: "user", content: VISITOR_TEXT }] },
+      statusCode: isRetryable ? 503 : 400,
+      responseHeaders: { "x-request-id": SECRET },
+      responseBody: `{"echo":"${VISITOR_TEXT}","key":"${SECRET}"}`,
+      isRetryable,
+    });
+  }
+
+  function everythingLogged(logger: ReturnType<typeof silentLogger>) {
+    return inspect([...logger.error.mock.calls, ...logger.info.mock.calls], { depth: null });
+  }
+
+  it("keeps the type and status, not the request or response", async () => {
+    const { response, logger } = await handle(
+      { messages: [userMessage(VISITOR_TEXT)] },
+      failingModel(apiError(false)),
+    );
+    await response.text();
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("model error"),
+      expect.objectContaining({ statusCode: 400, isRetryable: false }),
+    );
+    expect(everythingLogged(logger)).not.toContain(VISITOR_TEXT);
+    expect(everythingLogged(logger)).not.toContain(SECRET);
+  });
+
+  it("unwraps an error that was retried, and still keeps nothing else", async () => {
+    const { response, logger } = await handle(
+      { messages: [userMessage(VISITOR_TEXT)] },
+      failingModel(apiError(true)),
+    );
+    await response.text();
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("model error"),
+      expect.objectContaining({ statusCode: 503, attempts: 2 }),
+    );
+    expect(everythingLogged(logger)).not.toContain(VISITOR_TEXT);
+    expect(everythingLogged(logger)).not.toContain(SECRET);
+  });
+
+  it("keeps only the name of any other error", async () => {
+    const { response, logger } = await handle(
+      { messages: [userMessage(VISITOR_TEXT)] },
+      failingModel(new TypeError(`Failed on ${VISITOR_TEXT}`)),
+    );
+    await response.text();
+
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining("model error"), {
+      name: "TypeError",
+    });
+    expect(everythingLogged(logger)).not.toContain(VISITOR_TEXT);
+  });
+});
+
+describe("handleChatRequest: the daily limit", () => {
+  function limitWith(take: ChatTurnLimiter["take"]) {
+    const limiter = { take: vi.fn(take) };
+    const identifyVisitor = vi.fn<ChatLimit["identifyVisitor"]>(async () => "visitor-hash");
+    return { limit: { limiter, identifyVisitor }, limiter, identifyVisitor };
+  }
+
+  async function ask(limit: ChatLimit, body: unknown = { messages: [userMessage("Hi")] }) {
+    const model = mockModel();
+    const logger = silentLogger();
+    const response = await handleChatRequest(chatRequest(body), {
+      model,
+      profile: testProfile(),
+      limit,
+      logger,
+    });
+    return { response, model, logger };
+  }
+
+  it("runs the model when the limiter allows it, counting the hashed visitor once", async () => {
+    const { limit, limiter } = limitWith(async () => "allowed");
+    const { response, model } = await ask(limit);
+    await response.text();
+
+    expect(response.status).toBe(200);
+    expect(model.doStreamCalls).toHaveLength(1);
+    expect(limiter.take).toHaveBeenCalledExactlyOnceWith("visitor-hash");
+  });
+
+  it.each([
+    ["visitor-limit", "You've reached the daily limit"],
+    ["site-limit", "The assistant has reached its daily limit"],
+  ] as const)("gives 429 with no model call on %s", async (decision, message) => {
+    const { limit } = limitWith(async () => decision);
+    const { response, model, logger } = await ask(limit);
+
+    expect(response.status).toBe(429);
+    expect(await response.text()).toContain(message);
+    expect(model.doStreamCalls).toHaveLength(0);
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("limited"), {
+      limit: decision,
+    });
+  });
+
+  it("gives 503 with no model call on a store error, and does not log the error", async () => {
+    const { limit } = limitWith(async () => {
+      throw new Error(`store failed with ${SECRET}`);
+    });
+    const { response, model, logger } = await ask(limit);
+
+    expect(response.status).toBe(503);
+    expect(await response.text()).toMatch(/^The assistant could not answer right now\./);
+    expect(model.doStreamCalls).toHaveLength(0);
+    expect(inspect(logger.error.mock.calls, { depth: null })).not.toContain(SECRET);
+  });
+
+  it("gives 503 with no model call when the visitor cannot be identified", async () => {
+    const { limit, limiter, identifyVisitor } = limitWith(async () => "allowed");
+    identifyVisitor.mockResolvedValue(undefined);
+    const { response, model } = await ask(limit);
+
+    expect(response.status).toBe(503);
+    expect(limiter.take).not.toHaveBeenCalled();
+    expect(model.doStreamCalls).toHaveLength(0);
+  });
+
+  it("gives 503 with no model call when the store does not answer in time", async () => {
+    vi.useFakeTimers();
+    try {
+      const { limit } = limitWith(() => new Promise(() => {}));
+      const pending = ask(limit);
+      await vi.advanceTimersByTimeAsync(CHAT_LIMITS.limiterTimeoutMs);
+      const { response, model } = await pending;
+
+      expect(response.status).toBe(503);
+      expect(model.doStreamCalls).toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("never asks the limiter about an invalid request", async () => {
+    const { limit, limiter, identifyVisitor } = limitWith(async () => "allowed");
+    const { response } = await ask(limit, { messages: [] });
+
+    expect(response.status).toBe(400);
+    expect(identifyVisitor).not.toHaveBeenCalled();
+    expect(limiter.take).not.toHaveBeenCalled();
+  });
+
+  it("never logs the visitor key", async () => {
+    const { limit } = limitWith(async () => "visitor-limit");
+    const { logger } = await ask(limit);
+
+    expect(inspect(logger.info.mock.calls, { depth: null })).not.toContain("visitor-hash");
+  });
 });

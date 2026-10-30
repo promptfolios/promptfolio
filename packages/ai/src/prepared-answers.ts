@@ -17,8 +17,8 @@ import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";
 export const PREPARED_ANSWER_LIMITS = {
   maxAnswers: 20,
   /**
-   * The server rejects any message, assistant messages included, over this length. A longer
-   * prepared answer would make every follow-up in its thread fail.
+   * A stored answer starts every thread it serves, so a long one would use up the conversation's
+   * `maxTotalChars` for each of them.
    */
   maxTextChars: CHAT_LIMITS.maxMessageChars,
   maxEvidenceIds: 50,

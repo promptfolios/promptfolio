@@ -81,7 +81,12 @@ describe("a restored thread and the server", () => {
     });
     const logger = { info: () => {}, warn: () => {}, error: () => {} };
 
-    const response = await handleChatRequest(request, { model, profile: profile(), logger });
+    const response = await handleChatRequest(request, {
+      model,
+      profile: profile(),
+      logger,
+      limit: null,
+    });
     await response.text();
 
     expect(response.status).toBe(200);
@@ -130,7 +135,7 @@ describe("a prepared answer saved in a thread", () => {
     const starterModel = answeringModel();
     const served = await handleChatRequest(
       chatRequest([{ id: "u1", role: "user", parts: [{ type: "text", text: question }] }]),
-      { model: starterModel, profile: profile(), logger, preparedAnswers },
+      { model: starterModel, profile: profile(), logger, preparedAnswers, limit: null },
     );
     const received = await receivedMessage(served);
     expect(starterModel.doStreamCalls).toHaveLength(0);
@@ -161,7 +166,7 @@ describe("a prepared answer saved in a thread", () => {
         ...restored,
         { id: "u2", role: "user", parts: [{ type: "text", text: "Tell me more." }] },
       ]),
-      { model: followUpModel, profile: profile(), logger, preparedAnswers },
+      { model: followUpModel, profile: profile(), logger, preparedAnswers, limit: null },
     );
     await followUp.text();
     expect(followUp.status).toBe(200);

@@ -228,6 +228,7 @@ describe("prepared answers and the contact form", () => {
   ): Promise<ReturnType<typeof stepsModel>> {
     const model = stepsModel(textChunks("A live answer."));
     const response = await handleChatRequest(chatRequest({ messages: [userMessage(QUESTION)] }), {
+      limit: null,
       model,
       profile: testProfile(),
       logger: silentLogger(),
@@ -281,6 +282,7 @@ describe("handleChatRequest with prepared answers", () => {
     const model = stepsModel(textChunks("A live answer."));
     const logger = silentLogger();
     const response = await handleChatRequest(chatRequest(body), {
+      limit: null,
       model,
       profile,
       logger,
@@ -315,6 +317,55 @@ describe("handleChatRequest with prepared answers", () => {
     ]);
     expect(body).not.toContain("providerMetadata");
     expect(preparedLog(logger)).toEqual({ outcome: "hit" });
+  });
+
+  describe("and the daily limit", () => {
+    function refusingLimit() {
+      const take = vi.fn(async () => "visitor-limit" as const);
+      const identifyVisitor = vi.fn(async () => "visitor-hash");
+      return { take, identifyVisitor, limit: { limiter: { take }, identifyVisitor } };
+    }
+
+    async function ask(question: string, limit: ReturnType<typeof refusingLimit>["limit"]) {
+      const model = stepsModel(textChunks("A live answer."));
+      const response = await handleChatRequest(chatRequest({ messages: [userMessage(question)] }), {
+        limit,
+        model,
+        profile: testProfile(),
+        logger: silentLogger(),
+        preparedAnswers: [await currentAnswer(testProfile())],
+      });
+      return { response, model };
+    }
+
+    it("serves a current answer to a blocked visitor, without counting it", async () => {
+      const { take, identifyVisitor, limit } = refusingLimit();
+      const { response, model } = await ask(QUESTION, limit);
+
+      expect(response.status).toBe(200);
+      expect(textOf(await readChunks(response))).toContain("full-stack engineer");
+      expect(model.doStreamCalls).toHaveLength(0);
+      expect(identifyVisitor).not.toHaveBeenCalled();
+      expect(take).not.toHaveBeenCalled();
+    });
+
+    it("serves a current answer when the limit cannot be checked", async () => {
+      const { take, limit } = refusingLimit();
+      take.mockRejectedValue(new Error("store down"));
+      const { response } = await ask(QUESTION, limit);
+
+      expect(response.status).toBe(200);
+      expect(take).not.toHaveBeenCalled();
+    });
+
+    it("refuses a question without an entry, which would need the model", async () => {
+      const { take, limit } = refusingLimit();
+      const { response, model } = await ask("Something else entirely?", limit);
+
+      expect(response.status).toBe(429);
+      expect(model.doStreamCalls).toHaveLength(0);
+      expect(take).toHaveBeenCalledOnce();
+    });
   });
 
   it("goes live for a question without an entry, including different case", async () => {

@@ -1,8 +1,10 @@
 import type { Profile } from "@promptfolio/core";
 import {
+  APICallError,
   convertToModelMessages,
   isStepCount,
   type LanguageModel,
+  RetryError,
   streamText,
   toUIMessageStream,
   type UIMessage,
@@ -73,8 +75,8 @@ export async function runChatTurn(
     maxRetries: CHAT_LIMITS.maxRetries,
     abortSignal: signal,
     onError: ({ error }) => {
-      // Full details stay in the server log; visitors only see the generic message.
-      logger.error(`[chat ${requestId}] model error`, error);
+      // Visitors only see the generic message, and the log only a summary (see below).
+      logger.error(`[chat ${requestId}] model error`, modelErrorSummary(error));
     },
     onEnd: (event) => {
       logger.info(`[chat ${requestId}] finished`, {
@@ -99,6 +101,24 @@ export async function runChatTurn(
     .pipeThrough(logToolCalls(requestId, logger))
     .pipeThrough(forVisitor(signal, requestId));
   return { result, stream };
+}
+
+/**
+ * What the log keeps of a model error: its type, status, and whether a retry could help. The
+ * error itself stays out, because an `APICallError` carries the whole request (the visitor's
+ * conversation) and the provider's response, and other errors can repeat them in their message.
+ */
+function modelErrorSummary(error: unknown) {
+  // After its retries, the AI SDK wraps the provider's error.
+  const cause = RetryError.isInstance(error) ? error.lastError : error;
+  return {
+    name: cause instanceof Error ? cause.name : "unknown",
+    ...(APICallError.isInstance(cause) && {
+      statusCode: cause.statusCode,
+      isRetryable: cause.isRetryable,
+    }),
+    ...(RetryError.isInstance(error) && { attempts: error.errors.length }),
+  };
 }
 
 /**

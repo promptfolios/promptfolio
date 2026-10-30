@@ -45,8 +45,21 @@ export type ParseChatRequestResult =
 /**
  * Reads and validates an incoming chat request. Never throws for bad input: failures
  * come back as a status code and a message that is safe to show to the visitor.
+ *
+ * `Sec-Fetch-Site` is set by browsers and scripts in a page cannot change it, and a page on
+ * another site can only post JSON after a CORS check this server never allows. So another site
+ * cannot use a visitor's browser to spend the visitor's or the site's live answers. A script
+ * outside a browser can omit the header, so this protects visitors and does not stop scripts.
  */
 export async function parseChatRequest(request: Request): Promise<ParseChatRequestResult> {
+  if (request.headers.get("sec-fetch-site") === "cross-site") {
+    return reject(403, "This request is not allowed.");
+  }
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().startsWith("application/json")) {
+    return reject(415, "The request must be JSON.");
+  }
+
   const text = await readBodyWithLimit(request, CHAT_LIMITS.maxBodyBytes);
   if (text === undefined) return reject(413, "The request is too large.");
 
@@ -68,7 +81,7 @@ export async function parseChatRequest(request: Request): Promise<ParseChatReque
       part.type === "text" ? [{ type: "text" as const, text: part.text }] : [],
     );
     const text = textParts.map((part) => part.text).join("");
-    if (text.length > CHAT_LIMITS.maxMessageChars) {
+    if (message.role === "user" && text.length > CHAT_LIMITS.maxMessageChars) {
       return reject(413, `A message is longer than ${CHAT_LIMITS.maxMessageChars} characters.`);
     }
     totalChars += text.length;

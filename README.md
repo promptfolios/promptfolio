@@ -95,9 +95,9 @@ table whose key is set is used. Never prefix a key with `NEXT_PUBLIC_`: keys are
 server. Set a monthly spend limit with
 your provider, and check its data terms (some free tiers allow the provider to use prompts).
 
-Without a key the app still builds and renders, but chat replies show an error. The endpoint has
-input limits but no rate limiting yet (planned for M11), so **do not deploy it publicly** before
-then.
+Without a key the app still builds and renders, but chat replies show an error. Outside `next dev`,
+live answers also need the daily limit's settings; see
+[docs/guides/chat-limit-setup.md](docs/guides/chat-limit-setup.md). Deployment is decided in M12.
 
 ## Workspace conventions
 

@@ -1,4 +1,5 @@
 import { handleChatRequest } from "@promptfolio/ai";
+import { createChatLimit } from "@/server/chat-limit";
 import { isContactEnabled } from "@/server/contact";
 import { createChatModel } from "@/server/model";
 import { loadPreparedAnswers } from "@/server/prepared-answers";
@@ -32,6 +33,7 @@ export async function POST(request: Request): Promise<Response> {
     preparedAnswers: await loadPreparedAnswers(fileName),
     // The same check that shows the Contact button, so the assistant only mentions a real one.
     contactFormAvailable: isContactEnabled(),
+    limit: createChatLimit(),
   });
 }
 
