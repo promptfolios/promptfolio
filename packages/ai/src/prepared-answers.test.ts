@@ -3,10 +3,9 @@ import { simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
 import { type ChatLogger, handleChatRequest } from "./chat-handler";
+import { citedIds, evidenceIdsIn } from "./citations";
 import { CHAT_LIMITS } from "./limits";
 import {
-  citedIds,
-  evidenceIdsIn,
   generatePreparedAnswer,
   instructionsFingerprint,
   type PreparedAnswer,
@@ -313,8 +312,14 @@ describe("handleChatRequest with prepared answers", () => {
       "text-delta",
       "text-end",
       "finish-step",
+      "data-sources",
       "finish",
     ]);
+    // Built from the profile when served, not stored with the answer.
+    expect(chunks.find((chunk) => chunk.type === "data-sources")?.data).toMatchObject({
+      sources: [{ id: "globex-fullstack", record: "Full-stack Engineer, Globex" }],
+      unverifiedCitations: 0,
+    });
     expect(body).not.toContain("providerMetadata");
     expect(preparedLog(logger)).toEqual({ outcome: "hit" });
   });
@@ -509,12 +514,24 @@ describe("generatePreparedAnswer", () => {
 
   it.each([
     ["an id no tool returned", "See [globex-fullstack]."],
-    ["the identity tag", "Jordan builds apps [owner_identity]."],
-    ["two ids in one bracket", "See [service-catalog, globex-fullstack]."],
+    ["one id of two in one bracket", "See [service-catalog, invented-id]."],
   ])("rejects an answer that cites %s", async (_name, text) => {
     const model = stepsModel(listCallChunks("projects"), textChunks(text));
     const result = await generatePreparedAnswer(QUESTION, options(model));
     expect(result).toMatchObject({ ok: false, reason: "unsupported-citation" });
+  });
+
+  it.each([
+    ["the identity block", "Jordan builds apps [owner_identity]."],
+    ["two returned ids in one bracket", "See [service-catalog, globex-fullstack]."],
+  ])("accepts an answer that cites %s", async (_name, text) => {
+    const model = stepsModel(
+      listCallChunks("projects"),
+      listCallChunks("experience"),
+      textChunks(text),
+    );
+    const result = await generatePreparedAnswer(QUESTION, options(model));
+    expect(result.ok).toBe(true);
   });
 
   it("rejects an answer longer than the message limit", async () => {
@@ -564,31 +581,6 @@ describe("generatePreparedAnswer", () => {
 });
 
 describe("citations and evidence", () => {
-  it("finds bracketed ids but not Markdown links", () => {
-    expect(citedIds("A [service-catalog], B [a, b], [GitHub](https://github.com) [x]")).toEqual([
-      "service-catalog",
-      "a, b",
-      "x",
-    ]);
-  });
-
-  it("collects record ids from lists, fetched records, and role summaries, but not sources", () => {
-    expect(
-      evidenceIdsIn([
-        {
-          output: {
-            status: "listed",
-            records: [{ id: "a" }, { name: "TypeScript" }],
-            sources: [{ id: "owner-profile" }],
-          },
-        },
-        { output: { status: "found", record: { id: "b" }, role: { id: "c" } } },
-        { output: { status: "not_found", id: "nasa-rover" } },
-        { output: "not an object" },
-      ]),
-    ).toEqual(["a", "b", "c"]);
-  });
-
   it("accepts a cited contribution id that a tool returned", () => {
     const id = `github.com/other-org/tool/commit/${"a".repeat(40)}`;
     const evidence = evidenceIdsIn([

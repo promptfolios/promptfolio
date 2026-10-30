@@ -10,6 +10,7 @@ import {
   type UIMessage,
   type UIMessageChunk,
 } from "ai";
+import { withSources } from "./citations";
 import { CHAT_LIMITS } from "./limits";
 import { createProfileTools } from "./profile-tools";
 import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";
@@ -99,6 +100,7 @@ export async function runChatTurn(
     onError: () => genericErrorMessage(requestId),
   })
     .pipeThrough(logToolCalls(requestId, logger))
+    .pipeThrough(withSources(profile, requestId, logger))
     .pipeThrough(forVisitor(signal, requestId));
   return { result, stream };
 }
@@ -122,7 +124,8 @@ function modelErrorSummary(error: unknown) {
 }
 
 /**
- * The only chunk types the browser receives: enough to render a streamed text answer.
+ * The only chunk types the browser receives: enough to render a streamed text answer and the
+ * server-built sources for its citations.
  * Everything else is dropped, including:
  *
  * - tool calls, results, and errors: tool activity stays on the server, so the browser
@@ -138,6 +141,7 @@ const VISITOR_CHUNK_TYPES: ReadonlySet<UIMessageChunk["type"]> = new Set([
   "text-start",
   "text-delta",
   "text-end",
+  "data-sources",
   "finish",
   "error",
   "abort",

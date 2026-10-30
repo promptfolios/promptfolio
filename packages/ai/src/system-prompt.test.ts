@@ -99,6 +99,24 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("never a source id");
   });
 
+  it("names the citation for identity facts, and that skills and links have none", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt).toContain("write [owner_identity]");
+    expect(prompt).toContain("Skills and links have no ids");
+  });
+
+  it("leaves the sources section to the page", () => {
+    expect(buildSystemPrompt(identity)).toContain("do not write a sources section yourself");
+  });
+
+  it("does not let a public repository pass as open source, or as by a person", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt).toContain("without a license in the tool result is not open source");
+    expect(prompt).toContain("under an account, not by a person");
+  });
+
   it("says what a contribution does and does not show, and that the list is partial", () => {
     const prompt = buildSystemPrompt(identity);
 

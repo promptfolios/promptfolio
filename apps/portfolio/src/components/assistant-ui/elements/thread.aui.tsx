@@ -8,6 +8,7 @@ import {
 import { File, getFileHref } from "@/components/assistant-ui/elements/file";
 import { ThreadFollowupSuggestions } from "@/components/assistant-ui/elements/follow-up-suggestions.aui";
 import { Image } from "@/components/assistant-ui/elements/image";
+import { SourcesPanel } from "@/components/sources-panel";
 import { MarkdownText } from "@/components/assistant-ui/elements/markdown-text";
 import {
   Reasoning,
@@ -712,7 +713,11 @@ const AssistantMessage: FC = () => {
               case "tool-call":
                 return part.toolUI ?? <ToolFallbackComponent {...part} />;
               case "data":
-                return part.dataRendererUI;
+                return part.name === "sources" ? (
+                  <SourcesPanel data={part.data} />
+                ) : (
+                  part.dataRendererUI
+                );
               case "file":
                 return (
                   <div data-slot="aui_assistant-message-file" className="py-1">

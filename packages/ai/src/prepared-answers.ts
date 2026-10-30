@@ -2,6 +2,7 @@ import { canonicalProfileContent, isRecordId, type Profile } from "@promptfolio/
 import { asSchema, type FlexibleSchema, type UIMessage, type UIMessageChunk } from "ai";
 import { z } from "zod";
 import { type ChatTurnOptions, runChatTurn } from "./chat-turn";
+import { type ChatSources, evidenceIdsIn, sourcesChunk, unverifiedIds } from "./citations";
 import { CHAT_LIMITS } from "./limits";
 import { createProfileTools } from "./profile-tools";
 import type { ChatTrigger } from "./request";
@@ -163,10 +164,14 @@ function textOf(message: UIMessage | undefined): string {
 }
 
 /**
- * The UI message chunks of a one-step text answer, as the AI SDK would stream them. No model
- * is involved; the caller still sends them through the visitor filter.
+ * The UI message chunks of a one-step text answer, as the AI SDK would stream them, with its
+ * sources if it has any. No model is involved; the caller still sends them through the visitor
+ * filter.
  */
-export function preparedAnswerStream(text: string): ReadableStream<UIMessageChunk> {
+export function preparedAnswerStream(
+  text: string,
+  sources?: ChatSources,
+): ReadableStream<UIMessageChunk> {
   const chunks: UIMessageChunk[] = [
     { type: "start" },
     { type: "start-step" },
@@ -174,6 +179,7 @@ export function preparedAnswerStream(text: string): ReadableStream<UIMessageChun
     { type: "text-delta", id: "prepared", delta: text },
     { type: "text-end", id: "prepared" },
     { type: "finish-step" },
+    ...(sources === undefined ? [] : [sourcesChunk(sources)]),
     { type: "finish", finishReason: "stop" },
   ];
   return new ReadableStream({
@@ -206,8 +212,8 @@ export type GeneratePreparedAnswerResult =
  * Generates a prepared answer by running the live turn for `question` and recording what a
  * visitor would have received. The answer is accepted only if the turn finished normally,
  * the text fits the message limit, and every `[id]` it cites was returned by a tool in this
- * turn (a stored answer is served to every visitor, so it is held to a stricter rule than a
- * live one).
+ * turn or is the identity block (a stored answer is served to every visitor, so it is held to a
+ * stricter rule than a live one, where an unverified citation is only reported).
  */
 export async function generatePreparedAnswer(
   question: string,
@@ -239,7 +245,7 @@ export async function generatePreparedAnswer(
   if (text.length > PREPARED_ANSWER_LIMITS.maxTextChars) {
     return { ok: false, reason: "too-long", detail: `${text.length} characters` };
   }
-  const unsupported = citedIds(text).filter((id) => !evidenceIds.includes(id));
+  const unsupported = unverifiedIds(text, evidenceIds);
   if (unsupported.length > 0) {
     return { ok: false, reason: "unsupported-citation", detail: unsupported.join(", ") };
   }
@@ -278,35 +284,4 @@ async function readVisitorText(
     } else if (chunk.type === "error" || chunk.type === "abort") failed = true;
   }
   return { text: parts.join("\n\n"), failed };
-}
-
-/**
- * The record ids in profile tool results: listed records, a fetched record, and the role
- * summary that comes with a project. Source ids are not record ids and are not collected.
- */
-export function evidenceIdsIn(toolResults: ReadonlyArray<{ output: unknown }>): string[] {
-  const ids = new Set<string>();
-  const add = (value: unknown) => {
-    if (isObject(value) && typeof value.id === "string") ids.add(value.id);
-  };
-  for (const { output } of toolResults) {
-    if (!isObject(output)) continue;
-    if (Array.isArray(output.records)) output.records.forEach(add);
-    add(output.record);
-    add(output.role);
-    add(output.ownerNotes);
-  }
-  return [...ids];
-}
-
-/**
- * The ids an answer cites: the text of every `[...]` that is not a Markdown link. The content
- * is taken as one id, so drifted forms such as `[a, b]` or `[owner_identity]` never match.
- */
-export function citedIds(text: string): string[] {
-  return [...new Set(Array.from(text.matchAll(/\[([^[\]]+)\](?!\()/g), (match) => match[1] ?? ""))];
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

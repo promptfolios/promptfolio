@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { chatSourcesSchema, SOURCES_PART_TYPE } from "./sources";
 import { STORAGE_LIMITS } from "./storage-limits";
 
 /** The part of the Web Storage API the store uses; `window.localStorage` satisfies it. */
@@ -22,12 +23,18 @@ const threadIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/);
 const messageIdSchema = z.string().min(1).max(200);
 
 /**
- * The same two part types the server accepts. `z.object` strips unknown keys, so extra
- * fields such as `providerMetadata` are never kept.
+ * The same part types the server accepts. `z.object` strips unknown keys, so extra
+ * fields such as `providerMetadata` are never kept. Sources that fail their check are dropped,
+ * and the answer's text is kept.
  */
 const partSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string() }),
   z.object({ type: z.literal("step-start") }),
+  z.object({
+    type: z.literal(SOURCES_PART_TYPE),
+    id: z.string().max(100).optional(),
+    data: chatSourcesSchema,
+  }),
 ]);
 type StoredPart = z.infer<typeof partSchema>;
 
@@ -190,8 +197,8 @@ export class ThreadStore {
   }
 
   /**
-   * Adds or replaces (by id) one message. Keeps only `id`, `parentId`, `role`, and text and
-   * `step-start` parts. A write that would exceed a limit is skipped and reported, leaving
+   * Adds or replaces (by id) one message. Keeps only `id`, `parentId`, `role`, and text,
+   * `step-start`, and sources parts. A write that would exceed a limit is skipped and reported, leaving
    * the saved thread unchanged.
    */
   saveMessage(threadId: string, input: MessageInput): SaveResult {

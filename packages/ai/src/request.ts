@@ -4,12 +4,15 @@ import { CHAT_LIMITS } from "./limits";
 
 /**
  * The only message parts accepted from the browser. `step-start` is a content-free
- * marker the AI SDK adds to assistant messages; it is accepted and then dropped.
- * Every other part type (files, tools, reasoning, data) is rejected.
+ * marker the AI SDK adds to assistant messages. `data-sources` is the sources block the server
+ * itself sent with an earlier answer. Both are accepted and then dropped, so the sources never
+ * reach the model, and a forged one has no effect.
+ * Every other part type (files, tools, reasoning, other data) is rejected.
  */
 const partSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string() }),
   z.object({ type: z.literal("step-start") }),
+  z.object({ type: z.literal("data-sources") }),
 ]);
 
 const messageSchema = z.object({

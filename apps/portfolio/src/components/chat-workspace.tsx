@@ -13,6 +13,7 @@ import { MenuIcon, XIcon } from "lucide-react";
 import { type FC, useEffect, useMemo, useState } from "react";
 import { openBrowserStorage } from "@/chat/browser-storage";
 import { createBrowserThreadListAdapter } from "@/chat/browser-thread-list-adapter";
+import { withoutSources } from "@/chat/sources";
 import { ThreadStore } from "@/chat/thread-store";
 import { Thread } from "@/components/assistant-ui/elements/thread.aui";
 import { ThreadList } from "@/components/assistant-ui/elements/thread-list.aui";
@@ -22,9 +23,15 @@ import { STARTERS } from "@/config/starters";
 
 /**
  * Posts `{ id, messages, trigger, messageId }` to our server route. Unlike assistant-ui's
- * `AssistantChatTransport`, it sends no `system` prompt or `tools`: the server owns both.
+ * `AssistantChatTransport`, it sends no `system` prompt or `tools`: the server owns both. Earlier
+ * answers' sources stay in the browser too.
  */
-const transport = new DefaultChatTransport({ api: "/api/chat" });
+const transport = new DefaultChatTransport({
+  api: "/api/chat",
+  prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => ({
+    body: { id, messages: withoutSources(messages), trigger, messageId },
+  }),
+});
 const config = AuiConfig({ suggestions: Suggestions(STARTERS) });
 
 /**

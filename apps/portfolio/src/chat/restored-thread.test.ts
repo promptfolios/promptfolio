@@ -94,6 +94,77 @@ describe("a restored thread and the server", () => {
   });
 });
 
+describe("an answer's sources in a saved thread", () => {
+  const sources = {
+    sources: [
+      {
+        id: "service-catalog",
+        record: "Service Catalog",
+        evidence: [
+          { basis: "self-reported", source: "Test", observedAt: "2026-10-01T00:00:00.000Z" },
+        ],
+      },
+    ],
+    unverifiedCitations: 0,
+  };
+
+  function saved(parts: unknown[]) {
+    const store = new ThreadStore({ storage: createMemoryStorage(), warn: () => {} });
+    store.createThread("t1");
+    store.saveMessage("t1", {
+      id: "u1",
+      parentId: null,
+      role: "user",
+      parts: [{ type: "text", text: "Projects?" }],
+    });
+    store.saveMessage("t1", { id: "a1", parentId: "u1", role: "assistant", parts });
+    return store.loadMessages("t1").map(({ id, role, parts: kept }) => ({ id, role, parts: kept }));
+  }
+
+  it("survives a reload, and the server accepts the thread when it is continued", async () => {
+    const restored = saved([
+      { type: "text", text: "A catalog [service-catalog]." },
+      { type: "data-sources", id: "sources", data: sources, extra: "dropped" },
+    ]);
+
+    expect(restored[1]?.parts).toEqual([
+      { type: "text", text: "A catalog [service-catalog]." },
+      { type: "data-sources", id: "sources", data: sources },
+    ]);
+
+    const model = new MockLanguageModelV4({
+      doStream: async () => ({ stream: simulateReadableStream({ chunks: answer }) }),
+    });
+    const response = await handleChatRequest(
+      new Request("http://localhost/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            ...restored,
+            { id: "u2", role: "user", parts: [{ type: "text", text: "More?" }] },
+          ],
+        }),
+      }),
+      { model, profile: profile(), logger: { info: () => {}, error: () => {} }, limit: null },
+    );
+    await response.text();
+
+    expect(response.status).toBe(200);
+    expect(JSON.stringify(model.doStreamCalls[0]?.prompt)).not.toContain("Service Catalog");
+  });
+
+  it("is dropped if invalid, and the answer's text is kept", () => {
+    const restored = saved([
+      { type: "text", text: "A catalog." },
+      { type: "data-sources", data: { sources: "not a list" } },
+      { type: "data-other", data: {} },
+    ]);
+
+    expect(restored[1]?.parts).toEqual([{ type: "text", text: "A catalog." }]);
+  });
+});
+
 describe("a prepared answer saved in a thread", () => {
   const question = "Give me a short professional overview.";
   const logger = { info: () => {}, error: () => {} };

@@ -12,6 +12,7 @@ export {
   handleChatRequest,
 } from "./chat-handler";
 export type { ChatLimit, ChatTurnDecision, ChatTurnLimiter } from "./chat-limit";
+export type { ChatSources, CitedSource, SourceEvidence } from "./citations";
 export { CHAT_LIMITS } from "./limits";
 export {
   type GeneratePreparedAnswerOptions,

@@ -1,6 +1,7 @@
 import { createUIMessageStreamResponse } from "ai";
 import { type ChatLimit, checkChatLimit } from "./chat-limit";
 import { type ChatTurnOptions, forVisitor, genericErrorMessage, runChatTurn } from "./chat-turn";
+import { buildChatSources } from "./citations";
 import {
   type PreparedAnswer,
   preparedAnswerStream,
@@ -73,9 +74,12 @@ export async function handleChatRequest(
       );
     }
     if (selection.outcome === "hit") {
-      const stream = preparedAnswerStream(selection.answer.text).pipeThrough(
-        forVisitor(request.signal, requestId),
-      );
+      const { text, evidenceIds } = selection.answer;
+      const stream = preparedAnswerStream(
+        text,
+        // Built from the profile now, which the fingerprint has just shown to be the same content.
+        buildChatSources(profile, text, evidenceIds),
+      ).pipeThrough(forVisitor(request.signal, requestId));
       return createUIMessageStreamResponse({ stream });
     }
   }
