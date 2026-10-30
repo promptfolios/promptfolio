@@ -27,6 +27,8 @@ that builds it; code links are marked "planned").
 | Prepared answers and invalidation | [prepared-answers-and-invalidation.md](prepared-answers-and-invalidation.md) | M7 | in use |
 | Source adapters and snapshots   | [source-adapters-and-snapshots.md](source-adapters-and-snapshots.md) | M8 | in use |
 | Calling external APIs           | [calling-external-apis.md](calling-external-apis.md)         | M8            | in use  |
+| Refresh status and last known good | [refresh-status-and-last-known-good.md](refresh-status-and-last-known-good.md) | M9 | in use |
+| Scheduled jobs                  | [scheduled-jobs.md](scheduled-jobs.md)                       | M9            | planned |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").

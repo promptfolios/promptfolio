@@ -10,7 +10,7 @@ failure into a typed, explainable result instead of an exception or a half-finis
 
 ## 2. Why it matters in Promptfolio
 
-The GitHub fetcher runs unattended (manually now, on a schedule from M9). Nobody watches it
+The GitHub fetcher runs unattended (by hand, or from a scheduled job; see M9). Nobody watches it
 fail, and a careless run can get the client rate-limited or banned, or replace good data with
 garbage. Every response is untrusted input, exactly like a visitor's message.
 
@@ -36,6 +36,15 @@ garbage. Every response is untrusted input, exactly like a visitor's message.
   `network`, `timeout`, `malformed`. Messages never include the token, headers, or response bodies.
   Some errors stop the run at once (rate limits, a rejected token); others are collected so the
   owner sees every problem from one run.
+- **Partial failure as a result type (M9).** The fetcher returns `status: "complete" | "partial" |
+  "failed"` rather than `ok: true | false`. A failed languages or README request makes the run
+  partial: the result lists the missing repositories with their errors, and the caller decides
+  whether earlier data can fill the gap. A new discriminant, instead of reusing `ok`, makes the
+  type checker find every caller that assumed all or nothing.
+- **Conditional requests, deferred (M9).** Sending a stored `ETag` as `If-None-Match` gets a `304`
+  that does not count against the primary rate limit, but only for authorized requests. With a
+  token the budget is 20 to 100 times one run; without one there is no saving. Not worth storing
+  ETags yet.
 - **One request at a time.** GitHub recommends serial requests to avoid secondary limits.
 - **Testing without the network.** `fetchGitHubSnapshot` takes an injectable `fetch`. Tests pass a
   fake that answers from fixtures, records each call (URL, method, headers), can throw (network

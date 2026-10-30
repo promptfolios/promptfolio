@@ -60,8 +60,15 @@ flowchart LR
 GitHub data (M8) is part of the profile content. A refetch that finds the same data only changes
 `retrievedAt`, which the fingerprint ignores, so answers stay current; any changed README excerpt,
 description, topic, language share, license, or month of last push invalidates every prepared
-answer. That is why the adapter keeps dates by month and leaves out star counts, and why the fetch
-command says whether the content changed. Regenerating answers after a refresh is part of M9.
+answer. That is why the adapter keeps dates by month and leaves out star counts.
+
+**The fingerprint is the profile version (M9).** No counter is kept anywhere: the profile
+fingerprint *is* the version id, and an answer belongs to the version in its `profileFingerprint`.
+`pnpm --filter portfolio refresh` prints the version before and after, records it in the refresh
+status, and says how many prepared answers belong to the new version. It does not regenerate
+them: prepared answers are reviewed files, regeneration needs a model key, and free tiers limit
+requests. Until the owner reruns `prepare-answers`, stale starters are answered live, which is
+slower but never wrong.
 
 ## 4. Where it lives in the code
 
@@ -74,14 +81,15 @@ command says whether the content changed. Regenerating answers after a refresh i
 - Reading the file: [apps/portfolio/src/server/prepared-answers.ts](../../apps/portfolio/src/server/prepared-answers.ts);
   the owner's script: [apps/portfolio/scripts/prepare-answers.ts](../../apps/portfolio/scripts/prepare-answers.ts)
 - Design and decisions: [M7 plan](../plans/m7-prepared-starter-answers.md)
-- GitHub data in the fingerprint, and the content-change hint: [apps/portfolio/scripts/fetch-github.ts](../../apps/portfolio/scripts/fetch-github.ts)
+- The version check after a refresh: [apps/portfolio/src/server/refresh.ts](../../apps/portfolio/src/server/refresh.ts)
+  (`profileFingerprint`, exported by `@promptfolio/ai`)
 
 ## 5. Common pitfalls and misconceptions
 
 - "A cache needs an expiry time." A time to live only guesses when data changes. A content
   fingerprint knows: the answer is valid exactly as long as its inputs are unchanged, however old.
 - Fingerprinting too much. Including observation timestamps would invalidate every answer on
-  every checkout, and on every refresh in M9 that finds the same data.
+  every checkout, and on every refresh that finds the same data.
 - Fingerprinting too little. Dependencies are not only the records an answer used: "there is no
   open-source work in the profile" depends on records that are *absent*. That is why the whole
   profile is one dependency.

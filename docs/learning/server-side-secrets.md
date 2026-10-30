@@ -46,9 +46,17 @@ M4 verified layer 1 by building with a fake sentinel key and searching the build
 matches in `.next/static` (client) or anywhere in `.next`. A positive control (the default model
 id) was found in the server output, confirming the search reached it.
 
-`GITHUB_TOKEN` (M8) is optional and read only by the owner-run `fetch-github` command, which passes
-it to `fetchGitHubSnapshot` as an argument. The running app never reads it and never calls GitHub,
-so a deployment does not need it. Error messages from the fetcher never contain it.
+`GITHUB_TOKEN` (M8) is optional and read only by the refresh command (`pnpm --filter portfolio
+refresh`, named `fetch-github` in M8), which passes it to `fetchGitHubSnapshot` as an argument. The
+running app never reads it and never calls GitHub, so a deployment does not need it. Error
+messages, the refresh status file, and the command output never contain it.
+
+In the scheduled job (M9 template, [docs/guides/scheduled-refresh.md](../guides/scheduled-refresh.md))
+GitHub Actions supplies `GITHUB_TOKEN` itself, limited to the permissions the workflow declares
+(`contents: write`); no personal token is stored. A Vercel deploy hook URL is a secret too: anyone
+who has it can start a deployment, so it lives in a repository secret, never in the workflow file.
+A model key is needed in the job only if regenerating prepared answers is turned on (off by
+default).
 
 ## 4. Where it lives in the code
 
@@ -58,8 +66,8 @@ so a deployment does not need it. Error messages from the fetcher never contain 
 - Generic error messages: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
   (`genericErrorMessage`), with leak tests in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
 - Example configuration: [apps/portfolio/.env.example](../../apps/portfolio/.env.example)
-- The GitHub token: [apps/portfolio/scripts/fetch-github.ts](../../apps/portfolio/scripts/fetch-github.ts),
-  leak test in [packages/source-github/src/fetch.test.ts](../../packages/source-github/src/fetch.test.ts)
+- The GitHub token: [apps/portfolio/scripts/refresh.ts](../../apps/portfolio/scripts/refresh.ts),
+  leak tests in [apps/portfolio/src/server/refresh.test.ts](../../apps/portfolio/src/server/refresh.test.ts) and [packages/source-github/src/fetch.test.ts](../../packages/source-github/src/fetch.test.ts)
 
 ## 5. Common pitfalls and misconceptions
 

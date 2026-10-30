@@ -48,6 +48,11 @@ much, or how well; the system prompt tells the model to attribute such facts to 
 infer authorship or skill from them. An owner project with the same id as a repository is the
 owner's own (`self-reported`) description of it: both records keep their own provenance.
 
+From M9, `observedAt` is per repository: when a refresh cannot read a repository again, it keeps
+the previous data together with the time that data was read, so a carried record says it was
+observed on an earlier day instead of looking as current as the rest
+([refresh status and last known good](refresh-status-and-last-known-good.md)).
+
 ## 4. Where it lives in the code
 
 - `ClaimBasis`, `Provenance`, `SourceRef`: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
