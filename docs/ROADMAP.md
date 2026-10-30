@@ -26,6 +26,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M7.1 — OpenRouter provider                | Done      | `PROMPTFOLIO_MODEL=openrouter` with `OPENROUTER_API_KEY`: a free model answers with tools; [plan](plans/m7-1-openrouter-provider.md) |
 | M7.2 — AI Gateway provider                | Done      | `PROMPTFOLIO_MODEL=gateway` with `AI_GATEWAY_API_KEY` (needs a card on the Vercel team): a $0 model answers; [plan](plans/m7-2-ai-gateway-provider.md) |
 | M8 — GitHub source adapter                | Done      | `pnpm --filter portfolio refresh` (named `fetch-github` until M9) with `profile/<profile>.github.json`; answers cite `github.com/…` repositories; [plan](plans/m8-github-source-adapter.md) |
+| M8.1 — GitHub contributions               | Done      | `pnpm --filter portfolio refresh`: commits in other owners' public repositories become contributions; answers cite `github.com/…/commit/…`; [plan](plans/m8-1-github-contributions.md) |
 | M9 — Refresh pipeline and versions         | Done      | `pnpm --filter portfolio refresh`: exit 0, 2, or 1, `profile/<profile>.refresh-status.json`, snapshot unchanged when nothing changed; workflow template in [the guide](guides/scheduled-refresh.md); [plan](plans/m9-refresh-pipeline-and-versions.md) |
 
 Update this table when a milestone is approved.
@@ -161,16 +162,18 @@ Update this table when a milestone is approved.
 
 Plan and decisions: [M8 plan](plans/m8-github-source-adapter.md), [ADR 0009](adr/0009-github-source-as-fetched-snapshot.md). The owner configures only a GitHub username; repositories are selected automatically, identified by source keys (`github.com/owner/repo`), and fetched by `pnpm --filter portfolio refresh` (named `fetch-github` in M8) into a snapshot file.
 
-### M8.1 — GitHub contributions (proposed)
+### M8.1 — GitHub contributions
 
-**Objective:** Show open-source work outside the owner's own repositories. Split from M8 on 2026-10-29.
+**Objective:** Show work outside the owner's own repositories. Split from M8 on 2026-10-29.
 
 **Activities:**
-- Find pull requests by the owner merged into other repositories (search API: `is:pr author:<user> is:merged`; 10 searches per minute without a token, 30 with one).
-- Treat forks and pinned repositories of other owners as contribution candidates, backed by those pull requests.
-- Add a source-observed `contribution` record ("pull request X merged into repository Y") and prompt rules for what a merged pull request does and does not show.
+- Find commits GitHub attributes to the owner in other owners' public repositories (commit search; 10 searches per minute without a token, 30 with one). Commits replace the earlier idea of merged pull requests, which miss projects that take changes through their own review system.
+- Pinned repositories of other owners only rank results; forks and pins without commits make no record.
+- Add a source-observed `contribution` record and a prompt rule for what an attributed commit does and does not show.
 
-**Exit criteria:** Merged contributions appear as cited, source-observed records without overstating authorship or size. Needs its own plan.
+**Exit criteria:** Contributions appear as cited, source-observed records without overstating authorship or size.
+
+Plan and decisions: [M8.1 plan](plans/m8-1-github-contributions.md), [ADR 0011](adr/0011-contributions-as-attributed-commits.md).
 
 ### M9 — Refresh pipeline and profile versioning
 

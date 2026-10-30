@@ -73,3 +73,6 @@ the profile-independent reference app).
   entry with its own `retrievedAt` (snapshot format version 2), the run exits 2, and a status
   file records it. The snapshot is rewritten only when the profile version changes. See
   [ADR 0010](0010-refresh-status-and-content-versions.md).
+- *Update (M8.1):* work outside the owner's repositories is covered by contribution records, from
+  commits rather than forks or merged pull requests. See
+  [ADR 0011](0011-contributions-as-attributed-commits.md).

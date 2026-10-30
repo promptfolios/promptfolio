@@ -44,9 +44,11 @@ flowchart TB
         ghSnapshot["snapshot.ts<br/>response and snapshot schemas"]
         ghNormalize["normalize.ts<br/>normalizeGitHubSnapshot (pure)"]
         ghCarry["carry-forward.ts<br/>carryForward: per-repository last known good (pure)"]
+        ghContributions["contributions.ts<br/>eligible commits, mirrors, caps (pure)"]
         ghIndex --> ghFetch
         ghIndex --> ghNormalize
         ghIndex --> ghCarry
+        ghFetch --> ghContributions
         ghFetch --> ghSelect
         ghFetch --> ghSnapshot
         ghNormalize --> ghSnapshot
@@ -289,6 +291,9 @@ Profile
  ├─ repositories[] { id (source key, e.g. github.com/owner/name), name, fullName, url,
  │                  description?, homepage?, languages[{ name, percent }], topics[], fork,
  │                  archived, created?, lastActivity?, license?, readme?, provenance }
+ ├─ contributions[] { id (source key, e.g. github.com/owner/name/commit/<hash>), title, url,
+ │                  repositoryId, repository, repositoryUrl, repositoryDescription?, authored,
+ │                  provenance }
  └─ sources[]     { id, kind, label, url?, retrievedAt }
 
 provenance = { sourceId → sources.id, basis: self-reported | source-observed | derived, observedAt }
@@ -310,7 +315,7 @@ flowchart LR
     ai --> core["@promptfolio/core"]
     ai --> prepared["prepared starter answers (M7, done)"]
     github["@promptfolio/source-github (M8, done)"] -- "repositories with<br/>basis source-observed" --> core
-    contributions["contributions: forks and merged pull requests (M8.1)"] -.-> github
+    contributions["contributions: attributed commits (M8.1, done)"] --> github
     refresh["refresh: status, versions, last known good (M9, done)<br/>schedule: template, active in M12"] --> github
 ```
 
@@ -328,3 +333,4 @@ flowchart LR
 | [0008](adr/0008-prepared-answers-as-files.md)         | Prepared starter answers as reviewed files    | Accepted |
 | [0009](adr/0009-github-source-as-fetched-snapshot.md) | GitHub as a fetched snapshot, source-key ids  | Accepted |
 | [0010](adr/0010-refresh-status-and-content-versions.md) | Refresh status, last known good, content versions | Accepted |
+| [0011](adr/0011-contributions-as-attributed-commits.md) | Contributions as attributed commits | Accepted |
