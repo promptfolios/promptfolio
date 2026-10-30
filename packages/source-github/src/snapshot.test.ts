@@ -30,14 +30,43 @@ function validSnapshot() {
   };
 }
 
+/** Version 2 (M9): a `retrievedAt` per repository. */
+function validSnapshotV2(repositoryRetrievedAt = "2026-10-20T06:00:00.000Z") {
+  const v1 = validSnapshot();
+  return {
+    ...v1,
+    formatVersion: 2,
+    repositories: v1.repositories.map((r) => ({ retrievedAt: repositoryRetrievedAt, ...r })),
+  };
+}
+
 describe("parseGitHubSnapshot", () => {
-  it("accepts a snapshot written by the fetcher", () => {
-    expect(parseGitHubSnapshot(validSnapshot()).ok).toBe(true);
+  it("accepts a version 2 snapshot with a time per repository", () => {
+    const result = parseGitHubSnapshot(validSnapshotV2());
+    if (!result.ok) throw new Error(JSON.stringify(result.issues));
+    expect(result.snapshot.repositories[0]?.retrievedAt).toBe("2026-10-20T06:00:00.000Z");
+  });
+
+  it("upgrades a version 1 snapshot: each repository takes the file's time", () => {
+    const result = parseGitHubSnapshot(validSnapshot());
+    if (!result.ok) throw new Error(JSON.stringify(result.issues));
+    expect(result.snapshot.formatVersion).toBe(2);
+    expect(result.snapshot.repositories[0]?.retrievedAt).toBe("2026-10-29T06:00:00.000Z");
+  });
+
+  it("rejects a repository read after the snapshot was written", () => {
+    const result = parseGitHubSnapshot(validSnapshotV2("2026-10-30T06:00:00.000Z"));
+    if (result.ok) throw new Error("Expected issues");
+    expect(result.issues[0]?.path).toBe("repositories[0].retrievedAt");
   });
 
   it.each([
     [
-      "a wrong format version",
+      "an unknown format version",
+      (s: ReturnType<typeof validSnapshot>) => ({ ...s, formatVersion: 3 }),
+    ],
+    [
+      "version 2 without a time per repository",
       (s: ReturnType<typeof validSnapshot>) => ({ ...s, formatVersion: 2 }),
     ],
     ["an unknown key", (s: ReturnType<typeof validSnapshot>) => ({ ...s, extra: true })],

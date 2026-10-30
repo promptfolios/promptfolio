@@ -18,7 +18,7 @@ import {
  * (which `loadAppProfile` has already checked to be a plain name inside `profile/`):
  *
  * - `<name>.github.json`: the owner's configuration (the username, optional exclusions);
- * - `<name>.github-snapshot.json`: what `pnpm --filter portfolio fetch-github` last fetched.
+ * - `<name>.github-snapshot.json`: what `pnpm --filter portfolio refresh` last fetched.
  *
  * No configuration file means no GitHub source. Server-only: uses the filesystem.
  */
@@ -109,7 +109,7 @@ export async function withGitHubSource(
         ...owner.warnings,
         {
           path: `(${snapshotFileName})`,
-          message: "No GitHub data yet; run pnpm --filter portfolio fetch-github",
+          message: "No GitHub data yet; run pnpm --filter portfolio refresh",
         },
       ],
     };

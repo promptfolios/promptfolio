@@ -114,6 +114,32 @@ describe("addObservedRecords", () => {
     expect(profile.repositories[0]?.provenance).not.toBe(profile.repositories[1]?.provenance);
   });
 
+  it("uses a repository's own observation time when given, the source's otherwise", () => {
+    const profile = merged(
+      observed({
+        repositories: [
+          repository({ observedAt: new Date("2026-10-20T06:00:00.000Z") }),
+          repository({ id: `${REPO_ID}-2` }),
+        ],
+      }),
+    );
+
+    expect(profile.repositories.map((entry) => entry.provenance.observedAt)).toEqual([
+      "2026-10-20T06:00:00.000Z",
+      "2026-10-28T06:00:00.000Z",
+    ]);
+    expect(profile.repositories[0]).not.toHaveProperty("observedAt");
+  });
+
+  it("rejects an observation time after the source's, or an invalid one", () => {
+    const late = repository({ observedAt: new Date("2026-10-29T00:00:00.000Z") });
+    expect(issuesFor(observed({ repositories: [late] })).map((issue) => issue.path)).toEqual([
+      "repositories[0].observedAt",
+    ]);
+    const invalid = repository({ observedAt: new Date("nonsense") });
+    expect(issuesFor(observed({ repositories: [invalid] }))).not.toHaveLength(0);
+  });
+
   it("keeps the owner's link when the source observes the same URL", () => {
     const profile = merged();
     expect(profile.links).toHaveLength(1);
@@ -227,6 +253,13 @@ describe("canonical content of observed records", () => {
     const later = observed();
     later.source.retrievedAt = new Date("2026-10-29T06:00:00.000Z");
     expect(canonicalProfileContent(merged(later))).toBe(canonicalProfileContent(merged()));
+  });
+
+  it("does not change when a repository was observed earlier (carried over)", () => {
+    const carried = observed({
+      repositories: [repository({ observedAt: new Date("2026-10-20T06:00:00.000Z") })],
+    });
+    expect(canonicalProfileContent(merged(carried))).toBe(canonicalProfileContent(merged()));
   });
 
   it("changes when a README or the last activity changes", () => {

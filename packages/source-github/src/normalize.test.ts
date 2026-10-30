@@ -10,6 +10,7 @@ const CONFIG: GitHubSourceConfig = { user: "jordan-example", exclude: [] };
 
 function repository(overrides: Partial<SnapshotRepository> = {}): SnapshotRepository {
   return {
+    retrievedAt: "2026-10-29T06:00:00.000Z",
     name: "markdown-linter",
     fullName: "jordan-example/markdown-linter",
     htmlUrl: "https://github.com/jordan-example/markdown-linter",
@@ -32,7 +33,7 @@ function repository(overrides: Partial<SnapshotRepository> = {}): SnapshotReposi
 
 function snapshot(repositories: SnapshotRepository[] = [repository()]): GitHubSnapshot {
   return {
-    formatVersion: 1,
+    formatVersion: 2,
     retrievedAt: "2026-10-29T06:00:00.000Z",
     authenticated: false,
     user: { login: "jordan-example", htmlUrl: "https://github.com/jordan-example" },
@@ -88,6 +89,18 @@ describe("normalizeGitHubSnapshot", () => {
       retrievedAt: new Date("2026-10-29T06:00:00.000Z"),
     });
     expect(records.links).toEqual([{ label: "GitHub", url: "https://github.com/jordan-example" }]);
+  });
+
+  it("gives a repository read in an earlier run its own observation time", () => {
+    const carried = repository({
+      retrievedAt: "2026-10-20T06:00:00.000Z",
+      name: "old",
+      fullName: "jordan-example/old",
+    });
+    const records = normalized(snapshot([repository(), carried])).records.repositories ?? [];
+
+    expect(records[0]).not.toHaveProperty("observedAt");
+    expect(records[1]?.observedAt).toEqual(new Date("2026-10-20T06:00:00.000Z"));
   });
 
   it("leaves out empty and meaningless values", () => {
@@ -169,7 +182,7 @@ describe("normalizeGitHubSnapshot", () => {
     const result = normalizeGitHubSnapshot(snapshot(), { user: "someone-else", exclude: [] });
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.issues[0]?.message).toContain("run fetch-github");
+    expect(result.issues[0]?.message).toContain("run refresh");
   });
 
   it("produces records that core accepts", () => {

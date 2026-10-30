@@ -104,7 +104,7 @@ async function run(routes: Record<string, Route>, options: FetchGitHubOptions = 
 }
 
 function failure(result: FetchGitHubResult) {
-  if (result.ok) throw new Error("Expected the fetch to fail");
+  if (result.status !== "failed") throw new Error("Expected the fetch to fail");
   return result;
 }
 
@@ -119,7 +119,7 @@ function expectError(result: FetchGitHubResult, kind: string) {
 describe("fetchGitHubSnapshot without a token", () => {
   it("fetches the user, the repository list, and languages and README per selected repository", async () => {
     const { result, calls } = await run(baseRoutes());
-    if (!result.ok) throw new Error(JSON.stringify(result.errors));
+    if (result.status !== "complete") throw new Error(JSON.stringify(result));
 
     expect(calls.map((call) => call.url)).toEqual([
       "https://api.github.com/users/jordan-example",
@@ -130,6 +130,7 @@ describe("fetchGitHubSnapshot without a token", () => {
       "https://api.github.com/repos/jordan-example/Dot_Files/readme",
     ]);
     expect(result.requests).toBe(6);
+    expect(result.snapshot.formatVersion).toBe(2);
     expect(result.snapshot.retrievedAt).toBe("2026-10-29T06:00:00.000Z");
     expect(result.snapshot.authenticated).toBe(false);
     expect(result.snapshot.user).toEqual({
@@ -156,13 +157,14 @@ describe("fetchGitHubSnapshot without a token", () => {
 
   it("skips forks and private repositories and keeps what the snapshot needs", async () => {
     const { result } = await run(baseRoutes());
-    if (!result.ok) throw new Error("Expected success");
+    if (result.status !== "complete") throw new Error("Expected success");
 
     expect(result.snapshot.repositories.map((repository) => repository.fullName)).toEqual([
       "jordan-example/markdown-linter",
       "jordan-example/Dot_Files",
     ]);
     expect(result.snapshot.repositories[0]).toEqual({
+      retrievedAt: "2026-10-29T06:00:00.000Z",
       name: "markdown-linter",
       fullName: "jordan-example/markdown-linter",
       htmlUrl: "https://github.com/jordan-example/markdown-linter",
@@ -184,7 +186,7 @@ describe("fetchGitHubSnapshot without a token", () => {
 
   it("treats a missing README as no README, not as an error", async () => {
     const { result } = await run(baseRoutes());
-    if (!result.ok) throw new Error("Expected success");
+    if (result.status !== "complete") throw new Error("Expected success");
     expect(result.snapshot.repositories[1]?.readme).toBeNull();
   });
 
@@ -192,7 +194,7 @@ describe("fetchGitHubSnapshot without a token", () => {
     const routes = baseRoutes();
     routes["repos/jordan-example/markdown-linter/readme"] = { text: "x".repeat(25_000) };
     const { result } = await run(routes);
-    if (!result.ok) throw new Error("Expected success");
+    if (result.status !== "complete") throw new Error("Expected success");
     expect(result.snapshot.repositories[0]?.readme).toHaveLength(20_000);
     expect(result.snapshot.repositories[0]?.readmeTruncated).toBe(true);
   });
@@ -201,7 +203,7 @@ describe("fetchGitHubSnapshot without a token", () => {
 describe("fetchGitHubSnapshot with a token", () => {
   it("asks for pinned repositories with the token and puts them first", async () => {
     const { result, calls } = await run(tokenRoutes(), { token: TOKEN });
-    if (!result.ok) throw new Error(JSON.stringify(result.errors));
+    if (result.status !== "complete") throw new Error(JSON.stringify(result));
 
     expect(calls[1]?.url).toBe("https://api.github.com/graphql");
     expect(calls[1]?.method).toBe("POST");
@@ -217,13 +219,83 @@ describe("fetchGitHubSnapshot with a token", () => {
     expect(result.warnings).toEqual([expect.stringContaining("some-org/shared-config")]);
   });
 
+  it("skips a pinned item GitHub could not return, and keeps the others", async () => {
+    // As GitHub answers when an organization forbids the token: partial data, null node.
+    const routes = tokenRoutes();
+    const [first, , third] = pinned.data.user.pinnedItems.nodes;
+    routes.graphql = {
+      json: {
+        data: { user: { pinnedItems: { nodes: [first, null, third] } } },
+        errors: [
+          {
+            type: "FORBIDDEN",
+            path: ["user", "pinnedItems", "nodes", 1],
+            message: `The 'some-org' organization forbids access ${BODY_MARKER}`,
+          },
+        ],
+      },
+    };
+    const { result } = await run(routes, { token: TOKEN });
+    if (result.status !== "complete") throw new Error(JSON.stringify(result));
+
+    expect(result.snapshot.repositories.filter((r) => r.pinned).map((r) => r.name)).toEqual([
+      "old-but-pinned",
+      "markdown-linter",
+    ]);
+    expect(result.warnings).toEqual([
+      "Skipped pinned item 2: GitHub did not return it (FORBIDDEN)",
+    ]);
+    expect(result.warnings.join(" ")).not.toContain(BODY_MARKER);
+  });
+
+  it("stops when a GraphQL error is not about one pinned item", async () => {
+    const routes = tokenRoutes();
+    routes.graphql = {
+      json: { data: { user: null }, errors: [{ type: "NOT_FOUND", path: ["user"] }] },
+    };
+    const { result } = await run(routes, { token: TOKEN });
+    expectError(result, "unauthorized");
+  });
+
   it("never keeps a private repository, even when the token can see it", async () => {
     const { result } = await run(tokenRoutes(), { token: TOKEN });
-    if (!result.ok) throw new Error("Expected success");
+    if (result.status !== "complete") throw new Error("Expected success");
     expect(result.snapshot.repositories.map((repository) => repository.name)).not.toContain(
       "secret-notes",
     );
   });
+});
+
+const partialMessages: string[] = [];
+
+describe("fetchGitHubSnapshot partial results", () => {
+  it.each([
+    ["a server error on languages", "languages", { status: 500, text: BODY_MARKER }, "http"],
+    ["a malformed languages body", "languages", { text: `<html>${BODY_MARKER}` }, "malformed"],
+    ["a README timeout", "readme", { hang: true }, "timeout"],
+  ] as const)(
+    "is partial after %s and still reads the other repositories",
+    async (_name, endpoint, route, kind) => {
+      const routes = baseRoutes();
+      routes[`repos/jordan-example/markdown-linter/${endpoint}`] = route;
+      const { result, calls } = await run(routes, { timeoutMs: 20 });
+      if (result.status !== "partial")
+        throw new Error(`Expected partial: ${JSON.stringify(result)}`);
+
+      expect(result.snapshot.repositories.map((repository) => repository.name)).toEqual([
+        "Dot_Files",
+      ]);
+      expect(result.selected).toEqual([
+        "jordan-example/markdown-linter",
+        "jordan-example/Dot_Files",
+      ]);
+      expect(result.missing).toHaveLength(1);
+      expect(result.missing[0]?.fullName).toBe("jordan-example/markdown-linter");
+      expect(result.missing[0]?.errors.map((error) => error.kind)).toEqual([kind]);
+      expect(calls.map((call) => call.url).at(-1)).toContain("Dot_Files/readme");
+      for (const error of result.missing[0]?.errors ?? []) partialMessages.push(error.message);
+    },
+  );
 });
 
 describe("fetchGitHubSnapshot failures", () => {
@@ -299,13 +371,12 @@ describe("fetchGitHubSnapshot failures", () => {
     expect(calls).toHaveLength(2);
   });
 
-  it("fails on a server error but still reports the other repositories", async () => {
+  it("fails when the repository list cannot be read, before any per-repository request", async () => {
     const routes = baseRoutes();
-    routes["repos/jordan-example/markdown-linter/languages"] = { status: 500, text: BODY_MARKER };
+    routes["users/jordan-example/repos"] = { status: 500, text: BODY_MARKER };
     const { result, calls } = await run(routes);
-    const errors = expectError(result, "http");
-    expect(errors).toHaveLength(1);
-    expect(calls.map((call) => call.url).at(-1)).toContain("Dot_Files/readme");
+    expectError(result, "http");
+    expect(calls).toHaveLength(2);
   });
 
   it("reports a network error", async () => {
@@ -335,6 +406,7 @@ describe("fetchGitHubSnapshot failures", () => {
   });
 
   it("never puts the token or a response body into a message", () => {
+    allMessages.push(...partialMessages);
     expect(allMessages.length).toBeGreaterThan(10);
     for (const message of allMessages) {
       expect(message).not.toContain(TOKEN);

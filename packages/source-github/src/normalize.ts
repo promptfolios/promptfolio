@@ -41,7 +41,7 @@ export function normalizeGitHubSnapshot(
       issues: [
         {
           path: "user.login",
-          message: `The snapshot is for @${snapshot.user.login}, but the configuration names @${config.user}; run fetch-github`,
+          message: `The snapshot is for @${snapshot.user.login}, but the configuration names @${config.user}; run refresh`,
         },
       ],
     };
@@ -50,14 +50,18 @@ export function normalizeGitHubSnapshot(
   const warnings: ProfileIssue[] = [];
   const repositories = snapshot.repositories
     .filter((repository) => !isExcluded(config, repository.name))
-    .map((repository, index) =>
-      toRepository(repository, (message) =>
+    .map((repository, index) => {
+      const record = toRepository(repository, (message) =>
         warnings.push({
           path: `repositories[${index}]`,
           message: `${repository.fullName}: ${message}`,
         }),
-      ),
-    );
+      );
+      // A repository kept from an earlier run (last known good) says when it was read.
+      return repository.retrievedAt === snapshot.retrievedAt
+        ? record
+        : { ...record, observedAt: new Date(repository.retrievedAt) };
+    });
   const links: ExternalLink[] = [{ label: "GitHub", url: snapshot.user.htmlUrl }];
 
   return {

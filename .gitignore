@@ -17,11 +17,12 @@ next-env.d.ts
 !.env.example
 
 # Real profile data (commit only fictional examples), including its prepared answers and its
-# GitHub configuration and snapshot
+# GitHub configuration, snapshot, and refresh status
 *.local.json
 *.local.answers.json
 *.local.github.json
 *.local.github-snapshot.json
+*.local.refresh-status.json
 
 # Deployment
 .vercel/

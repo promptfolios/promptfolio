@@ -5,9 +5,15 @@
  * (`parseGitHubConfig`, `parseGitHubSnapshot`) and normalizing (`normalizeGitHubSnapshot`),
  * so the latter can run on every request without touching the network. The output is
  * source-neutral and is added to a profile with `addObservedRecords` from `@promptfolio/core`.
+ * `carryForward` keeps the previous data of repositories a refresh could not read.
  *
  * Only what is exported here is part of the public API.
  */
+export {
+  type CarriedRepository,
+  type CarryForwardResult,
+  carryForward,
+} from "./carry-forward";
 export {
   CONFIG_LIMITS,
   type GitHubSourceConfig,
@@ -21,6 +27,7 @@ export {
   fetchGitHubSnapshot,
   type GitHubFetchError,
   type GitHubFetchErrorKind,
+  type MissingRepository,
 } from "./fetch";
 export {
   GITHUB_SOURCE_ID,
@@ -34,4 +41,5 @@ export {
   type ParseGitHubSnapshotResult,
   parseGitHubSnapshot,
   SNAPSHOT_LIMITS,
+  type SnapshotRepository,
 } from "./snapshot";

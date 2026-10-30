@@ -85,7 +85,7 @@ describe("loadAppProfile with a GitHub source", () => {
     expect(result.warnings).toEqual([
       {
         path: "(profile.local.github-snapshot.json)",
-        message: expect.stringContaining("fetch-github"),
+        message: expect.stringContaining("portfolio refresh"),
       },
     ]);
   });

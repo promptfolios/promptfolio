@@ -51,9 +51,37 @@ export interface GitHubFetchError {
   message: string;
 }
 
+/** A selected repository whose languages or README could not be read in this run. */
+export interface MissingRepository {
+  /** `owner/name` as GitHub returned it. */
+  fullName: string;
+  errors: GitHubFetchError[];
+}
+
+/**
+ * - `complete`: every request succeeded; the snapshot has every selected repository.
+ * - `partial`: the account and the repository list were read, but some repositories' details
+ *   were not. The snapshot has only the repositories that were read; `selected` gives the
+ *   full selection in order, and `carryForward` can fill the gaps from a previous snapshot.
+ * - `failed`: nothing usable (account, list, token, rate limit, or budget).
+ */
 export type FetchGitHubResult =
-  | { ok: true; snapshot: GitHubSnapshot; warnings: string[]; requests: number }
-  | { ok: false; errors: GitHubFetchError[]; requests: number };
+  | {
+      status: "complete";
+      snapshot: GitHubSnapshot;
+      warnings: string[];
+      requests: number;
+    }
+  | {
+      status: "partial";
+      snapshot: GitHubSnapshot;
+      /** Full names of every selected repository, in selection order. */
+      selected: string[];
+      missing: MissingRepository[];
+      warnings: string[];
+      requests: number;
+    }
+  | { status: "failed"; errors: GitHubFetchError[]; requests: number };
 
 /** Errors after which no further request is sent: more requests could not succeed. */
 const FATAL: ReadonlySet<GitHubFetchErrorKind> = new Set([
@@ -70,9 +98,11 @@ class FetchStopped extends Error {}
  * Fetches the owner's public GitHub repositories and returns a validated snapshot. The only
  * function in this package that does I/O.
  *
- * Requests are sent one at a time. All or nothing: if any request fails (a missing README is
- * not a failure), no snapshot is returned, so a caller never replaces good data with
- * incomplete data. There are no automatic retries; the next run is the retry.
+ * Requests are sent one at a time. A failure before the per-repository requests (or a rate
+ * limit, budget, or token error at any point) fails the whole run. A failed languages or
+ * README request makes the run `partial`: that repository is missing from the snapshot and
+ * listed in `missing`, so a caller can keep its previous data instead of dropping it (a
+ * missing README is not a failure). There are no automatic retries; the next run is the retry.
  */
 export async function fetchGitHubSnapshot(
   config: GitHubSourceConfig,
@@ -124,30 +154,50 @@ export async function fetchGitHubSnapshot(
       if (repository !== undefined) repositories.push(repository);
     }
 
+    // Without the full list, the selection itself would be wrong: nothing usable.
+    if (errors.length > 0) return failed();
+
     const selected = selectRepositories({ config, repositories, pinned, authenticated });
     client.checkBudget(selected.length * 2, fail);
 
+    const retrievedAt = (options.now ?? (() => new Date()))().toISOString();
     const snapshotRepositories: SnapshotRepository[] = [];
+    const missing: MissingRepository[] = [];
     for (const repository of selected) {
+      const errorsBefore = errors.length;
       const path = `repos/${encodePath(repository.full_name)}`;
       const languages = await client.json(`${path}/languages`, languagesResponseSchema, fail);
       const readme = await client.readme(`${path}/readme`, fail);
-      if (languages === undefined || readme === undefined) continue;
+      if (languages === undefined || readme === undefined) {
+        missing.push({ fullName: repository.full_name, errors: errors.slice(errorsBefore) });
+        continue;
+      }
       snapshotRepositories.push(
-        toSnapshotRepository(repository, languages, readme, isPinned(pinned, repository.full_name)),
+        toSnapshotRepository(
+          repository,
+          languages,
+          readme,
+          isPinned(pinned, repository.full_name),
+          retrievedAt,
+        ),
       );
     }
 
-    if (errors.length > 0) return failed();
+    const snapshot: GitHubSnapshot = {
+      formatVersion: 2,
+      retrievedAt,
+      authenticated,
+      user: { login: user.login, htmlUrl: user.html_url },
+      repositories: snapshotRepositories,
+    };
+    if (missing.length === 0) {
+      return { status: "complete", snapshot, warnings, requests: client.requests };
+    }
     return {
-      ok: true,
-      snapshot: {
-        formatVersion: 1,
-        retrievedAt: (options.now ?? (() => new Date()))().toISOString(),
-        authenticated,
-        user: { login: user.login, htmlUrl: user.html_url },
-        repositories: snapshotRepositories,
-      },
+      status: "partial",
+      snapshot,
+      selected: selected.map((repository) => repository.full_name),
+      missing,
       warnings,
       requests: client.requests,
     };
@@ -157,11 +207,18 @@ export async function fetchGitHubSnapshot(
   }
 
   function failed(): FetchGitHubResult {
-    return { ok: false, errors, requests: client.requests };
+    return { status: "failed", errors, requests: client.requests };
   }
 }
 
-/** Full names of pinned own public repositories, in pin order (GraphQL, token only). */
+/**
+ * Full names of pinned own public repositories, in pin order (GraphQL, token only).
+ *
+ * GraphQL can answer with partial data: an item the token may not read (for example a
+ * repository of an organization that forbids fine-grained tokens) is `null`, with an error
+ * whose `path` points at it. Such an item is skipped with a warning. Any other error, or an
+ * answer without the user, means the query as a whole was rejected.
+ */
 async function fetchPinned(
   client: GitHubClient,
   login: string,
@@ -175,18 +232,30 @@ async function fetchPinned(
     fail,
   );
   if (response === undefined) return [];
-  if (response.errors !== undefined && response.errors.length > 0) {
+  const nodes = response.data?.user?.pinnedItems.nodes;
+  const errors = response.errors ?? [];
+  const itemErrors = errors.filter((error) => pinnedItemIndex(error.path) !== undefined);
+  if (nodes === undefined || itemErrors.length < errors.length) {
     fail({
       kind: "unauthorized",
       target: "graphql",
       message: "GitHub rejected the pinned repositories query; check GITHUB_TOKEN",
     });
+    return [];
+  }
+  for (const error of itemErrors) {
+    const reason =
+      error.type !== undefined && /^[A-Z_]{1,40}$/.test(error.type) ? error.type : "an error";
+    warnings.push(
+      `Skipped pinned item ${(pinnedItemIndex(error.path) ?? 0) + 1}: GitHub did not return it (${reason})`,
+    );
   }
 
   const owner = `${login.toLowerCase()}/`;
   const pinned: string[] = [];
-  for (const node of response.data?.user?.pinnedItems.nodes ?? []) {
-    if (node.nameWithOwner === undefined || node.isFork || node.isPrivate) continue;
+  for (const node of nodes) {
+    if (node === null || node.nameWithOwner === undefined || node.isFork || node.isPrivate)
+      continue;
     if (!node.nameWithOwner.toLowerCase().startsWith(owner)) {
       warnings.push(
         `Skipped pinned repository ${node.nameWithOwner}: owned by someone else (contributions come later)`,
@@ -198,13 +267,27 @@ async function fetchPinned(
   return pinned;
 }
 
+/** The item index of an error path `user.pinnedItems.nodes.<index>`, or undefined. */
+function pinnedItemIndex(path: Array<string | number> | undefined): number | undefined {
+  if (path === undefined || path.length !== 4) return undefined;
+  const [user, items, nodes, index] = path;
+  return user === "user" &&
+    items === "pinnedItems" &&
+    nodes === "nodes" &&
+    typeof index === "number"
+    ? index
+    : undefined;
+}
+
 function toSnapshotRepository(
   repository: ListedRepository,
   languages: Record<string, number>,
   readme: { text: string | null; truncated: boolean },
   pinned: boolean,
+  retrievedAt: string,
 ): SnapshotRepository {
   return {
+    retrievedAt,
     name: repository.name,
     fullName: repository.full_name,
     htmlUrl: repository.html_url,

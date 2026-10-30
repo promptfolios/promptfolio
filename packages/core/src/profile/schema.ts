@@ -169,6 +169,8 @@ const repositoryInputSchema = z.strictObject({
   license: shortText.optional(),
   readme: z.string().trim().min(1).max(LIMITS.readme).optional(),
   readmeTruncated: z.boolean().optional(),
+  /** When this repository was read, if earlier than the source's `retrievedAt`. */
+  observedAt: z.date().optional(),
 });
 
 /** Records observed in an external source, produced by a source adapter (not by the owner). */

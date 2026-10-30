@@ -70,12 +70,16 @@ export const pinnedResponseSchema = z.object({
       user: z
         .object({
           pinnedItems: z.object({
+            // A node is null when GitHub could not return that item (see `errors`), for
+            // example a repository of an organization that forbids the token.
             nodes: z.array(
-              z.object({
-                nameWithOwner: z.string().optional(),
-                isFork: z.boolean().optional(),
-                isPrivate: z.boolean().optional(),
-              }),
+              z
+                .object({
+                  nameWithOwner: z.string().optional(),
+                  isFork: z.boolean().optional(),
+                  isPrivate: z.boolean().optional(),
+                })
+                .nullable(),
             ),
           }),
         })
@@ -83,12 +87,20 @@ export const pinnedResponseSchema = z.object({
     })
     .nullable()
     .optional(),
-  errors: z.array(z.unknown()).optional(),
+  // GraphQL errors can come with partial data. Only `path` and `type` are read, never `message`.
+  errors: z
+    .array(
+      z.object({
+        path: z.array(z.union([z.string(), z.number()])).optional(),
+        type: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 // --- Snapshot file ----------------------------------------------------------------------
 
-const snapshotRepositorySchema = z.strictObject({
+const snapshotRepositoryFields = {
   name: repositoryNameSchema,
   fullName: z.string().regex(/^[A-Za-z0-9-]+\/[A-Za-z0-9._-]{1,100}$/),
   htmlUrl: z.url({ protocol: /^https$/ }),
@@ -107,19 +119,61 @@ const snapshotRepositorySchema = z.strictObject({
   /** Raw README text, cut at `maxReadmeChars`; null when the repository has none. */
   readme: z.string().max(SNAPSHOT_LIMITS.maxReadmeChars).nullable(),
   readmeTruncated: z.boolean(),
-});
+};
 
-const snapshotSchema = z.strictObject({
-  formatVersion: z.literal(1),
+const snapshotFields = {
   retrievedAt: isoDateTime,
   /** Whether a token was used, which decides pinned repositories and the repository cap. */
   authenticated: z.boolean(),
   user: z.strictObject({ login: usernameSchema, htmlUrl: z.url({ protocol: /^https$/ }) }),
-  repositories: z.array(snapshotRepositorySchema).max(SNAPSHOT_LIMITS.maxRepositories),
+};
+
+/** Version 1 (M8): one `retrievedAt` for the whole file. Still read, never written. */
+const snapshotV1Schema = z.strictObject({
+  formatVersion: z.literal(1),
+  ...snapshotFields,
+  repositories: z
+    .array(z.strictObject(snapshotRepositoryFields))
+    .max(SNAPSHOT_LIMITS.maxRepositories),
 });
 
-/** What one fetch observed on GitHub: the validated subset, with the time it was retrieved. */
-export type GitHubSnapshot = z.infer<typeof snapshotSchema>;
+const snapshotRepositorySchema = z.strictObject({
+  /**
+   * When this repository's data was read. Earlier than the file's `retrievedAt` when a
+   * refresh could not read it again and kept the previous data (last known good).
+   */
+  retrievedAt: isoDateTime,
+  ...snapshotRepositoryFields,
+});
+
+/** Version 2 (M9): every repository has its own `retrievedAt`. */
+const snapshotV2Schema = z
+  .strictObject({
+    formatVersion: z.literal(2),
+    /** When the run that wrote this file read GitHub. */
+    ...snapshotFields,
+    repositories: z.array(snapshotRepositorySchema).max(SNAPSHOT_LIMITS.maxRepositories),
+  })
+  .superRefine((snapshot, context) => {
+    const written = Date.parse(snapshot.retrievedAt);
+    snapshot.repositories.forEach((repository, index) => {
+      if (Date.parse(repository.retrievedAt) > written) {
+        context.addIssue({
+          code: "custom",
+          path: ["repositories", index, "retrievedAt"],
+          message: "Later than the snapshot's retrievedAt",
+        });
+      }
+    });
+  });
+
+const snapshotSchema = z.discriminatedUnion("formatVersion", [snapshotV1Schema, snapshotV2Schema]);
+
+/**
+ * What GitHub showed, as validated by the fetcher: the time of the run that wrote it, and
+ * per repository the time its data was read. Always version 2 in memory.
+ */
+export type GitHubSnapshot = z.infer<typeof snapshotV2Schema>;
 export type SnapshotRepository = z.infer<typeof snapshotRepositorySchema>;
 
 export type ParseGitHubSnapshotResult =
@@ -128,10 +182,23 @@ export type ParseGitHubSnapshotResult =
 
 /**
  * Validates a snapshot read back from a file. The file is untrusted input like any other:
- * it may have been edited by hand or written by an older version.
+ * it may have been edited by hand or written by an older version. A version 1 file is
+ * upgraded: each repository takes the file's `retrievedAt`.
  */
 export function parseGitHubSnapshot(data: unknown): ParseGitHubSnapshotResult {
   const parsed = snapshotSchema.safeParse(data);
   if (!parsed.success) return { ok: false, issues: issuesFrom(parsed.error) };
-  return { ok: true, snapshot: parsed.data };
+  const snapshot = parsed.data;
+  if (snapshot.formatVersion === 2) return { ok: true, snapshot };
+  return {
+    ok: true,
+    snapshot: {
+      ...snapshot,
+      formatVersion: 2,
+      repositories: snapshot.repositories.map((repository) => ({
+        retrievedAt: snapshot.retrievedAt,
+        ...repository,
+      })),
+    },
+  };
 }

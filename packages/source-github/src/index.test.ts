@@ -9,6 +9,7 @@ describe("public API", () => {
       "GITHUB_SOURCE_ID",
       "SELECTION_LIMITS",
       "SNAPSHOT_LIMITS",
+      "carryForward",
       "fetchGitHubSnapshot",
       "normalizeGitHubSnapshot",
       "parseGitHubConfig",

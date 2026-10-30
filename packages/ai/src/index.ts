@@ -22,5 +22,6 @@ export {
   type PreparedAnswerRejection,
   type PreparedAnswersFile,
   parsePreparedAnswers,
+  profileFingerprint,
 } from "./prepared-answers";
 export { buildSystemPrompt } from "./system-prompt";

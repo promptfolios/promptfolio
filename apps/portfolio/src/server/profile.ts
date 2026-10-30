@@ -2,6 +2,7 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { loadStructuredProfile, type ProfileLoadResult } from "@promptfolio/core";
 import { withGitHubSource } from "./github-source";
+import { refreshStatusWarnings } from "./refresh-status";
 
 /** Directory containing profile JSON files, relative to the app root. */
 export const PROFILE_DIR = path.join(process.cwd(), "profile");
@@ -20,18 +21,25 @@ export interface LoadAppProfileOptions {
 /**
  * Reads the profile file selected by `PROMPTFOLIO_PROFILE_FILE` (a file name inside
  * `profile/`), loads it through `@promptfolio/core`, and adds its GitHub source if one is
- * configured (see `withGitHubSource`). Server-only: uses the filesystem.
+ * configured (see `withGitHubSource`). If the last refresh was partial or failed, a warning
+ * for the owner is added (see `refreshStatusWarnings`). Server-only: uses the filesystem.
  */
 export async function loadAppProfile(options: LoadAppProfileOptions = {}): Promise<AppProfile> {
   const owner = await loadOwnerProfile(options);
   if (!owner.result.ok) return owner;
+  const dir = options.dir ?? PROFILE_DIR;
+  const result = await withGitHubSource(owner.result, owner.fileName, dir);
+  if (!result.ok) return { fileName: owner.fileName, result };
   return {
     fileName: owner.fileName,
-    result: await withGitHubSource(owner.result, owner.fileName, options.dir ?? PROFILE_DIR),
+    result: {
+      ...result,
+      warnings: [...result.warnings, ...(await refreshStatusWarnings(owner.fileName, dir))],
+    },
   };
 }
 
-/** The owner's profile file alone, without its sources. Used by the fetch command. */
+/** The owner's profile file alone, without its sources. Used by the refresh command. */
 export async function loadOwnerProfile({ dir }: LoadAppProfileOptions = {}): Promise<AppProfile> {
   const fileName = process.env.PROMPTFOLIO_PROFILE_FILE?.trim() || DEFAULT_PROFILE_FILE;
 

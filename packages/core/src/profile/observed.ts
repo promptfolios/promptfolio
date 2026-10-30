@@ -22,8 +22,12 @@ export interface ObservedSource {
   retrievedAt: Date;
 }
 
-/** A repository as a source adapter produces it: everything except provenance. */
-export type RepositoryInput = Omit<Repository, "provenance">;
+/**
+ * A repository as a source adapter produces it: everything except provenance, plus an optional
+ * `observedAt` for a repository read earlier than the rest of the source (a refresh that kept
+ * the previous data for it). Defaults to the source's `retrievedAt`.
+ */
+export type RepositoryInput = Omit<Repository, "provenance"> & { observedAt?: Date };
 
 /** Records observed in one external source, in the canonical shape. */
 export interface ObservedRecords {
@@ -57,7 +61,10 @@ export function addObservedRecords(profile: Profile, records: ObservedRecords): 
   }
   const { links, repositories } = parsed.data;
 
-  const issues = findIdConflicts(profile, repositories);
+  const issues = [
+    ...findIdConflicts(profile, repositories),
+    ...findLateObservations(repositories, source.retrievedAt),
+  ];
   if (profile.sources.some((existing) => existing.id === source.id)) {
     issues.unshift({
       path: "source.id",
@@ -70,10 +77,10 @@ export function addObservedRecords(profile: Profile, records: ObservedRecords): 
 
   const retrievedAt = source.retrievedAt.toISOString();
   // A fresh object per record, so modifying one record's provenance cannot affect another.
-  const provenance = (): Provenance => ({
+  const provenance = (observedAt = retrievedAt): Provenance => ({
     sourceId: source.id,
     basis: "source-observed",
-    observedAt: retrievedAt,
+    observedAt,
   });
   const sourceRef: SourceRef = {
     id: source.id,
@@ -87,11 +94,11 @@ export function addObservedRecords(profile: Profile, records: ObservedRecords): 
   const newLinks: ProfileLink[] = links
     .filter((link) => !knownUrls.has(comparableUrl(link.url)))
     .map((link) => ({ ...link, provenance: provenance() }));
-  const newRepositories: Repository[] = repositories.map((repository) => ({
+  const newRepositories: Repository[] = repositories.map(({ observedAt, ...repository }) => ({
     ...repository,
     languages: repository.languages.map((language) => ({ ...language })),
     topics: [...repository.topics],
-    provenance: provenance(),
+    provenance: provenance(observedAt?.toISOString()),
   }));
 
   const merged: Profile = {
@@ -135,6 +142,20 @@ function findIdConflicts(profile: Profile, repositories: RepositoryInput[]): Pro
       });
     }
     taken.set(repository.id, "a repository");
+  });
+  return issues;
+}
+
+/** A repository cannot have been observed after its source was read. */
+function findLateObservations(repositories: RepositoryInput[], retrievedAt: Date): ProfileIssue[] {
+  const issues: ProfileIssue[] = [];
+  repositories.forEach((repository, index) => {
+    if (repository.observedAt !== undefined && repository.observedAt > retrievedAt) {
+      issues.push({
+        path: `repositories[${index}].observedAt`,
+        message: "Observed after the source was retrieved",
+      });
+    }
   });
   return issues;
 }
