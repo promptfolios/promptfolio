@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { canonicalProfileContent } from "./canonical";
 import { loadStructuredProfile } from "./load";
-import { addObservedRecords, type ObservedRecords, type RepositoryInput } from "./observed";
+import {
+  addObservedRecords,
+  type ContributionInput,
+  type ObservedRecords,
+  type RepositoryInput,
+} from "./observed";
 import { findRecordById, recordsUsingSkill } from "./query";
+import { isRecordId } from "./schema";
 import type { Profile } from "./types";
 
 const REPO_ID = "github.com/jordan-example/markdown-linter";
@@ -51,6 +57,22 @@ function repository(overrides: Partial<RepositoryInput> = {}): RepositoryInput {
     lastActivity: "2026-09",
     license: "MIT",
     readme: "# Markdown Linter\n\nFinds broken links.",
+    ...overrides,
+  };
+}
+
+const COMMIT_ID = `github.com/other-org/shared-tool/commit/${"a".repeat(40)}`;
+
+function contribution(overrides: Partial<ContributionInput> = {}): ContributionInput {
+  return {
+    id: COMMIT_ID,
+    title: "fix: handle empty input",
+    url: `https://github.com/other-org/shared-tool/commit/${"a".repeat(40)}`,
+    repositoryId: "github.com/other-org/shared-tool",
+    repository: "other-org/shared-tool",
+    repositoryUrl: "https://github.com/other-org/shared-tool",
+    repositoryDescription: "A shared tool.",
+    authored: "2026-09",
     ...overrides,
   };
 }
@@ -237,6 +259,86 @@ describe("addObservedRecords", () => {
   });
 });
 
+describe("contributions", () => {
+  it("adds contributions stamped source-observed, with their own observation time", () => {
+    const original = ownerProfile();
+    const before = JSON.stringify(original);
+    const profile = merged(
+      observed({
+        contributions: [
+          contribution(),
+          contribution({
+            id: `github.com/other-org/shared-tool/commit/${"b".repeat(40)}`,
+            observedAt: new Date("2026-10-20T06:00:00.000Z"),
+          }),
+        ],
+      }),
+      original,
+    );
+
+    expect(JSON.stringify(original)).toBe(before);
+    expect(original.contributions).toEqual([]);
+    expect(profile.contributions.map((entry) => entry.provenance)).toEqual([
+      { sourceId: "github", basis: "source-observed", observedAt: "2026-10-28T06:00:00.000Z" },
+      { sourceId: "github", basis: "source-observed", observedAt: "2026-10-20T06:00:00.000Z" },
+    ]);
+    expect(profile.contributions[1]).not.toHaveProperty("observedAt");
+  });
+
+  it("rejects an id already used by any other record, and invalid fields", () => {
+    const paths = (entries: ContributionInput[], profile = ownerProfile()) =>
+      issuesFor(observed({ contributions: entries }), profile).map((issue) => issue.path);
+
+    expect(paths([contribution(), contribution()])).toEqual(["contributions[1].id"]);
+    expect(paths([contribution({ id: REPO_ID })])).toContain("contributions[0].id");
+    expect(paths([contribution({ title: " " })])).toEqual(["contributions[0].title"]);
+    expect(paths([contribution({ authored: "last year" })])).toEqual(["contributions[0].authored"]);
+    expect(paths([contribution({ observedAt: new Date("2026-10-29T00:00:00.000Z") })])).toEqual([
+      "contributions[0].observedAt",
+    ]);
+
+    const owner = ownerProfile();
+    const project = { ...owner.projects[0], id: COMMIT_ID } as (typeof owner.projects)[number];
+    expect(paths([contribution()], { ...owner, projects: [project] })).toEqual([
+      "contributions[0].id",
+    ]);
+  });
+
+  it("returns a contribution with the project for its repository as owner notes", () => {
+    const profile = merged(observed({ contributions: [contribution()] }));
+    expect(findRecordById(profile, COMMIT_ID)?.kind).toBe("contribution");
+    expect(findRecordById(profile, COMMIT_ID)).not.toHaveProperty("ownerNotes");
+
+    const notes = {
+      ...profile.projects[0],
+      id: "github.com/other-org/shared-tool",
+    } as (typeof profile.projects)[number];
+    const annotated = { ...profile, projects: [notes] };
+    expect(findRecordById(annotated, COMMIT_ID)).toMatchObject({ ownerNotes: { id: notes.id } });
+  });
+
+  it("does not warn about a project for a repository that only has contributions", () => {
+    const owner = ownerProfile();
+    const notes = { ...owner.projects[0], id: "github.com/other-org/shared-tool" };
+    const unrelated = { ...owner.projects[0], id: "github.com/other-org/unrelated" };
+    const result = addObservedRecords(
+      { ...owner, projects: [notes, unrelated] as typeof owner.projects },
+      observed({ repositories: [], links: [], contributions: [contribution()] }),
+    );
+    if (!result.ok) throw new Error(JSON.stringify(result.issues));
+    expect(result.warnings.map((warning) => warning.message)).toEqual([
+      expect.stringContaining("github.com/other-org/unrelated"),
+    ]);
+  });
+
+  it("accepts the longest possible commit key, and not a longer one", () => {
+    const key = `github.com/${"o".repeat(39)}/${"n".repeat(100)}/commit/${"a".repeat(40)}`;
+    expect(key).toHaveLength(199);
+    expect(isRecordId(key)).toBe(true);
+    expect(isRecordId(`${key}aa`)).toBe(false);
+  });
+});
+
 describe("repositories in lookups", () => {
   it("matches a skill by language or topic, without listing the skill", () => {
     const profile = merged();
@@ -253,6 +355,24 @@ describe("canonical content of observed records", () => {
     const later = observed();
     later.source.retrievedAt = new Date("2026-10-29T06:00:00.000Z");
     expect(canonicalProfileContent(merged(later))).toBe(canonicalProfileContent(merged()));
+  });
+
+  it("does not change with a contribution's observation time, but with its data", () => {
+    const base = canonicalProfileContent(merged(observed({ contributions: [contribution()] })));
+    expect(
+      canonicalProfileContent(
+        merged(
+          observed({
+            contributions: [contribution({ observedAt: new Date("2026-10-20T06:00:00.000Z") })],
+          }),
+        ),
+      ),
+    ).toBe(base);
+    expect(
+      canonicalProfileContent(
+        merged(observed({ contributions: [contribution({ title: "New title" })] })),
+      ),
+    ).not.toBe(base);
   });
 
   it("does not change when a repository was observed earlier (carried over)", () => {

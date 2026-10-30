@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { carryForward } from "./carry-forward";
 import type { FetchGitHubResult, GitHubFetchError } from "./fetch";
-import type { GitHubSnapshot, SnapshotRepository } from "./snapshot";
+import type { GitHubSnapshot, SnapshotContribution, SnapshotRepository } from "./snapshot";
 
 const OLD = "2026-10-20T06:00:00.000Z";
 const NOW = "2026-10-30T06:00:00.000Z";
@@ -28,13 +28,19 @@ function repository(name: string, retrievedAt: string, readme = `${name} at ${re
   } satisfies SnapshotRepository;
 }
 
-function snapshot(repositories: SnapshotRepository[], retrievedAt = NOW, login = "jordan-example") {
+function snapshot(
+  repositories: SnapshotRepository[],
+  retrievedAt = NOW,
+  login = "jordan-example",
+  contributions: SnapshotContribution[] = [],
+) {
   return {
     formatVersion: 2,
     retrievedAt,
     authenticated: false,
     user: { login, htmlUrl: `https://github.com/${login}` },
     repositories,
+    contributions,
   } satisfies GitHubSnapshot;
 }
 
@@ -58,6 +64,7 @@ function partial(): FetchGitHubResult {
       { fullName: "jordan-example/b", errors: [timeout("b")] },
       { fullName: "jordan-example/d", errors: [timeout("d")] },
     ],
+    contributionErrors: [],
     warnings: ["a note"],
     requests: 8,
   };
@@ -77,6 +84,7 @@ describe("carryForward", () => {
       snapshot: fetched.snapshot,
       carriedOver: [],
       notAdded: [],
+      contributionsKept: false,
       errors: [],
       warnings: [],
     });
@@ -126,6 +134,58 @@ describe("carryForward", () => {
   it("fails a partial fetch when there is no previous snapshot to fill the gaps", () => {
     const result = carryForward(undefined, partial());
     expect(result).toEqual({ status: "failed", errors: [timeout("b"), timeout("d")] });
+  });
+
+  describe("contributions", () => {
+    const earlier: SnapshotContribution = {
+      retrievedAt: OLD,
+      sha: "a".repeat(40),
+      title: "fix: handle empty input",
+      htmlUrl: "https://github.com/other-org/tool/commit/abc",
+      repository: "other-org/tool",
+      repositoryUrl: "https://github.com/other-org/tool",
+      repositoryDescription: null,
+      authoredAt: OLD,
+    };
+    const searchFailed: GitHubFetchError = {
+      kind: "http",
+      target: "search/commits",
+      message: "GitHub answered with status 500",
+    };
+    const withEarlier = snapshot([repository("a", OLD)], OLD, "jordan-example", [earlier]);
+    const onlySearchFailed = (): FetchGitHubResult => ({
+      status: "partial",
+      snapshot: snapshot([repository("a", NOW)]),
+      selected: ["jordan-example/a"],
+      missing: [],
+      contributionErrors: [searchFailed],
+      warnings: [],
+      requests: 5,
+    });
+
+    it("keeps all earlier contributions and their dates when the search failed", () => {
+      const result = carryForward(withEarlier, onlySearchFailed());
+      if (result.status === "failed") throw new Error("Expected partial");
+      expect(result.status).toBe("partial");
+      expect(result.contributionsKept).toBe(true);
+      expect(result.snapshot.contributions).toEqual([earlier]);
+      expect(result.snapshot.repositories[0]?.retrievedAt).toBe(NOW);
+      expect(result.errors).toEqual([searchFailed]);
+    });
+
+    it("fails when the search failed and there is no earlier snapshot", () => {
+      expect(carryForward(undefined, onlySearchFailed())).toEqual({
+        status: "failed",
+        errors: [searchFailed],
+      });
+    });
+
+    it("uses the fresh list when only a repository failed", () => {
+      const result = carryForward(withEarlier, partial());
+      if (result.status === "failed") throw new Error("Expected partial");
+      expect(result.contributionsKept).toBe(false);
+      expect(result.snapshot.contributions).toEqual([]);
+    });
   });
 
   it("does not carry data over from a snapshot of another account", () => {

@@ -10,7 +10,8 @@ export interface CarriedRepository {
 /**
  * - `complete`: the fetch read everything; the snapshot is the fetched one.
  * - `partial`: some repositories could not be read. Those in the previous snapshot are kept
- *   from it (`carriedOver`), the others are left out (`notAdded`).
+ *   from it (`carriedOver`), the others are left out (`notAdded`). Or the contributions could
+ *   not be read: all previous ones are kept (`contributionsKept`).
  * - `failed`: nothing to write: the fetch failed, or it was partial with no previous snapshot
  *   to fill the gaps from.
  */
@@ -20,7 +21,8 @@ export type CarryForwardResult =
       snapshot: GitHubSnapshot;
       carriedOver: CarriedRepository[];
       notAdded: string[];
-      /** The errors of the repositories that could not be read (empty when complete). */
+      contributionsKept: boolean;
+      /** Why repositories or contributions could not be read (empty when complete). */
       errors: GitHubFetchError[];
       warnings: string[];
     }
@@ -34,7 +36,8 @@ export type CarryForwardResult =
  * that is no longer selected disappears, because that is a real change, not a failure. A kept
  * repository is the whole previous entry, with its own older `retrievedAt`, so no record mixes
  * data read at two different times. A repository that failed and was never in a snapshot is
- * left out: nothing valid is lost, and the next run adds it.
+ * left out: nothing valid is lost, and the next run adds it. Contributions succeed or fail as
+ * a whole: on failure all previous entries are kept, with their dates.
  *
  * @param previous The snapshot currently in use, if one exists and is valid.
  */
@@ -49,12 +52,16 @@ export function carryForward(
       snapshot: fetched.snapshot,
       carriedOver: [],
       notAdded: [],
+      contributionsKept: false,
       errors: [],
       warnings: fetched.warnings,
     };
   }
 
-  const errors = fetched.missing.flatMap((repository) => repository.errors);
+  const errors = [
+    ...fetched.missing.flatMap((repository) => repository.errors),
+    ...fetched.contributionErrors,
+  ];
   const sameUser =
     previous !== undefined &&
     previous.user.login.toLowerCase() === fetched.snapshot.user.login.toLowerCase();
@@ -81,11 +88,17 @@ export function carryForward(
     }
   }
 
+  const contributionsKept = fetched.contributionErrors.length > 0;
   return {
     status: "partial",
-    snapshot: { ...fetched.snapshot, repositories },
+    snapshot: {
+      ...fetched.snapshot,
+      repositories,
+      contributions: contributionsKept ? previous.contributions : fetched.snapshot.contributions,
+    },
     carriedOver,
     notAdded,
+    contributionsKept,
     errors,
     warnings: fetched.warnings,
   };

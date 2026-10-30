@@ -475,6 +475,15 @@ describe("citations and evidence", () => {
     ).toEqual(["a", "b", "c"]);
   });
 
+  it("accepts a cited contribution id that a tool returned", () => {
+    const id = `github.com/other-org/tool/commit/${"a".repeat(40)}`;
+    const evidence = evidenceIdsIn([
+      { output: { status: "listed", section: "contributions", records: [{ id }] } },
+    ]);
+    expect(citedIds(`A commit is attributed to them [${id}].`)).toEqual([id]);
+    expect(evidence).toEqual([id]);
+  });
+
   it("accepts a cited repository id that a tool returned", () => {
     const id = "github.com/jordan-example/markdown-linter";
     const text = `The public repository checks links [${id}].`;

@@ -8,9 +8,11 @@ import repos from "./fixtures/repos.json";
 import user from "./fixtures/user.json";
 
 const README = readFileSync(new URL("./fixtures/readme.md", import.meta.url), "utf8");
-const CONFIG = { user: "jordan-example", exclude: [] };
+const CONFIG = { user: "jordan-example", exclude: [], excludeContributionsTo: [] };
+const NO_COMMITS = { json: { total_count: 0, incomplete_results: false, items: [] } };
 const TOKEN = "github_pat_fixture_secret";
 const BODY_MARKER = "BODY-MARKER-should-never-appear";
+const EMAIL = "jordan@private.example";
 const NOW = () => new Date("2026-10-29T06:00:00.000Z");
 const RATE = {
   "x-ratelimit-remaining": "57",
@@ -81,6 +83,7 @@ function baseRoutes(): Record<string, Route> {
     "repos/jordan-example/markdown-linter/readme": { text: README },
     "repos/jordan-example/Dot_Files/languages": { json: {} },
     "repos/jordan-example/Dot_Files/readme": { status: 404, json: { message: "Not Found" } },
+    "search/commits": NO_COMMITS,
   };
 }
 
@@ -128,8 +131,9 @@ describe("fetchGitHubSnapshot without a token", () => {
       "https://api.github.com/repos/jordan-example/markdown-linter/readme",
       "https://api.github.com/repos/jordan-example/Dot_Files/languages",
       "https://api.github.com/repos/jordan-example/Dot_Files/readme",
+      "https://api.github.com/search/commits?q=author%3Ajordan-example%20-user%3Ajordan-example%20is%3Apublic%20merge%3Afalse&sort=author-date&order=desc&per_page=100&page=1",
     ]);
-    expect(result.requests).toBe(6);
+    expect(result.requests).toBe(7);
     expect(result.snapshot.formatVersion).toBe(2);
     expect(result.snapshot.retrievedAt).toBe("2026-10-29T06:00:00.000Z");
     expect(result.snapshot.authenticated).toBe(false);
@@ -292,10 +296,175 @@ describe("fetchGitHubSnapshot partial results", () => {
       expect(result.missing).toHaveLength(1);
       expect(result.missing[0]?.fullName).toBe("jordan-example/markdown-linter");
       expect(result.missing[0]?.errors.map((error) => error.kind)).toEqual([kind]);
-      expect(calls.map((call) => call.url).at(-1)).toContain("Dot_Files/readme");
+      expect(calls.map((call) => call.url)).toContainEqual(
+        expect.stringContaining("Dot_Files/readme"),
+      );
       for (const error of result.missing[0]?.errors ?? []) partialMessages.push(error.message);
     },
   );
+});
+
+function commit(name: string, sha: string, overrides: Record<string, unknown> = {}) {
+  return {
+    sha: sha.repeat(40),
+    html_url: `https://github.com/${name}/commit/${sha.repeat(40)}`,
+    commit: {
+      message: "fix: handle empty input\n\nA longer body that is never kept.",
+      author: { name: "Jordan", email: EMAIL, date: "2026-09-30T23:30:00Z" },
+    },
+    author: { login: "jordan-example" },
+    parents: [{ sha: "c".repeat(40) }],
+    repository: {
+      full_name: name,
+      html_url: `https://github.com/${name}`,
+      description: "A tool.",
+      private: false,
+      fork: false,
+      owner: { login: name.split("/")[0] },
+    },
+    ...overrides,
+  };
+}
+
+function commitsRoute(items: unknown[], incomplete = false): Route {
+  return { json: { total_count: items.length, incomplete_results: incomplete, items } };
+}
+
+describe("fetchGitHubSnapshot contributions", () => {
+  it("keeps commits in other owners' repositories, without author data", async () => {
+    const routes = baseRoutes();
+    routes["search/commits"] = commitsRoute([commit("other-org/tool", "a")]);
+    const { result } = await run(routes);
+    if (result.status !== "complete") throw new Error(JSON.stringify(result));
+
+    expect(result.snapshot.contributions).toEqual([
+      {
+        retrievedAt: "2026-10-29T06:00:00.000Z",
+        sha: "a".repeat(40),
+        title: "fix: handle empty input",
+        htmlUrl: `https://github.com/other-org/tool/commit/${"a".repeat(40)}`,
+        repository: "other-org/tool",
+        repositoryUrl: "https://github.com/other-org/tool",
+        repositoryDescription: "A tool.",
+        authoredAt: "2026-09-30T23:30:00Z",
+      },
+    ]);
+    expect(JSON.stringify(result.snapshot)).not.toContain(EMAIL);
+    expect(JSON.stringify(result.snapshot)).not.toContain("longer body");
+  });
+
+  it("never stores a private repository, even when the query should have excluded it", async () => {
+    const routes = baseRoutes();
+    const secret = commit("other-org/secret", "a");
+    routes["search/commits"] = commitsRoute([
+      { ...secret, repository: { ...secret.repository, private: true } },
+    ]);
+    const { result } = await run(routes, { token: TOKEN });
+    expect(JSON.stringify(result)).not.toContain("secret");
+  });
+
+  it("compares stars only for a hash in several repositories, and stores none", async () => {
+    const routes = baseRoutes();
+    routes["search/commits"] = commitsRoute([
+      commit("a-mirror/tool", "a"),
+      commit("other-org/tool", "a"),
+      commit("other-org/alone", "b"),
+    ]);
+    routes["repos/a-mirror/tool"] = { json: { stargazers_count: 1 } };
+    routes["repos/other-org/tool"] = { json: { stargazers_count: 900 } };
+    const { result, calls } = await run(routes);
+    if (result.status !== "complete") throw new Error(JSON.stringify(result));
+
+    expect(result.snapshot.contributions.map((entry) => entry.repository).sort()).toEqual([
+      "other-org/alone",
+      "other-org/tool",
+    ]);
+    expect(calls.filter((call) => call.url.endsWith("/repos/other-org/alone"))).toEqual([]);
+    expect(JSON.stringify(result.snapshot)).not.toContain("stargazers");
+  });
+
+  it("does not fail when a star lookup fails, and warns", async () => {
+    const routes = baseRoutes();
+    routes["search/commits"] = commitsRoute([
+      commit("a-mirror/tool", "a"),
+      commit("other-org/tool", "a"),
+    ]);
+    routes["repos/a-mirror/tool"] = { status: 403, text: BODY_MARKER };
+    routes["repos/other-org/tool"] = { json: { stargazers_count: 9 } };
+    const { result } = await run(routes);
+    if (result.status !== "complete") throw new Error(JSON.stringify(result));
+    expect(result.snapshot.contributions.map((entry) => entry.repository)).toEqual([
+      "other-org/tool",
+    ]);
+    expect(result.warnings).toEqual([expect.stringContaining("a-mirror/tool")]);
+  });
+
+  it("reads further pages only while they are full, at most 3", async () => {
+    const page = Array.from({ length: 100 }, (_, index) =>
+      commit("other-org/tool", index.toString(16).padStart(40, "0").slice(-1)),
+    ).map((item, index) => ({ ...item, sha: index.toString(16).padStart(40, "0") }));
+    const routes = baseRoutes();
+    routes["search/commits"] = commitsRoute(page);
+    const { calls } = await run(routes);
+    expect(calls.filter((call) => call.url.includes("search/commits"))).toHaveLength(3);
+  });
+
+  it.each([
+    ["a server error", { status: 500, text: BODY_MARKER }, "http"],
+    ["a validation error", { status: 422, text: BODY_MARKER }, "http"],
+    [
+      "a rate limit",
+      { status: 403, text: BODY_MARKER, headers: { "x-ratelimit-remaining": "0" } },
+      "rate-limited",
+    ],
+    ["a body that is not JSON", { text: `<html>${BODY_MARKER}` }, "malformed"],
+    [
+      "items that are not an array",
+      { json: { incomplete_results: false, items: "x" } },
+      "malformed",
+    ],
+    ["incomplete results", commitsRoute([commit("other-org/tool", "a")], true), "incomplete"],
+    ["a network error", { throws: new TypeError("fetch failed") }, "network"],
+    ["a timeout", { hang: true }, "timeout"],
+  ] as const)(
+    "is partial after %s, with the repositories still read",
+    async (_name, route, kind) => {
+      const routes = baseRoutes();
+      routes["search/commits"] = route as Route;
+      const { result } = await run(routes, { timeoutMs: 20 });
+      if (result.status !== "partial") throw new Error(JSON.stringify(result));
+
+      expect(result.snapshot.repositories).toHaveLength(2);
+      expect(result.snapshot.contributions).toEqual([]);
+      expect(result.missing).toEqual([]);
+      expect(result.contributionErrors.map((error) => error.kind)).toEqual([kind]);
+      for (const error of result.contributionErrors) partialMessages.push(error.message);
+    },
+  );
+
+  it("warns about a pinned repository of another owner with no commits found", async () => {
+    const { result } = await run(tokenRoutes(), { token: TOKEN });
+    if (result.status !== "complete") throw new Error(JSON.stringify(result));
+    expect(result.warnings).toEqual([expect.stringContaining("some-org/shared-config")]);
+  });
+
+  it("does not warn about, and ranks first, a pinned repository with commits", async () => {
+    const routes = tokenRoutes();
+    routes["search/commits"] = commitsRoute([
+      {
+        ...commit("other-org/tool", "b"),
+        commit: { message: "newer", author: { date: "2026-10-01T00:00:00Z" } },
+      },
+      commit("some-org/shared-config", "a"),
+    ]);
+    const { result } = await run(routes, { token: TOKEN });
+    if (result.status !== "complete") throw new Error(JSON.stringify(result));
+    expect(result.snapshot.contributions.map((entry) => entry.repository)).toEqual([
+      "some-org/shared-config",
+      "other-org/tool",
+    ]);
+    expect(result.warnings).toEqual([]);
+  });
 });
 
 describe("fetchGitHubSnapshot failures", () => {

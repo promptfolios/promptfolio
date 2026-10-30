@@ -283,7 +283,7 @@ describe("loadStructuredProfile: invalid input", () => {
     "https://github.com/jordan/promptfolio",
     "github.com/jordan/..",
     "github/jordan",
-    `github.com/jordan/${"a".repeat(150)}`,
+    `github.com/jordan/${"a".repeat(200)}`,
   ])("rejects the malformed source key %s", (id) => {
     const input = fullInput();
     const [project] = input.projects;

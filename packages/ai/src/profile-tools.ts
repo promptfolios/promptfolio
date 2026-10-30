@@ -1,5 +1,6 @@
 import {
   type ClaimBasis,
+  type Contribution,
   type Education,
   findRecordById,
   isRecordId,
@@ -26,6 +27,7 @@ const SECTIONS = [
   "experience",
   "projects",
   "repositories",
+  "contributions",
   "education",
   "skills",
   "links",
@@ -58,9 +60,9 @@ export const getInputSchema = z.strictObject({
   id: z
     .string()
     .min(1)
-    .max(160)
+    .max(200)
     .describe(
-      "The exact id of a role, project, education entry, or repository, as returned by a list.",
+      "The exact id of a role, project, education entry, repository, or contribution, as returned by a list.",
     ),
 });
 
@@ -113,7 +115,7 @@ export function createProfileTools(profile: Profile, { maxCalls }: ProfileToolsO
     }),
     getProfileRecord: tool({
       description:
-        "Get the full details of one role, project, education entry, or repository by its exact id.",
+        "Get the full details of one role, project, education entry, repository, or contribution by its exact id.",
       inputSchema: getInputSchema,
       execute: async ({ id }) => (withinBudget() ? getRecord(profile, id) : LIMIT_REACHED),
     }),
@@ -154,6 +156,11 @@ function selectSection(
         summary: summarizeRepository(repository, profile),
         provenance: repository.provenance,
       }));
+    case "contributions":
+      return profile.contributions.map((contribution) => ({
+        summary: summarizeContribution(contribution, profile),
+        provenance: contribution.provenance,
+      }));
     case "education":
       return profile.education.map((entry) => ({
         summary: summarizeEducation(entry),
@@ -179,13 +186,13 @@ function getRecord(profile: Profile, id: string) {
       status: "not_found" as const,
       id,
       message:
-        "No role, project, education entry, or repository has this id. Do not guess a similar one.",
+        "No role, project, education entry, repository, or contribution has this id. Do not guess a similar one.",
     };
   }
 
-  if (match.kind === "repository") {
+  if (match.kind === "repository" || match.kind === "contribution") {
     const { provenance, ...fields } = match.record;
-    // The owner's project with the same id: their own description of this repository.
+    // The owner's project for this repository: their own description of it.
     const notes = match.ownerNotes;
     return {
       status: "found" as const,
@@ -254,6 +261,16 @@ function summarizeRepository(repository: Repository, profile: Profile) {
     ...(repository.license !== undefined && { license: repository.license }),
     hasOwnerNotes: profile.projects.some((project) => project.id === repository.id),
     ...evidence(repository.provenance),
+  };
+}
+
+function summarizeContribution(contribution: Contribution, profile: Profile) {
+  const { provenance, repositoryId, ...fields } = contribution;
+  return {
+    ...fields,
+    repositoryId,
+    hasOwnerNotes: profile.projects.some((project) => project.id === repositoryId),
+    ...evidence(provenance),
   };
 }
 

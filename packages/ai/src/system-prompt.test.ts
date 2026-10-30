@@ -71,6 +71,27 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("or a repository's README");
   });
 
+  it("asks to check every section that can hold work before saying there is none", () => {
+    expect(buildSystemPrompt(identity)).toContain(
+      "Check all three before saying that Jordan Example has none",
+    );
+  });
+
+  it("asks for one id per pair of brackets, and record ids only", () => {
+    const prompt = buildSystemPrompt(identity);
+    expect(prompt).toContain("Use one pair of brackets per id");
+    expect(prompt).toContain("never a source id");
+  });
+
+  it("says what a contribution does and does not show, and that the list is partial", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt).toContain("A contribution means the public source attributes that commit");
+    expect(prompt).toContain("not its size or importance, and not a role in the project");
+    expect(prompt).toContain("does not mean Jordan Example never contributed to it");
+    expect(prompt).toContain("projects, repositories, contributions, skills");
+  });
+
   it("says the owner and the owner-provided source are the same party, attributed once", () => {
     const prompt = buildSystemPrompt(identity);
 

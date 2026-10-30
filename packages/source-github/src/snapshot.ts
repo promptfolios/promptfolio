@@ -14,6 +14,7 @@ import { issuesFrom } from "./issues";
 
 export const SNAPSHOT_LIMITS = {
   maxRepositories: 30,
+  maxContributions: 50,
   /** Raw README characters kept in the snapshot; the profile keeps a shorter excerpt. */
   maxReadmeChars: 20_000,
   maxDescriptionChars: 10_000,
@@ -98,6 +99,35 @@ export const pinnedResponseSchema = z.object({
     .optional(),
 });
 
+const commitSearchItemSchema = z.object({
+  sha: z.string().regex(/^[0-9a-f]{40}$/),
+  html_url: z.url({ protocol: /^https$/ }),
+  // Only the date: the commit's author name and email are never read.
+  commit: z.object({ message: z.string(), author: z.object({ date: isoDateTime }) }),
+  /** The account GitHub links the commit to, by its email; null when there is none. */
+  author: z.object({ login: z.string() }).nullable(),
+  parents: z.array(z.unknown()),
+  repository: z.object({
+    full_name: z.string().regex(/^[A-Za-z0-9-]+\/[A-Za-z0-9._-]{1,100}$/),
+    html_url: z.url({ protocol: /^https$/ }),
+    description: z.string().max(SNAPSHOT_LIMITS.maxDescriptionChars).nullable(),
+    private: z.boolean(),
+    fork: z.boolean(),
+    owner: z.object({ login: z.string() }),
+  }),
+});
+
+/** One result of `GET /search/commits`, the fields the adapter uses. */
+export type CommitSearchItem = z.infer<typeof commitSearchItemSchema>;
+
+export const commitSearchResponseSchema = z.object({
+  incomplete_results: z.boolean(),
+  items: z.array(commitSearchItemSchema).max(100),
+});
+
+/** Stars of a repository: only to choose between copies of a commit, and never stored. */
+export const repositoryStarsSchema = z.object({ stargazers_count: z.number().int().nonnegative() });
+
 // --- Snapshot file ----------------------------------------------------------------------
 
 const snapshotRepositoryFields = {
@@ -146,25 +176,47 @@ const snapshotRepositorySchema = z.strictObject({
   ...snapshotRepositoryFields,
 });
 
-/** Version 2 (M9): every repository has its own `retrievedAt`. */
+const snapshotContributionSchema = z.strictObject({
+  /** When this entry was read; earlier than the file's when a refresh kept earlier data. */
+  retrievedAt: isoDateTime,
+  sha: z.string().regex(/^[0-9a-f]{40}$/),
+  /** The first line of the commit message, written on GitHub. */
+  title: z.string().max(SNAPSHOT_LIMITS.maxDescriptionChars),
+  htmlUrl: z.url({ protocol: /^https$/ }),
+  repository: z.string().regex(/^[A-Za-z0-9-]+\/[A-Za-z0-9._-]{1,100}$/),
+  repositoryUrl: z.url({ protocol: /^https$/ }),
+  repositoryDescription: z.string().max(SNAPSHOT_LIMITS.maxDescriptionChars).nullable(),
+  authoredAt: isoDateTime,
+});
+
+/** Version 2 (M9): every repository has its own `retrievedAt`. Contributions (M8.1) are added. */
 const snapshotV2Schema = z
   .strictObject({
     formatVersion: z.literal(2),
     /** When the run that wrote this file read GitHub. */
     ...snapshotFields,
     repositories: z.array(snapshotRepositorySchema).max(SNAPSHOT_LIMITS.maxRepositories),
+    /** Older files have none yet. */
+    contributions: z
+      .array(snapshotContributionSchema)
+      .max(SNAPSHOT_LIMITS.maxContributions)
+      .default([]),
   })
   .superRefine((snapshot, context) => {
     const written = Date.parse(snapshot.retrievedAt);
-    snapshot.repositories.forEach((repository, index) => {
-      if (Date.parse(repository.retrievedAt) > written) {
-        context.addIssue({
-          code: "custom",
-          path: ["repositories", index, "retrievedAt"],
-          message: "Later than the snapshot's retrievedAt",
-        });
-      }
-    });
+    const checkTimes = (section: string, entries: Array<{ retrievedAt: string }>) => {
+      entries.forEach((entry, index) => {
+        if (Date.parse(entry.retrievedAt) > written) {
+          context.addIssue({
+            code: "custom",
+            path: [section, index, "retrievedAt"],
+            message: "Later than the snapshot's retrievedAt",
+          });
+        }
+      });
+    };
+    checkTimes("repositories", snapshot.repositories);
+    checkTimes("contributions", snapshot.contributions);
   });
 
 const snapshotSchema = z.discriminatedUnion("formatVersion", [snapshotV1Schema, snapshotV2Schema]);
@@ -175,6 +227,7 @@ const snapshotSchema = z.discriminatedUnion("formatVersion", [snapshotV1Schema, 
  */
 export type GitHubSnapshot = z.infer<typeof snapshotV2Schema>;
 export type SnapshotRepository = z.infer<typeof snapshotRepositorySchema>;
+export type SnapshotContribution = z.infer<typeof snapshotContributionSchema>;
 
 export type ParseGitHubSnapshotResult =
   | { ok: true; snapshot: GitHubSnapshot }
@@ -199,6 +252,7 @@ export function parseGitHubSnapshot(data: unknown): ParseGitHubSnapshotResult {
         retrievedAt: snapshot.retrievedAt,
         ...repository,
       })),
+      contributions: [],
     },
   };
 }

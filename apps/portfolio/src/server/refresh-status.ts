@@ -36,6 +36,8 @@ const sourceStatusSchema = z.strictObject({
   carriedOver: z.array(z.strictObject({ repository: text, retrievedAt: isoDateTime })).max(100),
   /** Repositories that failed and had no earlier data, so they are not in the profile yet. */
   notAdded: z.array(text).max(100),
+  /** Whether the contributions could not be read, so the earlier ones are still in use. */
+  contributionsKept: z.boolean().default(false),
   /** Sanitized messages: never a token, header, or response body. */
   errors: z.array(z.strictObject({ kind: text, target: text, message: text })).max(100),
 });
@@ -117,6 +119,7 @@ export async function refreshStatusWarnings(
     const parts = [
       carried.length > 0 ? `kept earlier data for ${carried.join(", ")}` : "",
       github.notAdded.length > 0 ? `could not add ${github.notAdded.join(", ")}` : "",
+      github.contributionsKept ? "kept earlier contributions" : "",
     ].filter((part) => part !== "");
     return [
       {

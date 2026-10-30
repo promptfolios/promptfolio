@@ -1,5 +1,5 @@
 import { skillKey } from "./load";
-import type { Education, Profile, Project, Repository, Role } from "./types";
+import type { Contribution, Education, Profile, Project, Repository, Role } from "./types";
 
 /** A record found by id, tagged with the section it belongs to. */
 export type ProfileRecordMatch =
@@ -7,7 +7,9 @@ export type ProfileRecordMatch =
   | { kind: "project"; record: Project }
   | { kind: "education"; record: Education }
   /** `ownerNotes` is the owner's project with the same id, if there is one. */
-  | { kind: "repository"; record: Repository; ownerNotes?: Project };
+  | { kind: "repository"; record: Repository; ownerNotes?: Project }
+  /** `ownerNotes` is the owner's project whose id is the contribution's `repositoryId`. */
+  | { kind: "contribution"; record: Contribution; ownerNotes?: Project };
 
 /** Records that list or match a skill, and whether the skill itself is listed. */
 export interface SkillUsage {
@@ -20,9 +22,10 @@ export interface SkillUsage {
 }
 
 /**
- * Finds a role, project, education entry, or repository by its id. Ids share one namespace,
+ * Finds a role, project, education entry, repository, or contribution by its id. Ids share one namespace,
  * with one exception: a project may share a repository's id, as the owner's description of
- * that repository. Then the repository is returned with the project as `ownerNotes`.
+ * that repository. Then the repository is returned with the project as `ownerNotes`. A
+ * contribution is returned with the project for its repository, if there is one.
  *
  * Matching is exact: ids are lowercase by schema, and a near miss (other casing, extra
  * spaces) returns `undefined` rather than a guess.
@@ -32,6 +35,11 @@ export function findRecordById(profile: Profile, id: string): ProfileRecordMatch
   if (repository) {
     const ownerNotes = profile.projects.find((record) => record.id === id);
     return { kind: "repository", record: repository, ...(ownerNotes && { ownerNotes }) };
+  }
+  const contribution = profile.contributions.find((record) => record.id === id);
+  if (contribution) {
+    const ownerNotes = profile.projects.find((record) => record.id === contribution.repositoryId);
+    return { kind: "contribution", record: contribution, ...(ownerNotes && { ownerNotes }) };
   }
   const role = profile.experience.find((record) => record.id === id);
   if (role) return { kind: "role", record: role };

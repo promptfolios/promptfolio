@@ -22,7 +22,7 @@ function listed(name: string, overrides: Partial<ListedRepository> = {}): Listed
   };
 }
 
-const config = { user: "Jordan", exclude: ["Hidden"] };
+const config = { user: "Jordan", exclude: ["Hidden"], excludeContributionsTo: [] };
 const names = (repositories: ListedRepository[]) =>
   repositories.map((repository) => repository.name);
 

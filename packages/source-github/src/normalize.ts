@@ -1,4 +1,5 @@
 import type {
+  ContributionInput,
   ExternalLink,
   LanguageShare,
   ObservedRecords,
@@ -6,11 +7,12 @@ import type {
   ProfileIssue,
   RepositoryInput,
 } from "@promptfolio/core";
-import { type GitHubSourceConfig, isExcluded } from "./config";
-import type { GitHubSnapshot, SnapshotRepository } from "./snapshot";
+import { type GitHubSourceConfig, isContributionExcluded, isExcluded } from "./config";
+import type { GitHubSnapshot, SnapshotContribution, SnapshotRepository } from "./snapshot";
 
 export const NORMALIZE_LIMITS = {
   descriptionChars: 500,
+  titleChars: 200,
   readmeChars: 3000,
   /** A README is cut at a line break only if one exists in the last part of the excerpt. */
   readmeMinCutChars: 1500,
@@ -62,6 +64,20 @@ export function normalizeGitHubSnapshot(
         ? record
         : { ...record, observedAt: new Date(repository.retrievedAt) };
     });
+  const contributions = snapshot.contributions
+    .filter((contribution) => !isContributionExcluded(config, contribution.repository))
+    .flatMap((contribution, index) => {
+      const warn = (message: string) =>
+        warnings.push({
+          path: `contributions[${index}]`,
+          message: `${contribution.repository}: ${message}`,
+        });
+      const record = toContribution(contribution, warn);
+      if (record === undefined) return [];
+      return contribution.retrievedAt === snapshot.retrievedAt
+        ? [record]
+        : [{ ...record, observedAt: new Date(contribution.retrievedAt) }];
+    });
   const links: ExternalLink[] = [{ label: "GitHub", url: snapshot.user.htmlUrl }];
 
   return {
@@ -76,6 +92,7 @@ export function normalizeGitHubSnapshot(
       },
       links,
       repositories,
+      contributions,
     },
     warnings,
   };
@@ -118,6 +135,38 @@ function toRepository(
     ...(license !== undefined && { license }),
     ...(readme !== undefined && { readme: readme.text, readmeTruncated: readme.truncated }),
   };
+}
+
+function toContribution(
+  contribution: SnapshotContribution,
+  warn: (message: string) => void,
+): ContributionInput | undefined {
+  const title = cleanTitle(contribution.title, warn);
+  const authored = monthOf(contribution.authoredAt);
+  if (title === undefined || authored === undefined) {
+    warn(`commit ${contribution.sha} dropped: no title or date`);
+    return undefined;
+  }
+  const repositoryDescription = cleanDescription(contribution.repositoryDescription, warn);
+  const repositoryId = repositoryKey(contribution.repository);
+  return {
+    id: `${repositoryId}/commit/${contribution.sha}`,
+    title,
+    url: contribution.htmlUrl,
+    repositoryId,
+    repository: contribution.repository,
+    repositoryUrl: contribution.repositoryUrl,
+    ...(repositoryDescription !== undefined && { repositoryDescription }),
+    authored,
+  };
+}
+
+function cleanTitle(value: string, warn: (message: string) => void): string | undefined {
+  const text = withoutControlCharacters(value).replace(/\s+/g, " ").trim();
+  if (text === "") return undefined;
+  if (text.length <= NORMALIZE_LIMITS.titleChars) return text;
+  warn(`title cut to ${NORMALIZE_LIMITS.titleChars} characters`);
+  return `${text.slice(0, NORMALIZE_LIMITS.titleChars - 1).trimEnd()}…`;
 }
 
 /** Control characters become spaces (they are invisible and can hide text). */

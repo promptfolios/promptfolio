@@ -1,14 +1,25 @@
 import type { z } from "zod";
 import type { GitHubSourceConfig } from "./config";
+import {
+  CONTRIBUTION_LIMITS,
+  eligibleCommits,
+  firstLine,
+  repositoriesWithSharedCommits,
+  selectContributions,
+} from "./contributions";
 import { SELECTION_LIMITS, selectRepositories } from "./select";
 import {
+  type CommitSearchItem,
+  commitSearchResponseSchema,
   type GitHubSnapshot,
   type ListedRepository,
   languagesResponseSchema,
   listedRepositorySchema,
   pinnedResponseSchema,
   repositoryListSchema,
+  repositoryStarsSchema,
   SNAPSHOT_LIMITS,
+  type SnapshotContribution,
   type SnapshotRepository,
   userResponseSchema,
 } from "./snapshot";
@@ -41,7 +52,8 @@ export type GitHubFetchErrorKind =
   | "http"
   | "network"
   | "timeout"
-  | "malformed";
+  | "malformed"
+  | "incomplete";
 
 /** A failed request. Messages never contain the token, headers, or response bodies. */
 export interface GitHubFetchError {
@@ -61,7 +73,7 @@ export interface MissingRepository {
 /**
  * - `complete`: every request succeeded; the snapshot has every selected repository.
  * - `partial`: the account and the repository list were read, but some repositories' details
- *   were not. The snapshot has only the repositories that were read; `selected` gives the
+ *   or the contributions were not. The snapshot has only what was read; `selected` gives the
  *   full selection in order, and `carryForward` can fill the gaps from a previous snapshot.
  * - `failed`: nothing usable (account, list, token, rate limit, or budget).
  */
@@ -78,6 +90,8 @@ export type FetchGitHubResult =
       /** Full names of every selected repository, in selection order. */
       selected: string[];
       missing: MissingRepository[];
+      /** Why the contributions could not be read; empty when they were. */
+      contributionErrors: GitHubFetchError[];
       warnings: string[];
       requests: number;
     }
@@ -102,7 +116,9 @@ class FetchStopped extends Error {}
  * limit, budget, or token error at any point) fails the whole run. A failed languages or
  * README request makes the run `partial`: that repository is missing from the snapshot and
  * listed in `missing`, so a caller can keep its previous data instead of dropping it (a
- * missing README is not a failure). There are no automatic retries; the next run is the retry.
+ * missing README is not a failure). Contributions come last and succeed or fail as a whole: a
+ * failure there also makes the run `partial`, whatever the error, because the repositories
+ * already read are still good. There are no automatic retries; the next run is the retry.
  */
 export async function fetchGitHubSnapshot(
   config: GitHubSourceConfig,
@@ -132,7 +148,9 @@ export async function fetchGitHubSnapshot(
       });
     }
 
-    const pinned = authenticated ? await fetchPinned(client, user.login, warnings, fail) : [];
+    const { own: pinned, others: pinnedOthers } = authenticated
+      ? await fetchPinned(client, user.login, warnings, fail)
+      : { own: [], others: [] };
 
     const listed =
       (await client.json(
@@ -183,14 +201,23 @@ export async function fetchGitHubSnapshot(
       );
     }
 
+    const contributions = await fetchContributions(
+      client,
+      config,
+      pinnedOthers,
+      retrievedAt,
+      warnings,
+    );
+
     const snapshot: GitHubSnapshot = {
       formatVersion: 2,
       retrievedAt,
       authenticated,
       user: { login: user.login, htmlUrl: user.html_url },
       repositories: snapshotRepositories,
+      contributions: contributions.entries,
     };
-    if (missing.length === 0) {
+    if (missing.length === 0 && contributions.errors.length === 0) {
       return { status: "complete", snapshot, warnings, requests: client.requests };
     }
     return {
@@ -198,6 +225,7 @@ export async function fetchGitHubSnapshot(
       snapshot,
       selected: selected.map((repository) => repository.full_name),
       missing,
+      contributionErrors: contributions.errors,
       warnings,
       requests: client.requests,
     };
@@ -212,7 +240,84 @@ export async function fetchGitHubSnapshot(
 }
 
 /**
- * Full names of pinned own public repositories, in pin order (GraphQL, token only).
+ * Commits GitHub attributes to the user in other owners' public repositories. Succeeds or fails
+ * as a whole, and never stops the run: this data is optional next to the repositories. A failed
+ * star lookup only means a copy of a commit may be chosen less well.
+ */
+async function fetchContributions(
+  client: GitHubClient,
+  config: GitHubSourceConfig,
+  pinnedOthers: string[],
+  retrievedAt: string,
+  warnings: string[],
+): Promise<{ entries: SnapshotContribution[]; errors: GitHubFetchError[] }> {
+  const errors: GitHubFetchError[] = [];
+  const collect = (error: GitHubFetchError) => {
+    errors.push(error);
+  };
+  const query = encodeURIComponent(
+    `author:${config.user} -user:${config.user} is:public merge:false`,
+  );
+
+  const items: CommitSearchItem[] = [];
+  for (let page = 1; page <= CONTRIBUTION_LIMITS.pages; page += 1) {
+    const response = await client.json(
+      `search/commits?q=${query}&sort=author-date&order=desc&per_page=${CONTRIBUTION_LIMITS.perPage}&page=${page}`,
+      commitSearchResponseSchema,
+      collect,
+    );
+    if (response === undefined) return { entries: [], errors };
+    if (response.incomplete_results) {
+      // The answer may be missing items, so it must not replace a complete list.
+      collect({
+        kind: "incomplete",
+        target: "search/commits",
+        message: "GitHub returned incomplete search results",
+      });
+      return { entries: [], errors };
+    }
+    items.push(...response.items);
+    if (response.items.length < CONTRIBUTION_LIMITS.perPage) break;
+  }
+
+  const eligible = eligibleCommits(items, config);
+  const stars = new Map<string, number>();
+  for (const fullName of repositoriesWithSharedCommits(eligible)) {
+    const repository = await client.json(
+      `repos/${encodePath(fullName)}`,
+      repositoryStarsSchema,
+      () => warnings.push(`Could not read ${fullName} to choose between copies of a commit`),
+    );
+    if (repository !== undefined) stars.set(fullName, repository.stargazers_count);
+  }
+
+  const selected = selectContributions({ items: eligible, stars, pinned: pinnedOthers });
+  const included = new Set(selected.map((item) => item.repository.full_name.toLowerCase()));
+  for (const fullName of pinnedOthers) {
+    if (!included.has(fullName.toLowerCase())) {
+      warnings.push(
+        `Pinned repository ${fullName} is owned by someone else, and no commits by @${config.user} were found in it: not included`,
+      );
+    }
+  }
+  return {
+    entries: selected.map((item) => ({
+      retrievedAt,
+      sha: item.sha,
+      title: firstLine(item.commit.message).slice(0, SNAPSHOT_LIMITS.maxDescriptionChars),
+      htmlUrl: item.html_url,
+      repository: item.repository.full_name,
+      repositoryUrl: item.repository.html_url,
+      repositoryDescription: item.repository.description,
+      authoredAt: item.commit.author.date,
+    })),
+    errors,
+  };
+}
+
+/**
+ * Full names of pinned public repositories, in pin order (GraphQL, token only): the user's own,
+ * and those of other owners, which only rank contributions.
  *
  * GraphQL can answer with partial data: an item the token may not read (for example a
  * repository of an organization that forbids fine-grained tokens) is `null`, with an error
@@ -224,14 +329,14 @@ async function fetchPinned(
   login: string,
   warnings: string[],
   fail: (error: GitHubFetchError) => void,
-): Promise<string[]> {
+): Promise<{ own: string[]; others: string[] }> {
   const query = `query($login: String!) { user(login: $login) { pinnedItems(first: ${SELECTION_LIMITS.pinned}, types: REPOSITORY) { nodes { ... on Repository { nameWithOwner isFork isPrivate } } } } }`;
   const response = await client.graphql(
     { query, variables: { login } },
     pinnedResponseSchema,
     fail,
   );
-  if (response === undefined) return [];
+  if (response === undefined) return { own: [], others: [] };
   const nodes = response.data?.user?.pinnedItems.nodes;
   const errors = response.errors ?? [];
   const itemErrors = errors.filter((error) => pinnedItemIndex(error.path) !== undefined);
@@ -241,7 +346,7 @@ async function fetchPinned(
       target: "graphql",
       message: "GitHub rejected the pinned repositories query; check GITHUB_TOKEN",
     });
-    return [];
+    return { own: [], others: [] };
   }
   for (const error of itemErrors) {
     const reason =
@@ -252,19 +357,14 @@ async function fetchPinned(
   }
 
   const owner = `${login.toLowerCase()}/`;
-  const pinned: string[] = [];
+  const own: string[] = [];
+  const others: string[] = [];
   for (const node of nodes) {
     if (node === null || node.nameWithOwner === undefined || node.isFork || node.isPrivate)
       continue;
-    if (!node.nameWithOwner.toLowerCase().startsWith(owner)) {
-      warnings.push(
-        `Skipped pinned repository ${node.nameWithOwner}: owned by someone else (contributions come later)`,
-      );
-      continue;
-    }
-    pinned.push(node.nameWithOwner);
+    (node.nameWithOwner.toLowerCase().startsWith(owner) ? own : others).push(node.nameWithOwner);
   }
-  return pinned;
+  return { own, others };
 }
 
 /** The item index of an error path `user.pinnedItems.nodes.<index>`, or undefined. */

@@ -54,6 +54,34 @@ describe("parseGitHubSnapshot", () => {
     expect(result.snapshot.repositories[0]?.retrievedAt).toBe("2026-10-29T06:00:00.000Z");
   });
 
+  it("reads a snapshot without contributions as none, in both versions", () => {
+    for (const data of [validSnapshot(), validSnapshotV2()]) {
+      const result = parseGitHubSnapshot(data);
+      expect(result.ok && result.snapshot.contributions).toEqual([]);
+    }
+  });
+
+  it("accepts contributions, and rejects one read after the snapshot was written", () => {
+    const contribution = {
+      retrievedAt: "2026-10-20T06:00:00.000Z",
+      sha: "a".repeat(40),
+      title: "fix: handle empty input",
+      htmlUrl: "https://github.com/other-org/tool/commit/abc",
+      repository: "other-org/tool",
+      repositoryUrl: "https://github.com/other-org/tool",
+      repositoryDescription: null,
+      authoredAt: "2026-09-30T23:30:00Z",
+    };
+    const data = { ...validSnapshotV2(), contributions: [contribution] };
+    expect(parseGitHubSnapshot(data).ok).toBe(true);
+
+    const late = { ...contribution, retrievedAt: "2026-10-30T06:00:00.000Z" };
+    const result = parseGitHubSnapshot({ ...validSnapshotV2(), contributions: [late] });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.issues[0]?.path).toBe("contributions[0].retrievedAt");
+  });
+
   it("rejects a repository read after the snapshot was written", () => {
     const result = parseGitHubSnapshot(validSnapshotV2("2026-10-30T06:00:00.000Z"));
     if (result.ok) throw new Error("Expected issues");

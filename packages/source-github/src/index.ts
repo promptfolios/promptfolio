@@ -20,6 +20,7 @@ export {
   type ParseGitHubConfigResult,
   parseGitHubConfig,
 } from "./config";
+export { CONTRIBUTION_LIMITS } from "./contributions";
 export {
   FETCH_DEFAULTS,
   type FetchGitHubOptions,
@@ -41,5 +42,6 @@ export {
   type ParseGitHubSnapshotResult,
   parseGitHubSnapshot,
   SNAPSHOT_LIMITS,
+  type SnapshotContribution,
   type SnapshotRepository,
 } from "./snapshot";

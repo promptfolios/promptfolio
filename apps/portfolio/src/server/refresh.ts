@@ -122,6 +122,7 @@ export async function runRefresh(options: RunRefreshOptions = {}): Promise<Refre
         versionChanged: false,
         carriedOver: [],
         notAdded: [],
+        contributionsKept: false,
         errors,
       },
     },
@@ -190,6 +191,7 @@ export async function runRefresh(options: RunRefreshOptions = {}): Promise<Refre
           retrievedAt: entry.retrievedAt,
         })),
         notAdded: carried.notAdded,
+        contributionsKept: carried.contributionsKept,
         errors: carried.errors.map(statusError),
       },
     },
@@ -228,12 +230,19 @@ export async function runRefresh(options: RunRefreshOptions = {}): Promise<Refre
           : "";
       logger.log(`  ${repository.fullName}${mark === "" ? "" : `  (${mark})`}`);
     }
+    logger.log(
+      `Contributions in other owners' repositories: ${result.snapshot.contributions.length}`,
+    );
+    for (const contribution of result.snapshot.contributions) {
+      logger.log(`  ${contribution.repository}  ${contribution.title.slice(0, 70)}`);
+    }
     if (result.status === "partial") {
-      logger.warn("\nPartial refresh: some repositories could not be read:");
+      logger.warn("\nPartial refresh: some data could not be read:");
       for (const error of result.errors) {
         logger.warn(`  ${error.kind}  ${error.target}: ${error.message}`);
       }
       for (const name of result.notAdded) logger.warn(`  not added yet: ${name}`);
+      if (result.contributionsKept) logger.warn("  earlier contributions kept");
     }
   }
 

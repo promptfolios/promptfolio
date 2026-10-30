@@ -13,6 +13,7 @@ export {
 } from "./profile/load";
 export {
   addObservedRecords,
+  type ContributionInput,
   type ObservedRecords,
   type ObservedSource,
   type RepositoryInput,
@@ -26,6 +27,7 @@ export {
 export { isRecordId, isSourceKey, type ProfileInput } from "./profile/schema";
 export type {
   ClaimBasis,
+  Contribution,
   Education,
   ExternalLink,
   LanguageShare,

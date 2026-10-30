@@ -5,7 +5,7 @@ describe("parseGitHubConfig", () => {
   it("accepts a username alone and defaults the exclusions", () => {
     expect(parseGitHubConfig({ formatVersion: 1, user: "Jordan-Example" })).toEqual({
       ok: true,
-      config: { user: "Jordan-Example", exclude: [] },
+      config: { user: "Jordan-Example", exclude: [], excludeContributionsTo: [] },
     });
   });
 
@@ -14,7 +14,21 @@ describe("parseGitHubConfig", () => {
     expect(result.ok && result.config.exclude).toEqual(["old.repo_1"]);
   });
 
+  it("accepts repositories to hide from the contributions", () => {
+    const result = parseGitHubConfig({
+      formatVersion: 1,
+      user: "jordan",
+      excludeContributionsTo: ["other-org/old.tool"],
+    });
+    expect(result.ok && result.config.excludeContributionsTo).toEqual(["other-org/old.tool"]);
+  });
+
   it.each([
+    [
+      "a contribution exclusion without an owner",
+      { formatVersion: 1, user: "jordan", excludeContributionsTo: ["tool"] },
+      "excludeContributionsTo[0]",
+    ],
     ["a wrong format version", { formatVersion: 2, user: "jordan" }, "formatVersion"],
     ["an unknown key", { formatVersion: 1, user: "jordan", repos: [] }, "(root)"],
     ["a missing user", { formatVersion: 1 }, "user"],

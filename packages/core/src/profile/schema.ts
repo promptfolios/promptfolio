@@ -12,8 +12,11 @@ export const LIMITS = {
   shortText: 200,
   longText: 2000,
   id: 64,
-  /** Owner names on GitHub are at most 39 characters and repository names at most 100. */
-  sourceKey: 160,
+  /**
+   * Owner names on GitHub are at most 39 characters and repository names at most 100; a commit
+   * key such as `github.com/owner/name/commit/<40 hex>` adds up to 199.
+   */
+  sourceKey: 200,
   url: 2048,
   listItems: 100,
   readme: 3000,
@@ -34,7 +37,7 @@ const SOURCE_KEY = /^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/(?!\.+(?:\/|$))[a-z0-9._-]+
 
 /**
  * Whether a string is a valid record id: a lowercase slug (at most 64 characters) or a
- * source key (at most 160 characters). Exported so other packages validate ids by the same
+ * source key (at most 200 characters). Exported so other packages validate ids by the same
  * rule without depending on zod.
  */
 export function isRecordId(value: string): boolean {
@@ -173,10 +176,24 @@ const repositoryInputSchema = z.strictObject({
   observedAt: z.date().optional(),
 });
 
+const contributionInputSchema = z.strictObject({
+  id: sourceKey,
+  title: shortText,
+  url: httpUrl,
+  repositoryId: sourceKey,
+  repository: shortText,
+  repositoryUrl: httpUrl,
+  repositoryDescription: longText.optional(),
+  authored: partialDate,
+  /** When this contribution was read, if earlier than the source's `retrievedAt`. */
+  observedAt: z.date().optional(),
+});
+
 /** Records observed in an external source, produced by a source adapter (not by the owner). */
 export const observedRecordsSchema = z.strictObject({
   links: list(externalLinkSchema),
   repositories: list(repositoryInputSchema),
+  contributions: list(contributionInputSchema),
 });
 
 /** The structured profile authoring format, as written by the profile owner. */

@@ -1,6 +1,7 @@
 import { type ProfileIssue, type ProfileLoadResult, toProfileIssue } from "./load";
 import { isSourceKey, observedRecordsSchema } from "./schema";
 import type {
+  Contribution,
   ExternalLink,
   Profile,
   ProfileLink,
@@ -29,11 +30,15 @@ export interface ObservedSource {
  */
 export type RepositoryInput = Omit<Repository, "provenance"> & { observedAt?: Date };
 
+/** A contribution as a source adapter produces it; `observedAt` as for `RepositoryInput`. */
+export type ContributionInput = Omit<Contribution, "provenance"> & { observedAt?: Date };
+
 /** Records observed in one external source, in the canonical shape. */
 export interface ObservedRecords {
   source: ObservedSource;
   links?: ExternalLink[];
   repositories?: RepositoryInput[];
+  contributions?: ContributionInput[];
 }
 
 /**
@@ -42,7 +47,7 @@ export interface ObservedRecords {
  *
  * Owner records are never changed or replaced: an observed link whose URL the owner already
  * lists is skipped, and a project whose id equals a repository's id stays a separate record
- * (the owner's description of that repository).
+ * (the owner's description of that repository, and of contributions to it).
  *
  * @param profile A profile from `loadStructuredProfile` (or a previous call of this function).
  * @param records Untrusted records produced by a source adapter.
@@ -55,15 +60,18 @@ export function addObservedRecords(profile: Profile, records: ObservedRecords): 
   const parsed = observedRecordsSchema.safeParse({
     links: records.links ?? [],
     repositories: records.repositories ?? [],
+    contributions: records.contributions ?? [],
   });
   if (!parsed.success) {
     return { ok: false, issues: parsed.error.issues.map(toProfileIssue) };
   }
-  const { links, repositories } = parsed.data;
+  const { links, repositories, contributions } = parsed.data;
 
   const issues = [
     ...findIdConflicts(profile, repositories),
-    ...findLateObservations(repositories, source.retrievedAt),
+    ...findContributionIdConflicts(profile, repositories, contributions),
+    ...findLateObservations("repositories", repositories, source.retrievedAt),
+    ...findLateObservations("contributions", contributions, source.retrievedAt),
   ];
   if (profile.sources.some((existing) => existing.id === source.id)) {
     issues.unshift({
@@ -100,11 +108,16 @@ export function addObservedRecords(profile: Profile, records: ObservedRecords): 
     topics: [...repository.topics],
     provenance: provenance(observedAt?.toISOString()),
   }));
+  const newContributions: Contribution[] = contributions.map(({ observedAt, ...contribution }) => ({
+    ...contribution,
+    provenance: provenance(observedAt?.toISOString()),
+  }));
 
   const merged: Profile = {
     ...profile,
     links: [...profile.links, ...newLinks],
     repositories: [...profile.repositories, ...newRepositories],
+    contributions: [...profile.contributions, ...newContributions],
     sources: [...profile.sources, sourceRef],
   };
   return { ok: true, profile: merged, warnings: findUnmatchedAnnotations(merged, source) };
@@ -146,13 +159,46 @@ function findIdConflicts(profile: Profile, repositories: RepositoryInput[]): Pro
   return issues;
 }
 
-/** A repository cannot have been observed after its source was read. */
-function findLateObservations(repositories: RepositoryInput[], retrievedAt: Date): ProfileIssue[] {
+/** Contribution ids must be new: unlike a repository's, not even a project may share one. */
+function findContributionIdConflicts(
+  profile: Profile,
+  repositories: RepositoryInput[],
+  contributions: ContributionInput[],
+): ProfileIssue[] {
+  const taken = new Map<string, string>();
+  for (const role of profile.experience) taken.set(role.id, "a role");
+  for (const project of profile.projects) taken.set(project.id, "a project");
+  for (const entry of profile.education) taken.set(entry.id, "an education entry");
+  for (const repository of [...profile.repositories, ...repositories]) {
+    taken.set(repository.id, "a repository");
+  }
+  for (const contribution of profile.contributions) taken.set(contribution.id, "a contribution");
+
   const issues: ProfileIssue[] = [];
-  repositories.forEach((repository, index) => {
-    if (repository.observedAt !== undefined && repository.observedAt > retrievedAt) {
+  contributions.forEach((contribution, index) => {
+    const usedBy = taken.get(contribution.id);
+    if (usedBy !== undefined) {
       issues.push({
-        path: `repositories[${index}].observedAt`,
+        path: `contributions[${index}].id`,
+        message: `Id '${contribution.id}' is already used by ${usedBy}`,
+      });
+    }
+    taken.set(contribution.id, "a contribution");
+  });
+  return issues;
+}
+
+/** A record cannot have been observed after its source was read. */
+function findLateObservations(
+  section: "repositories" | "contributions",
+  records: Array<{ observedAt?: Date }>,
+  retrievedAt: Date,
+): ProfileIssue[] {
+  const issues: ProfileIssue[] = [];
+  records.forEach((record, index) => {
+    if (record.observedAt !== undefined && record.observedAt > retrievedAt) {
+      issues.push({
+        path: `${section}[${index}].observedAt`,
         message: "Observed after the source was retrieved",
       });
     }
@@ -161,15 +207,19 @@ function findLateObservations(repositories: RepositoryInput[], retrievedAt: Date
 }
 
 /**
- * Projects whose id is a source key on this source's host but match no repository: usually a
- * renamed, deleted, private, or unselected repository. The project still loads.
+ * Projects whose id is a source key on this source's host but match no repository, and no
+ * repository of a contribution: usually a renamed, deleted, private, or unselected repository.
+ * The project still loads.
  */
 function findUnmatchedAnnotations(profile: Profile, source: ObservedSource): ProfileIssue[] {
   const hosts = new Set(profile.repositories.map((repository) => hostOf(repository.id)));
   // core has no URL type (no DOM or Node types), and the host is all that is needed here.
   const sourceHost = source.url?.match(/^https?:\/\/([^/?#:]+)/i)?.[1];
   if (sourceHost !== undefined) hosts.add(sourceHost.toLowerCase());
-  const repositoryIds = new Set(profile.repositories.map((repository) => repository.id));
+  const repositoryIds = new Set([
+    ...profile.repositories.map((repository) => repository.id),
+    ...profile.contributions.map((contribution) => contribution.repositoryId),
+  ]);
 
   const warnings: ProfileIssue[] = [];
   profile.projects.forEach((project, index) => {

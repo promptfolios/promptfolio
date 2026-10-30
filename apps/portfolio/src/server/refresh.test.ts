@@ -41,6 +41,26 @@ function listed(name: string, description: string) {
   };
 }
 
+const COMMIT = {
+  sha: "a".repeat(40),
+  html_url: `https://github.com/other-org/shared-tool/commit/${"a".repeat(40)}`,
+  commit: {
+    message: "fix: handle empty input",
+    author: { name: "Jordan", email: "jordan@private.example", date: "2026-09-30T23:30:00Z" },
+  },
+  author: { login: "jordan-example" },
+  parents: [{}],
+  repository: {
+    full_name: "other-org/shared-tool",
+    html_url: "https://github.com/other-org/shared-tool",
+    description: "A shared tool.",
+    private: false,
+    fork: false,
+    owner: { login: "other-org" },
+  },
+};
+const CONTRIBUTION_ID = `github.com/other-org/shared-tool/commit/${"a".repeat(40)}`;
+
 interface Route {
   status?: number;
   json?: unknown;
@@ -66,6 +86,7 @@ function routes(toolDescription = "A tool.", change: Record<string, Route> = {})
     "repos/jordan-example/tool/languages": { json: { Go: 100 } },
     "repos/jordan-example/tool/readme": { status: 404 },
     graphql: { json: { data: { user: { pinnedItems: { nodes: [] } } } } },
+    "search/commits": { json: { incomplete_results: false, items: [COMMIT] } },
     ...change,
   } satisfies Record<string, Route>;
 }
@@ -315,6 +336,58 @@ describe("runRefresh", () => {
     const everything = [output.join("\n"), await read(SNAPSHOT), await read(STATUS)].join("\n");
     expect(everything).not.toContain(TOKEN);
     expect(everything).not.toContain(BODY_MARKER);
+  });
+});
+
+describe("runRefresh with contributions", () => {
+  it("writes contributions, loads them, and keeps a rerun byte-identical", async () => {
+    await refresh(routes(), T1);
+    const before = await read(SNAPSHOT);
+    const loaded = await loadAppProfile({ dir });
+    if (!loaded.result.ok) throw new Error("Expected the profile to load");
+    expect(loaded.result.profile.contributions.map((entry) => entry.id)).toEqual([CONTRIBUTION_ID]);
+    expect(before).not.toContain("jordan@private.example");
+
+    await refresh(routes(), T2);
+    expect(await read(SNAPSHOT)).toBe(before);
+  });
+
+  it("keeps earlier contributions and updates repositories when the search fails", async () => {
+    await refresh(routes(), T1);
+
+    const result = await refresh(
+      routes("A changed tool.", { "search/commits": { status: 500, text: BODY_MARKER } }),
+      T2,
+    );
+
+    expect(result.exitCode).toBe(2);
+    expect(JSON.parse(await read(STATUS)).sources.github).toMatchObject({
+      outcome: "partial",
+      contributionsKept: true,
+      snapshotWritten: true,
+      errors: [{ kind: "http", target: "search/commits" }],
+    });
+    const loaded = await loadAppProfile({ dir });
+    if (!loaded.result.ok) throw new Error("Expected the profile to load");
+    expect(loaded.result.profile.contributions[0]?.provenance.observedAt).toBe(T1);
+    expect(
+      loaded.result.profile.repositories.find((entry) => entry.name === "tool")?.description,
+    ).toBe("A changed tool.");
+    expect(loaded.result.warnings[0]?.message).toContain("kept earlier contributions");
+  });
+
+  it("fails a first run when the search fails: nothing to keep", async () => {
+    const result = await refresh(routes("A tool.", { "search/commits": { status: 500 } }), T1);
+    expect(result.exitCode).toBe(1);
+    await expect(read(SNAPSHOT)).rejects.toThrow();
+  });
+
+  it("reads a status file written before contributions existed", async () => {
+    await refresh(routes(), T1);
+    const status = JSON.parse(await read(STATUS));
+    delete status.sources.github.contributionsKept;
+    await write(STATUS, status);
+    expect(await refreshStatusWarnings(PROFILE_FILE, dir)).toEqual([]);
   });
 });
 

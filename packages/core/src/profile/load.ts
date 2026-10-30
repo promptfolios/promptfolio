@@ -194,6 +194,7 @@ function normalize(input: ParsedProfileInput, source: StructuredProfileSource): 
     education: input.education.map((entry) => ({ ...entry, provenance: provenance() })),
     // Owners do not write repositories; source adapters add them (`addObservedRecords`).
     repositories: [],
+    contributions: [],
     sources: [sourceRef],
   };
 }

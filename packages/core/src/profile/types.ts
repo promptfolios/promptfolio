@@ -162,6 +162,29 @@ export interface Repository {
   provenance: Provenance;
 }
 
+/**
+ * A change attributed to the owner that is in a repository they do not own. Source-neutral: a
+ * commit today. It shows that the source attributes the change to the owner, not its size or
+ * importance, or a role in the project. The owner's project whose id is `repositoryId` is
+ * their description of this work (see `findRecordById`).
+ */
+export interface Contribution {
+  /** Source key such as `"github.com/owner/name/commit/<hash>"`. */
+  id: string;
+  /** Short description, written on the source: untrusted. */
+  title: string;
+  url: string;
+  /** Source key of the repository, such as `"github.com/owner/name"`. */
+  repositoryId: string;
+  /** `"owner/name"` as the source shows it. */
+  repository: string;
+  repositoryUrl: string;
+  repositoryDescription?: string;
+  /** Month the change was authored, as reported by the source. */
+  authored: PartialDate;
+  provenance: Provenance;
+}
+
 /** The canonical, validated profile. */
 export interface Profile {
   schemaVersion: 1;
@@ -173,5 +196,7 @@ export interface Profile {
   education: Education[];
   /** Repositories observed in code-hosting sources; empty when none is configured. */
   repositories: Repository[];
+  /** Changes in other owners' repositories, from code-hosting sources; empty when none. */
+  contributions: Contribution[];
   sources: SourceRef[];
 }
