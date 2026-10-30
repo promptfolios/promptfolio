@@ -51,8 +51,8 @@ flowchart LR
   key: a different model does not make facts stale.
 - **A recorded live answer.** The generator runs the same turn as `handleChatRequest` and stores
   what the visitor stream would have contained. It accepts an answer only if the turn finished
-  normally, the text is at most 4,000 characters (the server's per-message limit, which also
-  applies when the answer comes back in a follow-up), and every cited `[id]` was returned by a tool
+  normally, the text is at most 4,000 characters (a stored answer starts every thread it serves, so
+  a long one would use up each conversation's total), and every cited `[id]` was returned by a tool
   in that turn.
 - **A stream without a model.** A hit is sent as the chunks of a one-step text answer through the
   same `forVisitor` filter, so the browser and its saved threads cannot tell the difference.

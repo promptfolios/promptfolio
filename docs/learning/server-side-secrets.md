@@ -37,7 +37,9 @@ Three layers keep the key on the server:
 2. **What may import it.** `model.ts` starts with `import "server-only"`, so if a client component
    ever imports it, the build fails instead of shipping the module to the browser.
 3. **What leaves the server.** Provider errors can contain request details. Visitors get a generic
-   message with a reference id; the full error stays in the server log.
+   message with a reference id, and since M11.1 the log keeps only the error's type, status, retry
+   flag, and attempt count. An `APICallError` carries the whole request, which includes the
+   visitor's conversation, and the provider's response, so the error itself stays out of the log.
 
 The key is checked per request, not at startup, so the app builds and renders without one (for
 example in CI or for someone only trying the UI).
@@ -64,6 +66,10 @@ The address is not a credential, but it is private ([ADR 0005](../adr/0005-profi
 boolean, `contactEnabled`, and the review shows the owner's name. Provider error messages stay out of
 responses and logs; only the error's name is logged.
 
+M11.1 adds `VISITOR_HASH_SECRET`, read only in `src/server/chat-limit.ts`. The Redis settings moved to
+`src/server/redis.ts`, and the visitor hash to `src/server/visitor.ts`, both `server-only`. The sentinel check was
+rerun with these secrets and found none in `.next`.
+
 ## 4. Where it lives in the code
 
 - Reading the key: [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts),
@@ -84,8 +90,10 @@ responses and logs; only the error's name is logged.
 - "Nobody will find it in a minified bundle." Bundles are public files; searching them is trivial.
 - Echoing provider errors to the visitor can leak request details, account information, or
   quota state.
-- A server route without rate limiting still lets anyone spend the owner's money through it. Set a
-  spend limit with the provider, and do not deploy publicly before rate limiting (M11).
+- A server route without rate limiting still lets anyone spend the owner's money through it. See
+  [abuse protection](abuse-protection-on-serverless.md), and set a spend limit with the provider too.
+- "Errors in the log are safe because only the owner reads them." Logs are kept and copied. An error
+  object can hold a visitor's whole conversation, so log what diagnosis needs and no more.
 
 ## 6. Further reading
 

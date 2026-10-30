@@ -1,7 +1,7 @@
 # Abuse protection on serverless
 
-First appears in: **M10** (contact workflow), with the daily limit from **M10.1**. Status: **in use**,
-except the host rate limit, which is **planned** for deployment (M12).
+First appears in: **M10** (contact workflow), with the daily limit from **M10.1** and chat's limits from
+**M11.1**. Status: **in use**, except the host rate limit, which is **planned** for deployment (M12).
 
 ## 1. What it is
 
@@ -10,8 +10,8 @@ kind: counting requests from a source and refusing the excess.
 
 ## 2. Why it matters in Promptfolio
 
-The contact routes are public and send real email. But each function call may run on a new instance, so a
-counter in memory does not reliably survive to the next request.
+The contact routes are public and send real email, and each live chat answer costs money. But each function
+call may run on a new instance, so a counter in memory does not reliably survive to the next request.
 
 ## 3. How it works
 
@@ -50,8 +50,25 @@ A rejected honeypot gets an error, not a fake "sent". A fake success would stop 
 rule that the app never claims a send that did not happen has no exceptions.
 
 [ADR 0001](../adr/0001-reference-app-framework.md) expected rate limits to need our own small store. M10
-tried to do without one, until the owner wanted one email a day, which only a store can enforce. M11 can
-reuse this database if chat needs limits too.
+tried to do without one, until the owner wanted one email a day, which only a store can enforce.
+
+**Chat counts answers, not requests ([ADR 0013](../adr/0013-chat-daily-limits.md)).** Spending is the risk, so
+only live answers count, not invalid requests or prepared answers. Each live answer runs `INCR` and
+`EXPIRE key 86400 NX` in one transaction, so a crash between them cannot leave a counter that never expires, and
+`NX` keeps the window from sliding forward on each count.
+
+There are two counters because they stop different things:
+
+| Counter | Stops | Does not stop |
+| ------- | ----- | ------------- |
+| 30 per visitor | One address using up the budget, and everyone else's answers with it | Rotating addresses |
+| 200 for the site | Unbounded spend from any number of addresses | Someone using up the 200 on purpose |
+
+The visitor counts first, so someone already blocked adds nothing to the site's count. If the store fails, the
+model is not called, for the same reason as contact. Prepared answers still work, because they cost nothing.
+
+Each layer has its own job: the firewall stops bursts cheaply, the counters bound the day, and a provider spend
+limit is the last backstop.
 
 ## 4. Where it lives in the code
 
@@ -59,9 +76,12 @@ reuse this database if chat needs limits too.
 - Limits: [packages/contact/src/limits.ts](../../packages/contact/src/limits.ts)
 - Claiming and failing closed: `handleContactSend` in
   [packages/contact/src/handlers.ts](../../packages/contact/src/handlers.ts)
-- Redis adapter and visitor hash: [apps/portfolio/src/server/contact.ts](../../apps/portfolio/src/server/contact.ts)
+- Contact's Redis adapter: [apps/portfolio/src/server/contact.ts](../../apps/portfolio/src/server/contact.ts)
+- Visitor hash: [apps/portfolio/src/server/visitor.ts](../../apps/portfolio/src/server/visitor.ts)
+- Chat's check and failing closed: [packages/ai/src/chat-limit.ts](../../packages/ai/src/chat-limit.ts)
+- Chat's Redis adapter and settings: [apps/portfolio/src/server/chat-limit.ts](../../apps/portfolio/src/server/chat-limit.ts)
 - Hidden field: [apps/portfolio/src/components/contact-dialog.tsx](../../apps/portfolio/src/components/contact-dialog.tsx)
-- Host rule (planned): [docs/guides/contact-setup.md](../guides/contact-setup.md)
+- Host rule (planned): [docs/guides/chat-limit-setup.md](../guides/chat-limit-setup.md)
 
 ## 5. Common pitfalls and misconceptions
 
@@ -72,6 +92,9 @@ reuse this database if chat needs limits too.
 - `x-forwarded-for` is trustworthy only when the host overwrites it. Elsewhere, a client can choose it.
 - A hashed IP address is still linked to a person, so the dialog tells visitors about it.
 - These layers reduce damage. None makes the endpoint abuse-proof.
+- A limit that protects a budget can itself be used to deny service: using up the site's count stops live answers
+  for everyone. That is the accepted price of a bound on spend.
+- The store is also a target. Refused requests still use commands, so the firewall in front of it matters.
 
 ## 6. Further reading
 

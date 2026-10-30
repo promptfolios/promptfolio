@@ -32,7 +32,8 @@ Where size is bounded:
 | Profile text and list sizes            | per field                      | `LIMITS` in `schema.ts`   |
 | Raw request body                       | 100 KB, before JSON parsing    | `CHAT_LIMITS`, `request.ts` |
 | Messages per request                   | 50                             | `CHAT_LIMITS`, `request.ts` |
-| Characters per message / in total      | 4,000 / 20,000                 | `CHAT_LIMITS`, `request.ts` |
+| Characters per visitor message / in total | 4,000 / 20,000              | `CHAT_LIMITS`, `request.ts` |
+| Live answers per day: per visitor / for the site | 30 / 200             | `CHAT_LIMITS`, `chat-limit.ts` |
 | Output tokens per model call (incl. thinking) | 2,000 (1,000 before M7.1) | `maxOutputTokens`   |
 | Wait for the first content / between chunks / whole reply | 15 s / 10 s / 25 s | `CHAT_LIMITS.timeouts`, AI SDK `timeout` |
 | Retries after a failed provider call   | 1                              | `CHAT_LIMITS.maxRetries`  |
