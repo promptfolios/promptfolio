@@ -72,6 +72,10 @@ with its README excerpt and, if the owner annotated it, the owner's project as `
 README text is untrusted: it arrives as a string field of a tool result, and the tool set stays two
 read-only tools whatever it says.
 
+From M8.1, a `contributions` section lists commits in other owners' repositories, and
+`getProfileRecord` returns one with the owner's notes on its repository. Titles are untrusted too. The
+skill filter does not apply to this section.
+
 ## 4. Where it lives in the code
 
 - Tools, input schemas, call budget: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts),

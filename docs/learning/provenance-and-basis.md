@@ -48,6 +48,10 @@ much, or how well; the system prompt tells the model to attribute such facts to 
 infer authorship or skill from them. An owner project with the same id as a repository is the
 owner's own (`self-reported`) description of it: both records keep their own provenance.
 
+From M8.1, a contribution is a `source-observed` commit in someone else's repository. It shows that
+GitHub attributes the commit to the owner, not its size or importance, or a role
+([contributions and evidence](contributions-and-evidence.md)).
+
 From M9, `observedAt` is per repository: when a refresh cannot read a repository again, it keeps
 the previous data together with the time that data was read, so a carried record says it was
 observed on an earlier day instead of looking as current as the rest

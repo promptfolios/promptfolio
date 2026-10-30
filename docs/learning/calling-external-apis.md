@@ -46,6 +46,10 @@ garbage. Every response is untrusted input, exactly like a visitor's message.
   token the budget is 20 to 100 times one run; without one there is no saving. Not worth storing
   ETags yet.
 - **One request at a time.** GitHub recommends serial requests to avoid secondary limits.
+- **Search is different (M8.1).** It has its own limit (10 per minute without a token, 30 with one),
+  shown by `x-ratelimit-resource: search`, so the budget check ignores it. `incomplete_results: true`
+  may mean missing items, so such an answer never replaces a complete list. Results depend on who asks,
+  so a query qualifier is checked again in code.
 - **Testing without the network.** `fetchGitHubSnapshot` takes an injectable `fetch`. Tests pass a
   fake that answers from fixtures, records each call (URL, method, headers), can throw (network
   error), or wait for the abort signal (timeout). Whether fixtures match real responses is checked

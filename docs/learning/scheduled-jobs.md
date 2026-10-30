@@ -37,7 +37,7 @@ flowchart LR
   without repository activity. A private deployment repository is not affected.
 - **`GITHUB_TOKEN`.** Created for each run, limited to the repository and to the permissions the
   workflow declares (`contents: write` to push; everything else becomes `none`). Its REST limit
-  is 1,000 requests per hour per repository; a refresh needs about 43.
+  is 1,000 requests per hour per repository; a refresh needs about 43, plus its commit searches, which have their own limit.
 - **No loops.** Events caused by `GITHUB_TOKEN` (such as the job's own push) start no other
   workflow runs, except `workflow_dispatch` and `repository_dispatch`. CI does not run on the
   bot's commit, and a deploy done by another workflow would not run either.

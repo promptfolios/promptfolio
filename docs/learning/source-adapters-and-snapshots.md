@@ -77,8 +77,8 @@ flowchart LR
   [profile.test.ts](../../apps/portfolio/src/server/profile.test.ts),
   [refresh.test.ts](../../apps/portfolio/src/server/refresh.test.ts)
 - Scheduled refresh: a template in [docs/guides/scheduled-refresh.md](../guides/scheduled-refresh.md),
-  **planned** to run in the deployment repository (M12). Forks and merged pull requests:
-  **planned** (M8.1)
+  **planned** to run in the deployment repository (M12). Work in other owners' repositories:
+  [contributions and evidence](contributions-and-evidence.md) (M8.1)
 
 ## 5. Common pitfalls and misconceptions
 

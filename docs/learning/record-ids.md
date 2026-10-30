@@ -50,6 +50,10 @@ whose id equals a repository's id is the owner's description of that repository,
 an id with a repository; a role or education entry may not. Renaming a repository changes its key.
 This refines ADR 0005's rule against derived ids: for observed records, the source decides the id.
 
+From M8.1, contributions have keys like `github.com/<owner>/<name>/commit/<hash>` (source keys are at
+most 200 characters). No record may share such an id, not even a project; the owner's notes use the
+repository's key instead.
+
 ## 4. Where it lives in the code
 
 - `recordId` regex: [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts)

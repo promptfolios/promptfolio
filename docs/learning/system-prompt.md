@@ -74,6 +74,12 @@ verified claim, never infer authorship, contribution size, popularity, or skill 
 and read `ownerNotes` as the owner's own description. Changing the prompt changes the instructions
 fingerprint, so prepared answers must be regenerated.
 
+M8.1 added a rule for contributions: the source attributes the commit, which does not show its size,
+importance, or a role, and the list is recent only, so "not listed" is not "never contributed". It
+also added two rules after real answers went wrong: one id per pair of brackets, and checking projects,
+repositories, and contributions before saying there is none. A new empty section made the model
+report "no open-source work" when a project was described as open source.
+
 ## 4. Where it lives in the code
 
 - Prompt construction: [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)

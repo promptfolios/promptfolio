@@ -49,6 +49,8 @@ flowchart TD
   private disappears: that is a real change, not a failure.
 - **No previous data, no carry-over.** A partial first run fails rather than writing an
   incomplete snapshot.
+- **Contributions (M8.1) succeed or fail as a whole.** On failure all earlier entries stay with their
+  dates, `contributionsKept` is true, and the run is partial. The repositories still update.
 - **Status file.** `profile/<profile>.refresh-status.json`, written on every run that got as far
   as fetching: `lastAttemptAt`, `outcome` (success, partial, failed), `lastSuccessAt`,
   `snapshotWritten`, `versionChanged`, `carriedOver`, `notAdded`, sanitized `errors`, and the

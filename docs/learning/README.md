@@ -27,6 +27,7 @@ that builds it; code links are marked "planned").
 | Prepared answers and invalidation | [prepared-answers-and-invalidation.md](prepared-answers-and-invalidation.md) | M7 | in use |
 | Source adapters and snapshots   | [source-adapters-and-snapshots.md](source-adapters-and-snapshots.md) | M8 | in use |
 | Calling external APIs           | [calling-external-apis.md](calling-external-apis.md)         | M8            | in use  |
+| Contributions and evidence     | [contributions-and-evidence.md](contributions-and-evidence.md) | M8.1 | in use |
 | Refresh status and last known good | [refresh-status-and-last-known-good.md](refresh-status-and-last-known-good.md) | M9 | in use |
 | Scheduled jobs                  | [scheduled-jobs.md](scheduled-jobs.md)                       | M9            | planned |
 

@@ -97,6 +97,9 @@ slower but never wrong.
   like even when no fact changed.
 - "Stale means wrong, so a miss is an error." Here a miss costs one live answer, never
   correctness, and the visitor sees no difference.
+- "The gate accepted it, so it is correct." The citation gate checks ids, and an answer that cites
+  nothing passes. M8.1's first regeneration produced a false "no open-source work" answer that passed.
+  Reading the file before committing is part of the design.
 - Treating the file as trusted because the owner wrote it. It is parsed with a schema like any
   input; an invalid file means "no prepared answers".
 - Saved threads are not invalidated: a conversation saved in a browser before a profile change
