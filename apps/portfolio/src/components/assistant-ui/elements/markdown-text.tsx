@@ -14,7 +14,9 @@ import { type FC, memo, useMemo, useRef } from "react";
 import type { TextMessagePartProps } from "@assistant-ui/react";
 import { CheckIcon, CopyIcon } from "lucide-react";
 
+import { citationIdFromHref, remarkCitations } from "@/chat/citation-links";
 import { MarkdownImage } from "@/components/assistant-ui/elements/markdown-image";
+import { CitationMarker } from "@/components/citation-marker";
 import { TooltipIconButton } from "@/components/assistant-ui/elements/tooltip-icon-button";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
@@ -23,6 +25,8 @@ type MarkdownTextProps = Partial<TextMessagePartProps> & {
   components?: Parameters<typeof memoizeMarkdownComponents>[0];
   componentsByLanguage?: MarkdownTextPrimitiveProps["componentsByLanguage"];
 };
+
+const REMARK_PLUGINS = [remarkGfm, remarkCitations];
 
 const useShallowStable = <T extends Record<string, unknown> | undefined>(
   value: T,
@@ -56,7 +60,7 @@ const MarkdownTextImpl: FC<MarkdownTextProps> = ({
 
   return (
     <MarkdownTextPrimitive
-      remarkPlugins={[remarkGfm]}
+      remarkPlugins={REMARK_PLUGINS}
       className="aui-md"
       components={markdownComponents}
       componentsByLanguage={stableComponentsByLanguage}
@@ -155,15 +159,19 @@ const defaultComponents = memoizeMarkdownComponents({
       {...props}
     />
   ),
-  a: ({ className, ...props }) => (
-    <a
-      className={cn(
-        "aui-md-a text-primary hover:text-primary/80 underline underline-offset-2",
-        className,
-      )}
-      {...props}
-    />
-  ),
+  a: ({ className, ...props }) => {
+    const citation = citationIdFromHref(props.href);
+    if (citation !== undefined) return <CitationMarker id={citation} />;
+    return (
+      <a
+        className={cn(
+          "aui-md-a text-primary hover:text-primary/80 underline underline-offset-2",
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
   img: MarkdownImage,
   blockquote: ({ className, ...props }) => (
     <blockquote

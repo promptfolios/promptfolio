@@ -26,11 +26,16 @@ export const SourcesPanel: FC<{ data: unknown }> = ({ data }) => {
       {sources.length > 0 && (
         <details open>
           <summary className="cursor-pointer font-medium">Sources ({sources.length})</summary>
-          <ul className="mt-1.5 flex flex-col gap-1.5">
+          <ol className="mt-1.5 ms-4 flex list-decimal flex-col gap-1.5">
             {sources.map((source) => (
-              <li key={source.id}>
-                <span className="text-foreground">{source.record}</span>{" "}
-                <span className="break-all">[{source.id}]</span>
+              <li
+                key={source.id}
+                data-source-id={source.id}
+                // A citation marker moves focus here, which also scrolls to it and highlights it.
+                tabIndex={-1}
+                className="focus:bg-accent rounded outline-none"
+              >
+                <span className="text-foreground break-words">{source.record}</span>
                 {source.evidence.map((evidence) => (
                   <div key={`${evidence.source}:${evidence.basis}`}>
                     {evidence.basis} · {evidence.source} · observed{" "}
@@ -39,7 +44,7 @@ export const SourcesPanel: FC<{ data: unknown }> = ({ data }) => {
                 ))}
               </li>
             ))}
-          </ul>
+          </ol>
         </details>
       )}
       {unverifiedCitations > 0 && <p className="mt-1.5">{unverifiedNote(unverifiedCitations)}</p>}

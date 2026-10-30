@@ -21,7 +21,10 @@ describe("SourcesPanel", () => {
 
     expect(html).toContain("Sources (1)");
     expect(html).toContain("Service Catalog");
-    expect(html).toContain("[service-catalog]");
+    // The id is how a citation marker finds this entry; visitors see the number instead.
+    expect(html).toContain('data-source-id="service-catalog"');
+    expect(html).not.toContain("[service-catalog]");
+    expect(html).toContain("<ol");
     expect(html).toContain("self-reported");
     expect(html).toContain("Owner&#x27;s file");
     expect(html).toContain("2026-10-01");

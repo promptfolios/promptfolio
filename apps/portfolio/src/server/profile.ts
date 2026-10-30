@@ -75,7 +75,8 @@ export async function loadOwnerProfile({ dir }: LoadAppProfileOptions = {}): Pro
     fileName,
     result: loadStructuredProfile(data, {
       sourceId: "owner-profile",
-      label: `Owner-provided profile file (${fileName})`,
+      // Visitors see this, and the model can repeat it, so it does not name the file.
+      label: "Owner-provided profile",
       observedAt: modifiedAt,
     }),
   };
