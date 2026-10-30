@@ -75,6 +75,7 @@ flowchart TB
         request["request.ts<br/>body size cap, allowlist, limits"]
         prompt["system-prompt.ts<br/>buildSystemPrompt(identity)"]
         tools["profile-tools.ts<br/>createProfileTools(profile, budget)"]
+        citations["citations.ts<br/>checks cited ids, builds sources from the profile"]
         aiIndex --> handler
         aiIndex --> prepared
         handler --> request
@@ -168,7 +169,7 @@ sequenceDiagram
         H->>P: tool result: record with id, basis, sourceId
     end
     P-->>H: answer text with cited ids
-    H-->>B: UI message stream: text and step boundaries only (output allowlist)
+    H-->>B: UI message stream: text, step boundaries, and sources for cited ids (output allowlist)
     Note over B,H: Provider errors and timeouts (15 s to first content, 25 s total) become a generic message with a ref id
     B-)H: Stop or disconnect fires request.signal
     H-)P: abortSignal cancels the model request
@@ -182,6 +183,10 @@ otherwise the request is answered live (M7, [ADR 0008](adr/0008-prepared-answers
 A live answer first takes one count from the daily limits, 30 per visitor and 200 for the site, held in
 Redis. If the limit is reached the visitor gets a 429, and if it cannot be checked a 503; the model is not
 called in either case (M11.1, [ADR 0013](adr/0013-chat-daily-limits.md)).
+
+When an answer finishes, the server checks its cited ids against the records returned in that turn and
+sends the sources as a separate `data-sources` chunk, built from the profile. The page draws them in their
+own panel, saves them with the thread, and leaves them out when it sends the thread back (M11.2).
 
 The server owns the instructions and the tools: the client never sends a system prompt or tools,
 and the handler would drop them if it did. Tool calls and results stay on the server; the browser
@@ -300,7 +305,7 @@ flowchart TD
 `useChatRuntime` from `@assistant-ui/ai-sdk` would bundle the per-thread part, but it builds its
 own thread list and cannot use the titled adapter, so the workspace composes `useChat` (AI SDK)
 and `useAISDKRuntime` (assistant-ui) itself. Messages have `parts`; the browser only ever receives
-text and step boundaries, because tool activity stays on the server (M5).
+text, step boundaries, and sources, because tool activity stays on the server (M5).
 
 Conversations are saved only in the visitor's browser (M6): the server stores no history and still
 validates every request, so saved history is as untrusted as typed history. The store keeps only

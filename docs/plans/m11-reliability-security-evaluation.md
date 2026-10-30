@@ -1,6 +1,6 @@
 # M11 plan: reliability, security, and AI evaluation
 
-- **Status:** Plan approved with every recommended default (2026-10-31). M11.1 is done and approved (2026-10-31); M11.2 and M11.3 have not started.
+- **Status:** Plan approved with every recommended default (2026-10-31). M11.1 is done and approved (2026-10-31). M11.2 is implemented and in review. M11.3 has not started.
 - **Date:** 2026-10-30
 - **Roadmap:** [M11](../ROADMAP.md#m11--reliability-security-and-ai-evaluation). Design input: [M5, Deferred to M11](m5-tools-grounded-lookup.md#deferred-to-m11-server-built-provenance-for-cited-facts).
 
@@ -138,3 +138,33 @@ The screenshot could not be taken because the app window was hidden, so results 
 **Developer's check on real Upstash (2026-10-31, reported by the developer):** under `next dev` with a real Upstash database and a real model, 19 live requests in the server log, none with `limit unavailable`, so Upstash accepts `INCR` and `EXPIRE ... NX` in one transaction. The developer checked the two keys in the Data Browser and reported the counts, the falling TTL, and the hashed key name as expected. The same log shows the new summary on a real provider 429, with no request or response text. The 31st answer and the site cap were not repeated on Upstash; they ran only against the stand-in.
 
 **Not run:** the real firewall 429 and the deployed IP header wait for M12. A prepared answer being served while the limit is reached has handler tests but was not seen in the browser, because the example answers are stale until M11.3 regenerates them.
+
+### M11.2
+
+Recorded 2026-10-31. Awaiting the developer's review.
+
+**Automated:** `pnpm verify` passes: lint, typecheck, 661 tests (`core` 74, `contact` 48, `source-github` 119, `ai` 170, app 250), and the build, with the same two "dynamic filesystem access" warnings as before. No test uses the network or a model.
+
+**Runtime check.** A production build in the in-app browser, with the real routes and SDKs, pointed at local stand-ins for Redis and the model. The stand-in model used a real tool call and wrote a verified citation, the identity citation, an invented citation, and its own fake "Sources" section. It shows the mechanism, not how a real model behaves, which is for M11.3.
+
+| Checked | Result |
+| ------- | ------ |
+| Panel after a lookup | Pass: `Sources (2)` with the record, id, basis, source, and date, below the answer |
+| Invented and fake citations | Pass: neither listed; "2 citations could not be matched to a lookup in this answer" |
+| Model's own "Sources" section | Pass: stays in the answer's text, apart from the panel; its citation counts as unverified |
+| Reload, then reopen the thread | Pass: the panel is restored from browser storage |
+| Follow-up | Pass: no `data-sources` in the request or in what the model received; the new answer has its own panel; no error |
+| Another data part in a request | Pass: 400 |
+| Server log | Pass: `citations { verified: 2, unverified: 2 }`, counts only |
+
+**Decisions made while implementing:**
+
+- **The panel is saved with the thread.** The plan did not settle this. Without it, proof would vanish on reload, so the store now keeps a checked `data-sources` part. Invalid data is dropped and the answer's text is kept.
+- **The browser removes sources before sending a thread back**, in the transport. The server still accepts and drops them. Otherwise they would count against the 100 KB request limit on every later message.
+- **A repository or contribution with owner notes lists both sources**, because the sentence may rely on either.
+- **The panel starts open**, because the request was to see proof alongside the fact. It can be collapsed.
+- **Brackets in code are not citations**, so `items[0]` does not count as unverified.
+
+**Added beyond the file list:** `apps/portfolio/src/chat/sources.ts`, the schema shared by the store and the panel, and `thread-store.ts`, for saving the panel.
+
+**Not run:** a real model, so how often it cites correctly, and whether the new prompt rules work, are unmeasured until M11.3. A prepared answer's panel has tests but was not seen in the browser, because the prompt change makes every prepared answer stale until M11.3 regenerates them.
