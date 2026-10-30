@@ -34,7 +34,7 @@ export const CitationMarker: FC<{ id: string }> = ({ id }) => {
           className="text-muted-foreground ms-0.5 cursor-help"
           title="Could not be matched to a lookup in this answer"
         >
-          ?
+          [?]
         </sup>
       );
     case "source":
@@ -44,10 +44,11 @@ export const CitationMarker: FC<{ id: string }> = ({ id }) => {
             type="button"
             aria-label={`Source ${display.number}: ${display.record}`}
             title={display.record}
-            className="text-primary cursor-pointer font-medium hover:underline"
+            className="cursor-pointer font-medium text-blue-600 hover:underline dark:text-blue-400"
             onClick={(event) => showSource(event, id)}
           >
-            {display.number}
+            {/* Brackets, because neighbouring markers would otherwise read as one number. */}
+            {`[${display.number}]`}
           </button>
         </sup>
       );
