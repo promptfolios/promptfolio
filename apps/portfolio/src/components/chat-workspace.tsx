@@ -16,6 +16,7 @@ import { createBrowserThreadListAdapter } from "@/chat/browser-thread-list-adapt
 import { ThreadStore } from "@/chat/thread-store";
 import { Thread } from "@/components/assistant-ui/elements/thread.aui";
 import { ThreadList } from "@/components/assistant-ui/elements/thread-list.aui";
+import { ContactDialog } from "@/components/contact-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { STARTERS } from "@/config/starters";
 
@@ -39,6 +40,8 @@ function useThreadRuntime() {
 export interface ChatWorkspaceProps {
   ownerName: string;
   headline: string;
+  /** Whether the server has a complete contact configuration. */
+  contactEnabled: boolean;
 }
 
 /**
@@ -46,7 +49,7 @@ export interface ChatWorkspaceProps {
  * Thread state and switching are managed by assistant-ui; threads are saved in this
  * browser's localStorage (in memory when storage is unavailable).
  */
-export function ChatWorkspace({ ownerName, headline }: ChatWorkspaceProps) {
+export function ChatWorkspace({ ownerName, headline, contactEnabled }: ChatWorkspaceProps) {
   // The adapter must stay stable across renders. During server rendering there is no
   // localStorage, so this falls back to memory; the browser creates its own on hydration.
   const [threadListAdapter] = useState(() =>
@@ -127,6 +130,7 @@ export function ChatWorkspace({ ownerName, headline }: ChatWorkspaceProps) {
               </button>
               <span className="font-medium">{ownerName}</span>
               <span className="text-muted-foreground truncate text-sm">· Promptfolio</span>
+              {contactEnabled && <ContactDialog ownerName={ownerName} />}
             </header>
             <div className="min-h-0 flex-1">
               <Thread components={{ Welcome }} />

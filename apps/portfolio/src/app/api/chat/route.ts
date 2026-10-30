@@ -1,4 +1,5 @@
 import { handleChatRequest } from "@promptfolio/ai";
+import { isContactEnabled } from "@/server/contact";
 import { createChatModel } from "@/server/model";
 import { loadPreparedAnswers } from "@/server/prepared-answers";
 import { loadAppProfile } from "@/server/profile";
@@ -29,6 +30,8 @@ export async function POST(request: Request): Promise<Response> {
     profile: result.profile,
     // Starter answers prepared by `pnpm prepare-answers`; used only while still current.
     preparedAnswers: await loadPreparedAnswers(fileName),
+    // The same check that shows the Contact button, so the assistant only mentions a real one.
+    contactFormAvailable: isContactEnabled(),
   });
 }
 

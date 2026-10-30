@@ -10,7 +10,7 @@ import {
 } from "ai";
 import { CHAT_LIMITS } from "./limits";
 import { createProfileTools } from "./profile-tools";
-import { buildSystemPrompt } from "./system-prompt";
+import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";
 
 type StreamTextOptions = Parameters<typeof streamText>[0];
 
@@ -28,7 +28,7 @@ export interface ChatTimeouts {
 export type ChatLogger = Pick<Console, "info" | "error">;
 
 /** Everything one model turn needs. Shared by live chat and prepared-answer generation. */
-export interface ChatTurnOptions {
+export interface ChatTurnOptions extends SystemPromptOptions {
   /** Any AI SDK language model; the application chooses the provider. */
   model: LanguageModel;
   profile: Profile;
@@ -54,11 +54,11 @@ export async function runChatTurn(
   options: ChatTurnOptions,
   { requestId, signal }: { requestId: string; signal: AbortSignal },
 ) {
-  const { model, profile, providerOptions, logger = console } = options;
+  const { model, profile, providerOptions, contactFormAvailable, logger = console } = options;
 
   const result = streamText({
     model,
-    instructions: buildSystemPrompt(profile.identity),
+    instructions: buildSystemPrompt(profile.identity, { contactFormAvailable }),
     messages: await convertToModelMessages(messages),
     // Only the server's tools exist; the client cannot add any (see parseChatRequest).
     tools: createProfileTools(profile, { maxCalls: CHAT_LIMITS.maxToolCalls }),

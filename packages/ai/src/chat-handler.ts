@@ -35,7 +35,7 @@ export async function handleChatRequest(
   request: Request,
   options: ChatHandlerOptions,
 ): Promise<Response> {
-  const { profile, preparedAnswers = [], logger = console } = options;
+  const { profile, preparedAnswers = [], contactFormAvailable, logger = console } = options;
   const requestId = crypto.randomUUID().slice(0, 8);
 
   const parsed = await parseChatRequest(request);
@@ -47,6 +47,7 @@ export async function handleChatRequest(
       parsed.trigger,
       preparedAnswers,
       profile,
+      { contactFormAvailable },
     );
     // Follow-ups are never candidates; logging them would only add noise.
     if (selection.outcome === "hit" || selection.reason !== "not-first-turn") {

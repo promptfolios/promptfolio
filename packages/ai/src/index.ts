@@ -24,4 +24,4 @@ export {
   parsePreparedAnswers,
   profileFingerprint,
 } from "./prepared-answers";
-export { buildSystemPrompt } from "./system-prompt";
+export { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";

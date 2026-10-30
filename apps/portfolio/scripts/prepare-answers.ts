@@ -16,6 +16,7 @@ import {
   type PreparedAnswersFile,
 } from "@promptfolio/ai";
 import { STARTERS } from "../src/config/starters";
+import { isContactEnabled } from "../src/server/contact";
 import { createChatModel } from "../src/server/model";
 import { preparedAnswersFileName } from "../src/server/prepared-answers";
 import { loadAppProfile } from "../src/server/profile";
@@ -43,6 +44,7 @@ async function main(): Promise<number> {
       providerOptions: chatModel.providerOptions,
       profile: result.profile,
       modelLabel,
+      contactFormAvailable: isContactEnabled(),
     });
     if (generated.ok) {
       answers.push(generated.answer);

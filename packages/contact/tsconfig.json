@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // The handlers use the global Request, Response, Web Crypto, and AbortSignal; Node's types declare them.
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

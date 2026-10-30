@@ -5,7 +5,7 @@ import { type ChatTurnOptions, runChatTurn } from "./chat-turn";
 import { CHAT_LIMITS } from "./limits";
 import { createProfileTools } from "./profile-tools";
 import type { ChatTrigger } from "./request";
-import { buildSystemPrompt } from "./system-prompt";
+import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";
 
 /**
  * Prepared answers: answers to the conversation starters, generated ahead of time by the
@@ -86,7 +86,10 @@ export function profileFingerprint(profile: Profile): Promise<string> {
  * Fingerprint of what the model is told: the system prompt and each tool's name,
  * description, and input schema. Changing any of them invalidates every prepared answer.
  */
-export async function instructionsFingerprint(profile: Profile): Promise<string> {
+export async function instructionsFingerprint(
+  profile: Profile,
+  promptOptions: SystemPromptOptions = {},
+): Promise<string> {
   const tools = createProfileTools(profile, { maxCalls: 0 });
   const toolDefinitions = await Promise.all(
     Object.entries(tools).map(async ([name, tool]) => ({
@@ -97,7 +100,10 @@ export async function instructionsFingerprint(profile: Profile): Promise<string>
     })),
   );
   return sha256(
-    JSON.stringify({ instructions: buildSystemPrompt(profile.identity), tools: toolDefinitions }),
+    JSON.stringify({
+      instructions: buildSystemPrompt(profile.identity, promptOptions),
+      tools: toolDefinitions,
+    }),
   );
 }
 
@@ -130,6 +136,7 @@ export async function selectPreparedAnswer(
   trigger: ChatTrigger,
   answers: readonly PreparedAnswer[],
   profile: Profile,
+  promptOptions: SystemPromptOptions = {},
 ): Promise<PreparedAnswerSelection> {
   if (messages.length !== 1) return miss("not-first-turn");
   if (trigger === "regenerate-message") return miss("regenerate");
@@ -141,7 +148,7 @@ export async function selectPreparedAnswer(
   if (answer.profileFingerprint !== (await profileFingerprint(profile))) {
     return miss("stale-profile");
   }
-  if (answer.instructionsFingerprint !== (await instructionsFingerprint(profile))) {
+  if (answer.instructionsFingerprint !== (await instructionsFingerprint(profile, promptOptions))) {
     return miss("stale-instructions");
   }
   return { outcome: "hit", answer };
@@ -237,14 +244,14 @@ export async function generatePreparedAnswer(
     return { ok: false, reason: "unsupported-citation", detail: unsupported.join(", ") };
   }
 
-  const { profile, modelLabel, now = () => new Date() } = options;
+  const { profile, contactFormAvailable, modelLabel, now = () => new Date() } = options;
   return {
     ok: true,
     answer: {
       question: question.trim(),
       text,
       profileFingerprint: await profileFingerprint(profile),
-      instructionsFingerprint: await instructionsFingerprint(profile),
+      instructionsFingerprint: await instructionsFingerprint(profile, { contactFormAvailable }),
       evidenceIds: evidenceIds.slice(0, PREPARED_ANSWER_LIMITS.maxEvidenceIds),
       model: modelLabel,
       generatedAt: now().toISOString(),

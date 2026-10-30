@@ -1,5 +1,6 @@
 import type { ProfileIssue } from "@promptfolio/core";
 import { ChatWorkspace } from "@/components/chat-workspace";
+import { isContactEnabled } from "@/server/contact";
 import { loadAppProfile } from "@/server/profile";
 
 export default async function HomePage() {
@@ -15,7 +16,13 @@ export default async function HomePage() {
   }
 
   const { identity } = result.profile;
-  return <ChatWorkspace ownerName={identity.name} headline={identity.headline} />;
+  return (
+    <ChatWorkspace
+      ownerName={identity.name}
+      headline={identity.headline}
+      contactEnabled={isContactEnabled()}
+    />
+  );
 }
 
 /** Shown to the profile owner when the configured profile cannot be loaded. */

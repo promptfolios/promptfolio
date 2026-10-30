@@ -31,6 +31,22 @@ describe("buildSystemPrompt", () => {
     expect(buildSystemPrompt(withoutLocation)).not.toContain("Location:");
   });
 
+  it("says the assistant cannot pass messages on, with or without a contact form", () => {
+    for (const contactFormAvailable of [true, false]) {
+      const prompt = buildSystemPrompt(identity, { contactFormAvailable });
+
+      expect(prompt).toContain("You cannot send messages or pass anything on to Jordan Example");
+      expect(prompt).toContain("Never say that a message was sent or will be passed on");
+      expect(prompt).toContain("any contact links in the profile");
+    }
+  });
+
+  it("mentions the Contact button only when the application says it exists", () => {
+    expect(buildSystemPrompt(identity, { contactFormAvailable: true })).toContain("Contact button");
+    expect(buildSystemPrompt(identity, { contactFormAvailable: false })).not.toMatch(/button/i);
+    expect(buildSystemPrompt(identity)).not.toMatch(/button/i);
+  });
+
   it("states the anti-invention, abstention, and third-person rules", () => {
     const prompt = buildSystemPrompt(identity);
 

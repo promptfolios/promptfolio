@@ -208,6 +208,69 @@ describe("fingerprints", () => {
       instructions,
     );
   });
+
+  it("change with whether a contact form exists, and default to none", async () => {
+    const without = await instructionsFingerprint(testProfile());
+
+    expect(await instructionsFingerprint(testProfile(), { contactFormAvailable: false })).toBe(
+      without,
+    );
+    expect(await instructionsFingerprint(testProfile(), { contactFormAvailable: true })).not.toBe(
+      without,
+    );
+  });
+});
+
+describe("prepared answers and the contact form", () => {
+  async function serve(
+    contactFormAvailable: boolean,
+    answer: PreparedAnswer,
+  ): Promise<ReturnType<typeof stepsModel>> {
+    const model = stepsModel(textChunks("A live answer."));
+    const response = await handleChatRequest(chatRequest({ messages: [userMessage(QUESTION)] }), {
+      model,
+      profile: testProfile(),
+      logger: silentLogger(),
+      preparedAnswers: [answer],
+      contactFormAvailable,
+    });
+    await response.text();
+    return model;
+  }
+
+  it("serves an answer only while the form's state matches its generation", async () => {
+    const withForm = await currentAnswer(testProfile(), {
+      instructionsFingerprint: await instructionsFingerprint(testProfile(), {
+        contactFormAvailable: true,
+      }),
+    });
+
+    expect((await serve(true, withForm)).doStreamCalls).toHaveLength(0);
+    expect((await serve(false, withForm)).doStreamCalls).toHaveLength(1);
+  });
+
+  it("tells a live turn about the button only when the form exists", async () => {
+    const stale = await currentAnswer(testProfile(), { question: "Another question?" });
+    const promptOf = (model: ReturnType<typeof stepsModel>) =>
+      JSON.stringify(model.doStreamCalls[0]?.prompt.filter((part) => part.role === "system"));
+
+    expect(promptOf(await serve(true, stale))).toContain("Contact button");
+    expect(promptOf(await serve(false, stale))).not.toContain("Contact button");
+  });
+
+  it("records the form's state in a generated answer's fingerprint", async () => {
+    const result = await generatePreparedAnswer(QUESTION, {
+      model: stepsModel(textChunks("An answer without citations.")),
+      profile: testProfile(),
+      logger: silentLogger(),
+      modelLabel: "mock:model",
+      contactFormAvailable: true,
+    });
+
+    expect(result.ok && result.answer.instructionsFingerprint).toBe(
+      await instructionsFingerprint(testProfile(), { contactFormAvailable: true }),
+    );
+  });
 });
 
 describe("handleChatRequest with prepared answers", () => {
