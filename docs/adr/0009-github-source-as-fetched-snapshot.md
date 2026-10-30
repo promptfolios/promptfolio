@@ -68,3 +68,8 @@ the profile-independent reference app).
 - Details: [M8 plan](../plans/m8-github-source-adapter.md), learning notes on
   [source adapters and snapshots](../learning/source-adapters-and-snapshots.md) and
   [calling external APIs](../learning/calling-external-apis.md).
+- *Update (M9):* the command is now `pnpm --filter portfolio refresh`, and all or nothing became
+  per-repository last known good: a repository whose details cannot be read keeps its previous
+  entry with its own `retrievedAt` (snapshot format version 2), the run exits 2, and a status
+  file records it. The snapshot is rewritten only when the profile version changes. See
+  [ADR 0010](0010-refresh-status-and-content-versions.md).

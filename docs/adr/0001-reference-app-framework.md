@@ -50,6 +50,9 @@ To limit its downsides:
   *Update (M7):* the answer cache needed no external storage: prepared answers are files deployed
   with the profile and checked against content fingerprints on every request
   ([ADR 0008](0008-prepared-answers-as-files.md)).
+  *Update (M9):* profile versions needed none either: the version is the content fingerprint, and
+  refresh status is a file written next to the snapshot. The cron trigger is a documented GitHub
+  Actions workflow ([ADR 0010](0010-refresh-status-and-content-versions.md)).
 - Workspace packages are consumed from TypeScript source. Next.js 16.4 (Turbopack) compiles them
   without `transpilePackages`.
 - Next.js 16.4 type-checks with the project-local `tsc` CLI by default, so TypeScript 7 works for

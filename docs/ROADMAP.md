@@ -25,7 +25,8 @@ This document describes the suggested milestone sequence and future directions. 
 | M7 — Seeded conversations and cache       | Done      | `pnpm --filter portfolio prepare-answers`, then a starter answers at once; [plan](plans/m7-prepared-starter-answers.md) |
 | M7.1 — OpenRouter provider                | Done      | `PROMPTFOLIO_MODEL=openrouter` with `OPENROUTER_API_KEY`: a free model answers with tools; [plan](plans/m7-1-openrouter-provider.md) |
 | M7.2 — AI Gateway provider                | Done      | `PROMPTFOLIO_MODEL=gateway` with `AI_GATEWAY_API_KEY` (needs a card on the Vercel team): a $0 model answers; [plan](plans/m7-2-ai-gateway-provider.md) |
-| M8 — GitHub source adapter                | Done      | `pnpm --filter portfolio fetch-github` with `profile/<profile>.github.json`; answers cite `github.com/…` repositories; [plan](plans/m8-github-source-adapter.md) |
+| M8 — GitHub source adapter                | Done      | `pnpm --filter portfolio refresh` (named `fetch-github` until M9) with `profile/<profile>.github.json`; answers cite `github.com/…` repositories; [plan](plans/m8-github-source-adapter.md) |
+| M9 — Refresh pipeline and versions         | Done      | `pnpm --filter portfolio refresh`: exit 0, 2, or 1, `profile/<profile>.refresh-status.json`, snapshot unchanged when nothing changed; workflow template in [the guide](guides/scheduled-refresh.md); [plan](plans/m9-refresh-pipeline-and-versions.md) |
 
 Update this table when a milestone is approved.
 
@@ -158,7 +159,7 @@ Update this table when a milestone is approved.
 
 **Exit criteria:** Selected public GitHub data can be normalized into the canonical model with provenance, without leaking GitHub-specific assumptions throughout the app.
 
-Plan and decisions: [M8 plan](plans/m8-github-source-adapter.md), [ADR 0009](adr/0009-github-source-as-fetched-snapshot.md). The owner configures only a GitHub username; repositories are selected automatically, identified by source keys (`github.com/owner/repo`), and fetched by `pnpm --filter portfolio fetch-github` into a snapshot file.
+Plan and decisions: [M8 plan](plans/m8-github-source-adapter.md), [ADR 0009](adr/0009-github-source-as-fetched-snapshot.md). The owner configures only a GitHub username; repositories are selected automatically, identified by source keys (`github.com/owner/repo`), and fetched by `pnpm --filter portfolio refresh` (named `fetch-github` in M8) into a snapshot file.
 
 ### M8.1 — GitHub contributions (proposed)
 
@@ -186,6 +187,8 @@ Plan and decisions: [M8 plan](plans/m8-github-source-adapter.md), [ADR 0009](adr
 
 **Exit criteria:** Refresh outcomes are distinguishable, failed ingestion does not silently erase valid data, and changed facts cannot leave dependent cached answers knowingly stale.
 
+Plan and decisions: [M9 plan](plans/m9-refresh-pipeline-and-versions.md), [ADR 0010](adr/0010-refresh-status-and-content-versions.md). `pnpm --filter portfolio refresh` keeps per-repository last known-good data, writes a status file, and treats the content fingerprint as the profile version. Prepared answers are not regenerated automatically (stale ones are answered live). The daily workflow is a template in [docs/guides/scheduled-refresh.md](guides/scheduled-refresh.md), activated in the deployment repository in M12.
+
 ### M10 — Contact workflow
 
 **Objective:** Provide a safe, confirmed way for a visitor to contact the profile owner.
@@ -212,6 +215,11 @@ Plan and decisions: [M8 plan](plans/m8-github-source-adapter.md), [ADR 0009](adr
   which no tool returns, so M7's gate rejects the prepared overview answer and that starter is
   always answered live (accepted for M7 on 2026-10-29; see the [M7 plan, Review
   results](plans/m7-prepared-starter-answers.md#review-results)).
+- Repository wording (moved from M8's observations by the M9 plan): the model called unlicensed
+  public repositories "open-source" and wrote "repositories by <user>". Consider prompt rules (a
+  public repository without a license is not open source; "under the account", not "by") and
+  check them with the evaluation set. See the [M8 plan,
+  Observations](plans/m8-github-source-adapter.md#review-results).
 - Verify error states and observability without logging unnecessary personal data.
 - Document known limitations.
 
@@ -227,6 +235,8 @@ Plan and decisions: [M8 plan](plans/m8-github-source-adapter.md), [ADR 0009](adr
 - Improve setup and package usage documentation.
 - Review public package exports and dependency direction.
 - Decide whether deployment is useful now; obtain approval before publishing or deploying.
+- With the deployment repository: activate the scheduled refresh from [docs/guides/scheduled-refresh.md](guides/scheduled-refresh.md) and check its first run, whether the host deploys the job's push, and whether `GITHUB_TOKEN` can read pinned repositories (M9 left these unverified).
+- Check how much of the refresh a second consumer has to copy from `apps/portfolio/src/server/refresh.ts` (raised during M9 review, deliberately not moved yet). Candidates for `@promptfolio/source-github`: `mergeGitHubSnapshot` (pure, now in the app's `github-source.ts`) and a `refreshGitHubSnapshot` that combines `fetchGitHubSnapshot` and `carryForward`. The refresh status schema is source-neutral, so it would go to `core`, and only once a second source exists. These stay in the app: the "write only on a new profile version" rule (needs `profileFingerprint` from `@promptfolio/ai`), files, environment, and exit codes. The scheduled workflow stays a deployment template.
 
 **Exit criteria:** The second consumer works through documented public APIs and configuration/data changes. Deployment is optional until separately approved.
 

@@ -10,13 +10,13 @@ in [`ROADMAP.md`](ROADMAP.md#status).
 flowchart TB
     subgraph app["apps/portfolio (Next.js reference app)"]
         direction TB
-        env[".env.local<br/>PROMPTFOLIO_PROFILE_FILE, provider key and model,<br/>optional GITHUB_TOKEN (fetch command only)"]
-        files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.answers.json (prepared starter answers)<br/>*.github.json and *.github-snapshot.json (GitHub source)"]
+        env[".env.local<br/>PROMPTFOLIO_PROFILE_FILE, provider key and model,<br/>optional GITHUB_TOKEN (refresh command only)"]
+        files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.answers.json (prepared starter answers)<br/>*.github.json and *.github-snapshot.json (GitHub source)<br/>*.refresh-status.json (last refresh, M9)"]
         page["src/app/page.tsx<br/>server: load profile, then render workspace or issues"]
         route["src/app/api/chat/route.ts<br/>server: POST /api/chat"]
         serverProfile["src/server/profile.ts<br/>fs + env"]
         serverGitHub["src/server/github-source.ts<br/>GitHub configuration and snapshot"]
-        fetchScript["scripts/fetch-github.ts<br/>owner-run: pnpm --filter portfolio fetch-github"]
+        fetchScript["scripts/refresh.ts and src/server/refresh.ts<br/>owner-run or scheduled: pnpm --filter portfolio refresh"]
         serverModel["src/server/model.ts<br/>server-only: PROMPTFOLIO_MODEL = provider:model"]
         serverAnswers["src/server/prepared-answers.ts<br/>reads profile/*.answers.json"]
         script["scripts/prepare-answers.ts<br/>owner-run: pnpm --filter portfolio prepare-answers"]
@@ -33,7 +33,7 @@ flowchart TB
         serverProfile -- reads --> files
         serverProfile --> serverGitHub
         serverGitHub -- reads --> files
-        fetchScript -- writes snapshot --> files
+        fetchScript -- "writes snapshot and status" --> files
     end
 
     subgraph ghpkg["packages/source-github (@promptfolio/source-github)"]
@@ -43,8 +43,10 @@ flowchart TB
         ghSelect["select.ts<br/>pinned, then recent, capped by tier"]
         ghSnapshot["snapshot.ts<br/>response and snapshot schemas"]
         ghNormalize["normalize.ts<br/>normalizeGitHubSnapshot (pure)"]
+        ghCarry["carry-forward.ts<br/>carryForward: per-repository last known good (pure)"]
         ghIndex --> ghFetch
         ghIndex --> ghNormalize
+        ghIndex --> ghCarry
         ghFetch --> ghSelect
         ghFetch --> ghSnapshot
         ghNormalize --> ghSnapshot
@@ -93,14 +95,16 @@ flowchart TB
     script -- "generatePreparedAnswer" --> aiIndex
     aipkg -- "Profile types, lookups" --> index
     serverGitHub -- "parse, normalize" --> ghIndex
-    fetchScript -- "fetchGitHubSnapshot" --> ghIndex
+    fetchScript -- "fetchGitHubSnapshot, carryForward" --> ghIndex
+    fetchScript -- "profileFingerprint" --> aiIndex
     ghpkg -- "ObservedRecords types" --> index
 ```
 
 `core` depends on zod only: no Node.js, browser, React, Next.js, or AI SDK code. `ai` depends on
 `core`, zod, and the AI SDK (`ai`), but on no provider package: the app passes in a model.
-`source-github` depends on `core` and zod and uses the global `fetch`; only the fetch command
+`source-github` depends on `core` and zod and uses the global `fetch`; only the refresh command
 calls it with the network, the app only parses and normalizes the snapshot file (M8).
+The refresh command also uses its `carryForward` and `@promptfolio/ai`'s `profileFingerprint` (M9).
 Dependencies point only towards the packages; packages never import the app
 ([ADR 0002](adr/0002-library-first-monorepo-boundaries.md)).
 
@@ -184,9 +188,11 @@ flowchart TD
         config["5. read profile/*.github.json<br/>none: no GitHub source"]
         snapshot["6. read profile/*.github-snapshot.json<br/>none: warning, no repositories"]
         normalizeGh["7. parseGitHubSnapshot, normalizeGitHubSnapshot<br/>(@promptfolio/source-github)"]
-        merge["8. addObservedRecords (@promptfolio/core)<br/>stamp source-observed, keep owner records"]
+        merge["8. addObservedRecords (@promptfolio/core)<br/>stamp source-observed with each repository's observedAt,<br/>keep owner records"]
         config --> snapshot --> normalizeGh --> merge
     end
+
+    status["9. read profile/*.refresh-status.json (M9)<br/>partial or failed: owner warning, never an issue"]
 
     file --> choose
     parse --> validate
@@ -198,13 +204,37 @@ flowchart TD
     config -- "invalid" --> issues
     snapshot -- "invalid" --> issues
     merge -- "id conflict" --> issues
-    merge --> ok
+    merge --> status --> ok
 ```
 
-The snapshot is written only by `pnpm --filter portfolio fetch-github` (M8), which calls GitHub,
-selects the owner's repositories automatically, and replaces the file only when every request
-succeeded. Requests never call GitHub. See [ADR 0009](adr/0009-github-source-as-fetched-snapshot.md)
-and [source adapters and snapshots](learning/source-adapters-and-snapshots.md).
+The snapshot is written only by `pnpm --filter portfolio refresh` (M8, extended in M9), which calls
+GitHub and selects the owner's repositories automatically. Requests never call GitHub. See
+[ADR 0009](adr/0009-github-source-as-fetched-snapshot.md) and
+[source adapters and snapshots](learning/source-adapters-and-snapshots.md).
+
+## Refresh flow
+
+```mermaid
+flowchart TD
+    run["pnpm --filter portfolio refresh<br/>by hand, or a scheduled job (template in docs/guides)"] --> setup["owner profile and GitHub configuration<br/>missing or invalid: exit 1, no status"]
+    setup --> fetch["fetchGitHubSnapshot<br/>complete, partial, or failed"]
+    fetch --> carry["carryForward(previous snapshot, fetched)<br/>missing repositories keep their previous entry and date"]
+    carry -- failed --> failed["snapshot untouched<br/>status failed, exit 1"]
+    carry --> merge["mergeGitHubSnapshot: validate against the profile"]
+    merge -- issues --> failed
+    merge --> version{"profile version changed?<br/>profileFingerprint from @promptfolio/ai"}
+    version -- yes --> write["write the snapshot atomically"]
+    version -- no --> keep["snapshot untouched"]
+    write --> status["write refresh-status.json<br/>exit 0 success or 2 partial"]
+    keep --> status
+```
+
+The profile version is the content fingerprint that prepared answers already carry, so a new
+version makes them stale (answered live) until the owner regenerates them. A refresh that finds
+nothing new writes only the status file, so a scheduled job commits nothing
+([ADR 0010](adr/0010-refresh-status-and-content-versions.md),
+[refresh status and last known good](learning/refresh-status-and-last-known-good.md),
+[scheduled jobs](learning/scheduled-jobs.md)).
 
 ## Chat workspace
 
@@ -281,7 +311,7 @@ flowchart LR
     ai --> prepared["prepared starter answers (M7, done)"]
     github["@promptfolio/source-github (M8, done)"] -- "repositories with<br/>basis source-observed" --> core
     contributions["contributions: forks and merged pull requests (M8.1)"] -.-> github
-    refresh["scheduled refresh, status, versions (M9)"] -.-> github
+    refresh["refresh: status, versions, last known good (M9, done)<br/>schedule: template, active in M12"] --> github
 ```
 
 ## Decision records
@@ -297,3 +327,4 @@ flowchart LR
 | [0007](adr/0007-chat-ui-assistant-ui.md)              | assistant-ui, Tailwind, and shadcn for chat   | Accepted |
 | [0008](adr/0008-prepared-answers-as-files.md)         | Prepared starter answers as reviewed files    | Accepted |
 | [0009](adr/0009-github-source-as-fetched-snapshot.md) | GitHub as a fetched snapshot, source-key ids  | Accepted |
+| [0010](adr/0010-refresh-status-and-content-versions.md) | Refresh status, last known good, content versions | Accepted |
