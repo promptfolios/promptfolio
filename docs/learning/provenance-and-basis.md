@@ -61,7 +61,7 @@ From M11.2, provenance reaches the visitor directly. After an answer, the server
 its verified citations, built from these fields on the profile, and the page shows them below the answer.
 The model cannot write that proof, because it never touches it. A repository with owner notes lists both
 its public source and the notes, because naming only the public source would claim it shows more than it
-does. A panel shows where a fact comes from, not that the sentence restates it correctly, and a fact
+does. Repositories and commits link to the record itself, so a visitor can check it. A panel shows where a fact comes from, not that the sentence restates it correctly, and a fact
 stated without a citation gets no entry. One citation can also look like more proof than it is: a
 sentence listing seven technologies may cite one repository that shows only one of them.
 

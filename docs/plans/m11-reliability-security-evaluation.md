@@ -1,6 +1,6 @@
 # M11 plan: reliability, security, and AI evaluation
 
-- **Status:** Plan approved with every recommended default (2026-10-31). M11.1 is done and approved (2026-10-31). M11.2 is implemented and in review. M11.3 has not started.
+- **Status:** Plan approved with every recommended default (2026-10-31). M11.1 is done and approved (2026-10-31). M11.2 is done and approved (2026-10-31). M11.3 has not started.
 - **Date:** 2026-10-30
 - **Roadmap:** [M11](../ROADMAP.md#m11--reliability-security-and-ai-evaluation). Design input: [M5, Deferred to M11](m5-tools-grounded-lookup.md#deferred-to-m11-server-built-provenance-for-cited-facts).
 
@@ -141,9 +141,9 @@ The screenshot could not be taken because the app window was hidden, so results 
 
 ### M11.2
 
-Recorded 2026-10-31. Awaiting the developer's review.
+Recorded 2026-10-31. Approved by the developer in review on the same day.
 
-**Automated:** `pnpm verify` passes: lint, typecheck, 678 tests (`core` 74, `contact` 48, `source-github` 119, `ai` 170, app 267), and the build, with the same two "dynamic filesystem access" warnings as before. No test uses the network or a model.
+**Automated:** `pnpm verify` passes: lint, typecheck, 682 tests (`core` 74, `contact` 48, `source-github` 119, `ai` 170, app 271), and the build, with the same two "dynamic filesystem access" warnings as before. No test uses the network or a model.
 
 **Runtime check.** A production build in the in-app browser, with the real routes and SDKs, pointed at local stand-ins for Redis and the model. The stand-in model used a real tool call and wrote a verified citation, the identity citation, an invented citation, and its own fake "Sources" section. It shows the mechanism, not how a real model behaves, which is for M11.3.
 
@@ -172,6 +172,8 @@ Recorded 2026-10-31. Awaiting the developer's review.
 
 - **The file name left the source label.** It meant nothing to visitors, and the model could repeat it, so the app's label is now "Owner-provided profile". This changes the profile fingerprint, which the prompt change had already made stale.
 - **Raw citations became numbered markers** that lead to their entry in the panel, in brackets because `1` and `2` side by side read as 12. Citations stay hidden while an answer streams, so numbers never shift, and an answer with no sources, such as one in an older thread, keeps its raw text. The Copy button still copies the raw `[id]` text.
+
+**Added after approval (developer's request, 2026-10-31):** repository and contribution entries in the panel link to the record on its source. Other records have no single address, so they stay plain text. A saved address that is not safe shows as plain text, checked in the browser with a `javascript:` value.
 
 **Seen in the developer's test, for M11.3:** a real answer listed seven technologies and cited one repository, so the panel made the sentence look better supported than it is. The check proves a record was looked up, not that it supports the sentence. M11.3 gets a test case for this and tries a prompt rule for citing each fact's own record.
 
