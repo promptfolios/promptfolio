@@ -30,10 +30,9 @@ export interface ChatHandlerOptions extends ChatTurnOptions {
 }
 
 const LIMIT_MESSAGES = {
-  "visitor-limit":
-    "You've reached the daily limit of live answers. The suggested questions may still work. Please try again tomorrow.",
+  "visitor-limit": "You've reached the daily limit of live answers. Please try again tomorrow.",
   "site-limit":
-    "The assistant has reached its daily limit of live answers. The suggested questions may still work. Please try again tomorrow.",
+    "The assistant has reached its daily limit of live answers. Please try again tomorrow.",
 } as const;
 
 /**

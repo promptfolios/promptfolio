@@ -872,14 +872,18 @@ describe("handleChatRequest: the daily limit", () => {
   });
 
   it.each([
-    ["visitor-limit", "You've reached the daily limit"],
-    ["site-limit", "The assistant has reached its daily limit"],
+    ["visitor-limit", "You've reached the daily limit of live answers. Please try again tomorrow."],
+    [
+      "site-limit",
+      "The assistant has reached its daily limit of live answers. Please try again tomorrow.",
+    ],
   ] as const)("gives 429 with no model call on %s", async (decision, message) => {
     const { limit } = limitWith(async () => decision);
     const { response, model, logger } = await ask(limit);
 
     expect(response.status).toBe(429);
-    expect(await response.text()).toContain(message);
+    // Exact: promising anything else may still work would be wrong when prepared answers are stale.
+    expect(await response.text()).toBe(message);
     expect(model.doStreamCalls).toHaveLength(0);
     expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("limited"), {
       limit: decision,
