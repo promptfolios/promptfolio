@@ -53,6 +53,7 @@ a cause.
 - A passing case does not reproduce every real problem. One repository cited for seven technologies was seen on a real
   profile and not on this small one.
 - Evaluating uses real quota. Three runs of this set used up a free tier's daily limit, which also stopped the local chat.
+- Results belong to one model. A second model showed a failure the first never did: raw tool calls as the answer.
 - Never run this on a real profile: its answers go into committed reports.
 - Editing a check after a run changes what the old report's numbers mean, so keep the old report and say what changed.
 

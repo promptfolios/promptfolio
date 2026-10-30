@@ -4,6 +4,9 @@ What Promptfolio does not do or guarantee, as of M11. Each item says what happen
 
 ## Answers
 
+- **A model's raw tool call can reach the visitor.** On `nemotron-3.5-lightning`, 2 of 17 answers were literal
+  `<tool_call>` text, which the app shows as the reply. It was not seen on Gemini. Run the evaluation on a model before
+  deploying it.
 - **A citation is not proof that a sentence is right.** The server checks that a cited record was looked up in that
   turn. It cannot check that the record supports the sentence. A real answer listed seven technologies and cited one
   repository, and an evaluation run wrote "note-notes" for a note-taking app with a verified citation.
@@ -11,9 +14,10 @@ What Promptfolio does not do or guarantee, as of M11. Each item says what happen
   and no source. Only the server log's `citations { verified, unverified }` counts record that. Model text streams
   as it arrives, so it cannot be corrected afterwards.
 - **Skills and links have no ids,** so they never get a source entry.
-- **Long ids can come out garbled,** such as `[github.com/pixel-notes]`, in about 1 to 6% of runs on the model tested. The
-  sentence then has no marker. See [the evaluation](evaluation/README.md).
-- **The evaluation is small.** It covers one fictional profile and one model, and the default model has not been run.
+- **Long ids can come out garbled,** such as `[github.com/pixel-notes]` or `[queue‑lab]`, or in other brackets such as
+  `【id】`. The sentence then has no marker. Look-alike hyphens are handled. See [the evaluation](evaluation/README.md).
+- **The evaluation is small.** It covers one fictional profile. The full set ran on one model, a part of it on another,
+  and neither the default model nor the final prompt across the full set has been run.
 - **Prompt rules guide the model and enforce nothing.** Anything that must hold is enforced in code; wording rules,
   such as what counts as open source, can still be broken.
 
@@ -40,6 +44,8 @@ What Promptfolio does not do or guarantee, as of M11. Each item says what happen
 
 ## Prepared answers
 
+- **The current ones are stale.** They were not regenerated in M11, so starters are answered live and counted, until
+  M12 chooses the model to generate them with.
 - **They go stale when the profile or prompt changes,** and starters are then answered live and counted until someone
   runs `prepare-answers`. A scheduled refresh that changes content does this, and regenerating in that job is off by
   default. M12 decides.

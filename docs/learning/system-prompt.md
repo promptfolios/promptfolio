@@ -56,7 +56,8 @@ From M5 the rules also cover grounding:
   account, not by a person;
 - (M11.3) copy ids exactly, cite each record a sentence draws on, put no citation on contact advice, and before saying a
   skill is not listed, look for it in projects and repositories. The
-  [evaluation](../evaluation/README.md) shows only the last has a measured benefit so far;
+  [evaluation](../evaluation/README.md) shows only the last has a measured benefit so far. Use the owner's name or "they", because the profile states no
+  pronouns and a model had assumed "he";
 - attribute `self-reported` facts to the owner ("Jordan's profile lists…");
 - (M7 review) the owner and the "owner-provided" source are the same party: attribute once per
   answer, and keep source, basis, and date for when the visitor asks. Without this rule the model
