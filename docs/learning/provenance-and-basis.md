@@ -57,6 +57,13 @@ the previous data together with the time that data was read, so a carried record
 observed on an earlier day instead of looking as current as the rest
 ([refresh status and last known good](refresh-status-and-last-known-good.md)).
 
+From M11.2, provenance reaches the visitor directly. After an answer, the server sends the sources for
+its verified citations, built from these fields on the profile, and the page shows them below the answer.
+The model cannot write that proof, because it never touches it. A repository with owner notes lists both
+its public source and the notes, because naming only the public source would claim it shows more than it
+does. A panel shows where a fact comes from, not that the sentence restates it correctly, and a fact
+stated without a citation gets no entry.
+
 ## 4. Where it lives in the code
 
 - `ClaimBasis`, `Provenance`, `SourceRef`: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
@@ -68,6 +75,8 @@ observed on an earlier day instead of looking as current as the rest
   attribution rules in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
 - `source-observed` records from GitHub (`addObservedRecords`): [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts);
   the attribution rule in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
+- The sources an answer shows: [packages/ai/src/citations.ts](../../packages/ai/src/citations.ts) and
+  [apps/portfolio/src/components/sources-panel.tsx](../../apps/portfolio/src/components/sources-panel.tsx)
 - Source and observed basis for GitHub data: [packages/source-github/src/normalize.ts](../../packages/source-github/src/normalize.ts)
 
 ## 5. Common pitfalls and misconceptions

@@ -52,7 +52,7 @@ to remove.
 
 1. Read the body, stopping after 100 KB, so an oversized body is never parsed (413).
 2. Parse JSON (400), then check the shape with zod: only `messages` is read; roles are `user` or
-   `assistant` (a `system` role is rejected); parts are `text`, or `step-start` (a content-free
+   `assistant` (a `system` role is rejected); parts are `text`, `data-sources` (the server's own sources block, dropped on arrival so a forged one has no effect), or `step-start` (a content-free
    marker the AI SDK adds, dropped). Other body fields, such as `system` and `tools`, are stripped.
 3. Check the limits (413) and that the last message is a non-empty question (400).
 4. Rebuild clean messages from the accepted text only, and pass those on.

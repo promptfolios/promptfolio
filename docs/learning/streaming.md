@@ -39,7 +39,7 @@ There are three streams, one per hop:
 2. **Server to browser.** `toUIMessageStream()` re-encodes the parts as the AI SDK's *UI message
    stream*: server-sent events whose `data:` lines are small JSON chunks, such as
    `{"type":"text-delta","id":"…","delta":"Jordan is"}`, ending with `finish` and `data: [DONE]`.
-   Promptfolio passes only an allowlist of chunk types (`start`, step boundaries, text, `finish`,
+   Promptfolio passes only an allowlist of chunk types (`start`, step boundaries, text, `data-sources` from M11.2, `finish`,
    `error`, `abort`) and removes `providerMetadata` from the chunks it passes. Provider `custom`
    metadata, Gemini's encrypted `thoughtSignature` on text chunks, and, from M5, tool calls and
    tool results stay on the server.

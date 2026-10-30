@@ -49,7 +49,11 @@ From M5 the rules also cover grounding:
 - look records up before answering about work history, projects, skills, education, or links:
   the section list is enough for most answers, and the full record only for its detail lists
   (each extra lookup costs another model call);
-- cite the record id in square brackets, for example `[service-catalog]`;
+- cite the record id in square brackets, for example `[service-catalog]`, and `[owner_identity]` for a
+  fact from the identity block (M11.2). Skills and links have no ids, so they get no citation, and the
+  model does not write a sources section, because the page shows one built by the server;
+- (M11.2) a public repository without a license is not open source, and a repository is under an
+  account, not by a person;
 - attribute `self-reported` facts to the owner ("Jordan's profile lists…");
 - (M7 review) the owner and the "owner-provided" source are the same party: attribute once per
   answer, and keep source, basis, and date for when the visitor asks. Without this rule the model

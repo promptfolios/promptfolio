@@ -37,7 +37,7 @@ flowchart LR
   adapter (one per thread, returned from `unstable_useAdapters`) knows their messages. Both write
   through `ThreadStore`.
 - **Minimal data.** Only `id`, `parentId`, `role` (`user` or `assistant`), and `text` and
-  `step-start` parts are written: the same shape the server accepts. Metadata, provider fields,
+  `step-start` parts, and since M11.2 an answer's checked sources, are written: the same shape the server accepts. Metadata, provider fields,
   and any other part type are dropped before writing.
 - **Validated on read.** Anything read back may be malformed, old, oversized, or edited by hand,
   by an extension, or by script on the same origin. zod schemas check it; invalid entries are

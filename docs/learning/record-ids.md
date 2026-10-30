@@ -64,10 +64,13 @@ repository's key instead.
 - Lookup by id (`findRecordById`, exact match only): [packages/core/src/profile/query.ts](../../packages/core/src/profile/query.ts)
 - Ids as tool arguments: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
   citation rule in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts).
-  Checking that cited ids were actually returned: **planned** (M11)
+  Checking that cited ids were returned in that turn: [packages/ai/src/citations.ts](../../packages/ai/src/citations.ts)
 - Both id forms (`isRecordId`, `isSourceKey`): [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts);
   repository ids from GitHub (`repositoryKey`): [packages/source-github/src/normalize.ts](../../packages/source-github/src/normalize.ts);
   id conflicts and annotations: [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts)
+
+`owner_identity` is a reserved citation for the identity block, which reaches the model in the system
+prompt rather than through a tool. Record ids cannot contain an underscore, so it cannot collide with one.
 
 ## 5. Common pitfalls and misconceptions
 

@@ -34,7 +34,7 @@ flowchart TD
 
 `useChat` (AI SDK) owns one conversation's state and talks to the server; `useAISDKRuntime`
 (assistant-ui) adapts it to the runtime the UI components read. A message has `parts`; the browser
-only ever receives text and `step-start` parts, because tool activity stays on the server (M5). On each turn the whole thread is sent, not just the newest message. Stop aborts
+only ever receives text, `step-start`, and `data-sources` parts (the sources panel, from M11.2, which the transport removes again before sending a thread back), because tool activity stays on the server (M5). On each turn the whole thread is sent, not just the newest message. Stop aborts
 the request, which the server passes on to the provider.
 
 assistant-ui's `useChatRuntime` bundles these two hooks, but it creates its own thread list and

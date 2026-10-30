@@ -97,6 +97,8 @@ slower but never wrong.
   like even when no fact changed.
 - "Stale means wrong, so a miss is an error." Here a miss costs one live answer, never
   correctness, and the visitor sees no difference.
+- Storing the sources with the answer. They are built from the profile when the answer is served, so
+  the observation dates are current, and a current fingerprint means the content behind them is the same.
 - "The gate accepted it, so it is correct." The citation gate checks ids, and an answer that cites
   nothing passes. M8.1's first regeneration produced a false "no open-source work" answer that passed.
   Reading the file before committing is part of the design.

@@ -102,10 +102,9 @@ skill filter does not apply to this section.
 - Counting a model's per-step limits as per-request limits: `maxOutputTokens` applies to each step,
   and a lookup turn makes two or three model calls, which also counts against provider rate
   limits.
-- A tool result is not proof. A cited id shows which record the model *claims* to have used; a
-  check that the cited ids were actually returned is planned for M11. Prepared answers (M7) already
-  get a narrow version: the generator collects the ids the tools returned in that turn
-  (`evidenceIdsIn`) and rejects an answer that cites any other id.
+- A tool result is not proof. A cited id shows which record the model *claims* to have used; the
+  server checks each one against the ids the tools returned in that turn (M11.2, `citations.ts`).
+  A live answer shows a count of those that fail, and the prepared-answer generator rejects the answer.
 
 ## 6. Further reading
 
