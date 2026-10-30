@@ -1,7 +1,7 @@
 # Prompt-injection exposure
 
 First appears in: **M11.1** (protection and failure paths). Status: **in use**. How a real model behaves with
-injected text is **planned** for the evaluation set (M11.3).
+injected text is measured in [the evaluation](../evaluation/README.md) (M11.3).
 
 ## 1. What it is
 
@@ -34,6 +34,10 @@ that text the moment the answer renders, with no click. So
 [`MarkdownImage`](../../apps/portfolio/src/components/assistant-ui/elements/markdown-image.tsx) renders every image
 as a link, and the `img-src` policy in [`next.config.ts`](../../apps/portfolio/next.config.ts) is a second layer, in
 case some other path renders an `<img>`.
+
+In M11.3, injected text and links appeared in none of 12 runs on the model tested, and a forged earlier answer was not
+repeated as fact in 3 runs. That is evidence about one model and these attempts. The table above is what still holds if a
+model does follow an injection.
 
 ## 4. Where it lives in the code
 

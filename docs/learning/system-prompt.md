@@ -54,6 +54,9 @@ From M5 the rules also cover grounding:
   model does not write a sources section, because the page shows one built by the server;
 - (M11.2) a public repository without a license is not open source, and a repository is under an
   account, not by a person;
+- (M11.3) copy ids exactly, cite each record a sentence draws on, put no citation on contact advice, and before saying a
+  skill is not listed, look for it in projects and repositories. The
+  [evaluation](../evaluation/README.md) shows only the last has a measured benefit so far;
 - attribute `self-reported` facts to the owner ("Jordan's profile lists…");
 - (M7 review) the owner and the "owner-provided" source are the same party: attribute once per
   answer, and keep source, basis, and date for when the visitor asks. Without this rule the model
