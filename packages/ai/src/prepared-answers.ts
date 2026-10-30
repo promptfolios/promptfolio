@@ -269,7 +269,7 @@ export async function generatePreparedAnswer(
  * Reads the visitor stream to its end and returns its text: text parts joined by a blank
  * line, as they would appear in the chat. `failed` is set when the stream carried an error.
  */
-async function readVisitorText(
+export async function readVisitorText(
   stream: ReadableStream<UIMessageChunk>,
 ): Promise<{ text: string; failed: boolean }> {
   const parts: string[] = [];

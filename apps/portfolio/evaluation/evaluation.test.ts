@@ -1,0 +1,106 @@
+import { findRecordById } from "@promptfolio/core";
+import { describe, expect, it } from "vitest";
+import { EVALUATION_CASES } from "./cases";
+import { loadEvaluationProfile } from "./load-profile";
+import { type EvaluationRun, formatReport, runPassed, summarize } from "./report";
+
+const finished = {
+  text: "An answer.",
+  failed: false,
+  finishReason: "stop",
+  steps: 1,
+  toolCalls: [],
+  returnedIds: [],
+  verifiedIds: [],
+  unverifiedIds: [],
+};
+
+describe("the evaluation set", () => {
+  const profile = loadEvaluationProfile();
+
+  it("loads the fictional profile, with its injected source data", () => {
+    expect(profile.identity.name).toBe("Riley Sample");
+    expect(JSON.stringify(profile.repositories)).toContain("PINEAPPLE-CANARY-7731");
+    expect(JSON.stringify(profile.repositories)).toContain("MANGO-CANARY-4412");
+  });
+
+  it("has unique case ids", () => {
+    const ids = EVALUATION_CASES.map((item) => item.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("only requires citations of records that exist", () => {
+    for (const item of EVALUATION_CASES) {
+      for (const id of item.expect.cites ?? []) {
+        if (id === "owner_identity") continue;
+        expect(findRecordById(profile, id), `${item.id} cites ${id}`).toBeDefined();
+      }
+    }
+  });
+
+  it("covers every category the spec requires", () => {
+    const categories = new Set(EVALUATION_CASES.map((item) => item.category));
+    for (const category of [
+      "structured facts",
+      "source lookups",
+      "insufficient evidence",
+      "exaggeration",
+      "injected source data",
+      "actions it cannot take",
+    ] as const) {
+      expect(categories.has(category), category).toBe(true);
+    }
+  });
+});
+
+describe("the report", () => {
+  const cases = EVALUATION_CASES.slice(0, 2);
+  const [first, second] = cases;
+  if (!first || !second) throw new Error("expected at least two cases");
+  const runs: EvaluationRun[] = [
+    {
+      caseId: first.id,
+      turn: { ...finished, toolCalls: ["t"] },
+      checks: [{ name: "a", passed: true }],
+    },
+    {
+      caseId: first.id,
+      turn: { ...finished, unverifiedIds: ["x", "y"], text: "A | B\n\n![leak](u)" },
+      checks: [{ name: "no unverified citations", passed: false, detail: "x, y" }],
+    },
+    { caseId: second.id, turn: { ...finished, failed: true, text: "" }, checks: [] },
+  ];
+
+  it("does not score a turn the provider failed", () => {
+    const summary = summarize(cases, runs);
+
+    expect(summary.runs).toBe(3);
+    expect(summary.failedRuns).toBe(1);
+    expect(summary.passedRuns).toBe(1);
+    expect(runs.map(runPassed)).toEqual([true, false, false]);
+  });
+
+  it("counts lookups and unverified citations over scored runs", () => {
+    const summary = summarize(cases, runs);
+
+    expect(summary.lookedUp).toEqual({ runs: 1, ofRuns: 2 });
+    expect(summary.unverified).toEqual({ runs: 1, citations: 2 });
+    expect(summary.uncitedRuns).toBe(2);
+  });
+
+  it("states failures, and quotes answers so they cannot change its structure", () => {
+    const report = formatReport(
+      { title: "Evaluation: test", date: "2026-10-31", model: "mock:model", repeats: 2 },
+      cases,
+      runs,
+    );
+
+    expect(report).toContain("| Scored runs that passed every check | 1 of 2 |");
+    expect(report).toContain("| Runs the provider failed (not scored) | 1 |");
+    expect(report).toContain("no unverified citations (x, y)");
+    expect(report).toContain("(1 provider failures)");
+    expect(report).toContain("> A | B");
+    expect(report).toContain("> ![leak](u)");
+    expect(report).not.toMatch(/^!\[leak/m);
+  });
+});

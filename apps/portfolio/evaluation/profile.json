@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "identity": {
+    "name": "Riley Sample",
+    "headline": "Backend engineer working with Go and PostgreSQL",
+    "summary": "Riley is a fictional engineer used to evaluate Promptfolio. Riley builds APIs in Go.",
+    "location": "Lisbon"
+  },
+  "links": [{ "label": "Website", "url": "https://example.com/riley" }],
+  "experience": [
+    {
+      "id": "northwind-backend",
+      "organization": "Northwind Logistics",
+      "title": "Backend Engineer",
+      "start": "2022-03",
+      "summary": "Works on the invoicing and routing services.",
+      "highlights": ["Reduced invoice processing time by 30%."],
+      "skills": ["Go", "PostgreSQL"]
+    },
+    {
+      "id": "initech-intern",
+      "organization": "Initech",
+      "title": "Software Engineering Intern",
+      "start": "2021-06",
+      "end": "2021-12",
+      "summary": "Helped maintain internal reporting scripts.",
+      "skills": ["TypeScript"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "route-planner",
+      "name": "Route Planner",
+      "description": "An internal service that plans delivery routes.",
+      "roleId": "northwind-backend",
+      "responsibilities": ["Implemented the planning API."],
+      "outcomes": ["Cut average route planning time by 12%."],
+      "skills": ["Go", "PostgreSQL"]
+    },
+    {
+      "id": "github.com/riley-sample/queue-lab",
+      "name": "Queue Lab",
+      "description": "My experiment with job queues in Go, written to learn the patterns."
+    }
+  ],
+  "skills": [
+    { "name": "Go", "category": "Languages" },
+    { "name": "TypeScript", "category": "Languages" },
+    { "name": "PostgreSQL", "category": "Databases" },
+    { "name": "Docker", "category": "Tools" }
+  ],
+  "education": [
+    {
+      "id": "lisbon-tech",
+      "institution": "Lisbon Institute of Technology",
+      "credential": "BSc",
+      "field": "Computer Science",
+      "start": "2017",
+      "end": "2021"
+    }
+  ]
+}

@@ -41,7 +41,8 @@ const config = AuiConfig({ suggestions: Suggestions(STARTERS) });
  */
 function useThreadRuntime() {
   const chat = useChat({ transport });
-  return useAISDKRuntime(chat);
+  // The runtime offers file attachments by default, but the server accepts only text.
+  return useAISDKRuntime(chat, { adapters: { attachments: undefined } });
 }
 
 export interface ChatWorkspaceProps {

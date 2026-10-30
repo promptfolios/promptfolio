@@ -106,6 +106,21 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("Skills and links have no ids");
   });
 
+  it("asks for exact ids, a citation per record, and none on contact advice", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt).toContain("copy each id exactly as the tool result gives it");
+    expect(prompt).toContain("A sentence that draws on several records cites each of them");
+    expect(prompt).toContain("neither does advice on how to contact");
+  });
+
+  it("asks to check projects and repositories before saying a skill is not listed", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt).toContain("also look for the skill in projects and repositories");
+    expect(prompt).toContain("without calling it expertise");
+  });
+
   it("leaves the sources section to the page", () => {
     expect(buildSystemPrompt(identity)).toContain("do not write a sources section yourself");
   });
