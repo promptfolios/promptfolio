@@ -1,6 +1,6 @@
 # M11 plan: reliability, security, and AI evaluation
 
-- **Status:** Plan approved with every recommended default (2026-10-31). M11.1 is done and approved (2026-10-31). M11.2 is done and approved (2026-10-31). M11.3 is done and in review, with prepared answers deliberately left for the deployed model (M12).
+- **Status:** Plan approved with every recommended default (2026-10-31). M11.1 is done and approved (2026-10-31). M11.2 is done and approved (2026-10-31). M11.3 is done and approved (2026-10-31), with prepared answers deliberately left for the deployed model (M12). M11 is complete.
 - **Date:** 2026-10-30
 - **Roadmap:** [M11](../ROADMAP.md#m11--reliability-security-and-ai-evaluation). Design input: [M5, Deferred to M11](m5-tools-grounded-lookup.md#deferred-to-m11-server-built-provenance-for-cited-facts).
 
@@ -185,7 +185,7 @@ Recorded 2026-10-31. Approved by the developer in review on the same day.
 
 ### M11.3
 
-Recorded 2026-10-31. Awaiting the developer's review.
+Recorded 2026-10-31. Approved by the developer in review on the same day.
 
 **Done:** the runner, 27 cases on a fictional profile with injected source data, offline tests of the scoring and report, [four real runs](../evaluation/README.md) on free tiers, [known limitations](../KNOWN_LIMITATIONS.md), and the accessibility assessment.
 
@@ -202,3 +202,5 @@ Recorded 2026-10-31. Awaiting the developer's review.
 **Not covered:** the default model, `gemini-3.8-flash`, the full set on the final prompt, and a profile as large as a real one.
 
 **During this work:** edits made through the shell briefly reached the main checkout and broke the running dev server's chat. They were reverted, the worktree was recreated at the developer's choice, and `main` is now only changed by fast-forward.
+
+**For M12:** choose the model to deploy, run the full evaluation on it with the final prompt, regenerate prepared answers with it, and confirm the cause of raw tool calls in answers if that model shows them.
