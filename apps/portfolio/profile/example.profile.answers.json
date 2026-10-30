@@ -2,40 +2,49 @@
   "formatVersion": 1,
   "answers": [
     {
+      "question": "Give me a short professional overview.",
+      "text": "According to Jordan Example's self-reported profile, Jordan is a full-stack engineer focused on TypeScript and developer tools, based remotely. Jordan's experience includes working as a Frontend Engineer at Acme Corp [acme-frontend] and as a Full-stack Engineer at Globex [globex-fullstack].",
+      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
+      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
+      "evidenceIds": ["acme-frontend", "globex-fullstack"],
+      "model": "google:gemini-3.5-flash-lite",
+      "generatedAt": "2026-10-30T08:56:19.718Z"
+    },
+    {
       "question": "What are the most relevant projects?",
-      "text": "Jordan Example's self-reported profile lists two projects:\n\n* **Service Catalog**: An internal catalog of services, their owners, and their documentation [service-catalog].\n* **Markdown Linter**: A small open-source tool that checks Markdown documents for broken links [markdown-linter].",
-      "profileFingerprint": "sha256:a61f12e4c20b9b6f1e6d75ae4e9ed5830fd6ab986c0858cbb3564469f3980232",
-      "instructionsFingerprint": "sha256:3d665448bd88ddfc978713071ce1a4943ef656eba866289c3d5883dd79d2c967",
+      "text": "According to Jordan Example's self-reported profile, the projects are:\n\n- **Service Catalog**: An internal catalog of services, their owners, and their documentation [service-catalog].\n- **Markdown Linter**: A small open-source tool that checks Markdown documents for broken links [markdown-linter].",
+      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
+      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
       "evidenceIds": ["service-catalog", "markdown-linter"],
       "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-29T19:39:59.777Z"
+      "generatedAt": "2026-10-30T08:56:21.319Z"
     },
     {
       "question": "What are the main technical skills?",
-      "text": "Jordan Example's self-reported technical skills include:\n\n* **Languages:** TypeScript\n* **Frontend:** React\n* **Backend:** Node.js\n* **Databases:** PostgreSQL\n* **Practices:** Testing\n\nThis information comes from Jordan Example's owner-provided profile file (`owner-profile`), observed on October 29, 2026.",
-      "profileFingerprint": "sha256:a61f12e4c20b9b6f1e6d75ae4e9ed5830fd6ab986c0858cbb3564469f3980232",
-      "instructionsFingerprint": "sha256:3d665448bd88ddfc978713071ce1a4943ef656eba866289c3d5883dd79d2c967",
+      "text": "According to Jordan Example's self-reported profile, the main technical skills are:\n\n* **Languages:** TypeScript\n* **Frontend:** React\n* **Backend:** Node.js\n* **Databases:** PostgreSQL\n* **Practices:** Testing",
+      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
+      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
       "evidenceIds": [],
       "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-29T19:40:01.946Z"
+      "generatedAt": "2026-10-30T08:56:23.132Z"
     },
     {
       "question": "Summarize the work experience.",
-      "text": "Based on Jordan Example's self-reported profile, the work experience includes:\n\n- **Frontend Engineer** at **Acme Corp** (March 2021 to August 2023), working on the customer dashboard team [acme-frontend].\n- **Full-stack Engineer** at **Globex** (September 2023 to present), building internal developer tools [globex-fullstack].",
-      "profileFingerprint": "sha256:a61f12e4c20b9b6f1e6d75ae4e9ed5830fd6ab986c0858cbb3564469f3980232",
-      "instructionsFingerprint": "sha256:3d665448bd88ddfc978713071ce1a4943ef656eba866289c3d5883dd79d2c967",
+      "text": "Jordan Example's self-reported work experience includes:\n\n- **Frontend Engineer** at Acme Corp (March 2021 – August 2023), working on the customer dashboard team [acme-frontend].\n- **Full-stack Engineer** at Globex (September 2023 – Present), building internal developer tools [globex-fullstack].",
+      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
+      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
       "evidenceIds": ["acme-frontend", "globex-fullstack"],
       "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-29T19:40:05.505Z"
+      "generatedAt": "2026-10-30T08:56:25.274Z"
     },
     {
       "question": "What open-source work is there?",
-      "text": "Jordan Example's self-reported profile lists one open-source project [markdown-linter]:\n\n- **Markdown Linter**: A small open-source tool that checks Markdown documents for broken links, built with TypeScript and Testing [markdown-linter].",
-      "profileFingerprint": "sha256:a61f12e4c20b9b6f1e6d75ae4e9ed5830fd6ab986c0858cbb3564469f3980232",
-      "instructionsFingerprint": "sha256:3d665448bd88ddfc978713071ce1a4943ef656eba866289c3d5883dd79d2c967",
+      "text": "Jordan Example's profile lists one open-source project: the Markdown Linter, which is a small tool that checks Markdown documents for broken links [markdown-linter]. According to Jordan Example's self-reported profile, this project involves TypeScript and Testing [markdown-linter].",
+      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
+      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
       "evidenceIds": ["service-catalog", "markdown-linter"],
       "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-29T19:40:14.118Z"
+      "generatedAt": "2026-10-30T08:56:27.362Z"
     }
   ]
 }
