@@ -78,13 +78,14 @@ export function remarkCitations() {
 }
 
 export type CitationDisplay =
-  /** The answer is still streaming: its sources, which number the markers, have not arrived. */
+  /**
+   * Nothing to draw: the answer is still streaming, so the sources that number the markers have not
+   * arrived, or the server could not match this citation, so there is no source to lead to.
+   */
   | { kind: "hidden" }
   /** The answer has no sources, as in a thread saved earlier or a reply that failed: keep the text. */
   | { kind: "raw" }
-  | { kind: "source"; number: number; record: string }
-  /** The server could not match this citation to a lookup. */
-  | { kind: "unverified" };
+  | { kind: "source"; number: number; record: string };
 
 /** How to draw one citation, given the message's sources (unchecked) and whether it is running. */
 export function citationDisplay(id: string, data: unknown, running: boolean): CitationDisplay {
@@ -93,6 +94,6 @@ export function citationDisplay(id: string, data: unknown, running: boolean): Ci
   const index = parsed.data.sources.findIndex((source) => source.id === id);
   const source = parsed.data.sources[index];
   return source === undefined
-    ? { kind: "unverified" }
+    ? { kind: "hidden" }
     : { kind: "source", number: index + 1, record: source.record };
 }

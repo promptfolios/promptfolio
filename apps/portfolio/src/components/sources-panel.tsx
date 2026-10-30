@@ -2,12 +2,6 @@ import type { FC } from "react";
 import { chatSourcesSchema } from "@/chat/sources";
 import { safeHref } from "@/components/assistant-ui/utils/href";
 
-function unverifiedNote(count: number): string {
-  return count === 1
-    ? "1 citation could not be matched to a lookup in this answer."
-    : `${count} citations could not be matched to a lookup in this answer.`;
-}
-
 /** A record's name, linked to the record itself when it has a safe address. */
 const SourceName: FC<{ record: string; url: string | undefined }> = ({ record, url }) => {
   const href = safeHref(url);
@@ -32,8 +26,8 @@ const SourceName: FC<{ record: string; url: string | undefined }> = ({ record, u
 export const SourcesPanel: FC<{ data: unknown }> = ({ data }) => {
   const parsed = chatSourcesSchema.safeParse(data);
   if (!parsed.success) return null;
-  const { sources, unverifiedCitations } = parsed.data;
-  if (sources.length === 0 && unverifiedCitations === 0) return null;
+  const { sources } = parsed.data;
+  if (sources.length === 0) return null;
 
   return (
     <div
@@ -64,7 +58,6 @@ export const SourcesPanel: FC<{ data: unknown }> = ({ data }) => {
           </ol>
         </details>
       )}
-      {unverifiedCitations > 0 && <p className="mt-1.5">{unverifiedNote(unverifiedCitations)}</p>}
     </div>
   );
 };

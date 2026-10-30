@@ -104,7 +104,7 @@ Automated tests use no network, Redis, email, or model.
 | 5 | The one Hobby firewall rule | Path starts with `/api/`, 40 requests per 600 seconds, replacing the contact-only rule | Keep it contact-only (chat bursts reach Redis); Pro plan (separate rules) |
 | 6 | Citing identity | Reserved `[owner_identity]` with its provenance in the panel | No citation for identity facts (the gate passes, but no proof is shown) |
 | 7 | Sources format | Separate `data-sources` panel | Appended text (no UI work, but imitable and sent back to the model) |
-| 8 | Unverified citations | Note under the answer: "N citations could not be matched to a lookup" | Log only (the visitor is not told); hold text until checked (loses streaming) |
+| 8 | Unverified citations | Note under the answer: "N citations could not be matched to a lookup". *Changed 2026-10-31 by the developer: show nothing; the claim reads as uncited, and the log counts it* | Log only (the visitor is not told); hold text until checked (loses streaming) |
 | 9 | Skills and links, which have no ids | No panel entry; the evaluation reports how often that happens | Give them ids (a profile model change) |
 | 10 | Evaluation depth | Each case 3 times on the configured model | Once (hides variation); several models (more cost) |
 
@@ -143,16 +143,16 @@ The screenshot could not be taken because the app window was hidden, so results 
 
 Recorded 2026-10-31. Approved by the developer in review on the same day.
 
-**Automated:** `pnpm verify` passes: lint, typecheck, 682 tests (`core` 74, `contact` 48, `source-github` 119, `ai` 170, app 271), and the build, with the same two "dynamic filesystem access" warnings as before. No test uses the network or a model.
+**Automated:** `pnpm verify` passes: lint, typecheck, 683 tests (`core` 74, `contact` 48, `source-github` 119, `ai` 170, app 272), and the build, with the same two "dynamic filesystem access" warnings as before. No test uses the network or a model.
 
 **Runtime check.** A production build in the in-app browser, with the real routes and SDKs, pointed at local stand-ins for Redis and the model. The stand-in model used a real tool call and wrote a verified citation, the identity citation, an invented citation, and its own fake "Sources" section. It shows the mechanism, not how a real model behaves, which is for M11.3.
 
 | Checked | Result |
 | ------- | ------ |
 | Panel after a lookup | Pass: `Sources (2)` with the record, id, basis, source, and date, below the answer |
-| Invented and fake citations | Pass: neither listed; "2 citations could not be matched to a lookup in this answer" |
+| Invented and fake citations | Pass: neither listed; a note reported 2 unmatched (the note was later removed, see below) |
 | Model's own "Sources" section | Pass: stays in the answer's text, apart from the panel; its citation counts as unverified |
-| Numbered markers | Pass: raw ids replaced by `[1]`, `[2]`, and `[?]` for each unmatched citation; none in the panel |
+| Numbered markers | Pass: raw ids replaced by `[1]`, `[2]`, and at this point `[?]` for each unmatched citation; none in the panel |
 | Clicking a number with the panel collapsed | Pass: the panel opens and that entry is focused and highlighted |
 | Source label | Pass: "Owner-provided profile", with no file name |
 | Reload, then reopen the thread | Pass: the panel and the markers are restored from browser storage |
@@ -174,6 +174,8 @@ Recorded 2026-10-31. Approved by the developer in review on the same day.
 - **Raw citations became numbered markers** that lead to their entry in the panel, in brackets because `1` and `2` side by side read as 12. Citations stay hidden while an answer streams, so numbers never shift, and an answer with no sources, such as one in an older thread, keeps its raw text. The Copy button still copies the raw `[id]` text.
 
 **Added after approval (developer's request, 2026-10-31):** repository and contribution entries in the panel link to the record on its source. Other records have no single address, so they stay plain text. A saved address that is not safe shows as plain text, checked in the browser with a `javascript:` value.
+
+**Changed after approval (developer's request, 2026-10-31): unmatched citations show nothing.** A real answer, "the profile does not list any work experience", showed `[?]` and a note, which looked like a fault in a correct sentence. A claim with no source now reads as uncited, like any other uncited claim, and the server log still counts it. The cost is that a visitor gets no warning when a model cites a record it did not look up, so M11.3 has to measure this from the counts.
 
 **Seen in the developer's test, for M11.3:** a real answer listed seven technologies and cited one repository, so the panel made the sentence look better supported than it is. The check proves a record was looked up, not that it supports the sentence. M11.3 gets a test case for this and tries a prompt rule for citing each fact's own record.
 

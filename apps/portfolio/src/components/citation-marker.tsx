@@ -28,15 +28,6 @@ export const CitationMarker: FC<{ id: string }> = ({ id }) => {
       return null;
     case "raw":
       return <>[{id}]</>;
-    case "unverified":
-      return (
-        <sup
-          className="text-muted-foreground ms-0.5 cursor-help"
-          title="Could not be matched to a lookup in this answer"
-        >
-          [?]
-        </sup>
-      );
     case "source":
       return (
         <sup className="ms-0.5">

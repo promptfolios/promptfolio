@@ -107,8 +107,14 @@ describe("citationDisplay", () => {
     expect(citationDisplay("one", data, true).kind).toBe("source");
   });
 
-  it("marks a citation the panel does not list as unverified", () => {
-    expect(citationDisplay("invented", data, false)).toEqual({ kind: "unverified" });
+  it("hides a citation the panel does not list, as there is no source to lead to", () => {
+    expect(citationDisplay("invented", data, false)).toEqual({ kind: "hidden" });
+  });
+
+  it("hides every citation when none could be matched, rather than showing raw ids", () => {
+    const none = { sources: [], unverifiedCitations: 2 };
+
+    expect(citationDisplay("invented", none, false)).toEqual({ kind: "hidden" });
   });
 
   it("hides citations while streaming, before the sources arrive", () => {

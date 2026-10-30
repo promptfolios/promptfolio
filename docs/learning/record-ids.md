@@ -73,7 +73,8 @@ repository's key instead.
 prompt rather than through a tool. Record ids cannot contain an underscore, so it cannot collide with one.
 
 Ids are for the model and the server. Visitors see a numbered marker that leads to the record's entry in
-the sources panel; a citation the server could not match shows as `[?]`. The raw `[id]` stays in the stored
+the sources panel; a citation the server could not match shows nothing, so the claim reads as uncited,
+and the server log counts it. The raw `[id]` stays in the stored
 text, which is what the Copy button copies, and it is what a thread saved before M11.2 still shows.
 
 ## 5. Common pitfalls and misconceptions

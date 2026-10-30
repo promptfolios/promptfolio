@@ -28,7 +28,6 @@ describe("SourcesPanel", () => {
     expect(html).toContain("self-reported");
     expect(html).toContain("Owner&#x27;s file");
     expect(html).toContain("2026-10-01");
-    expect(html).not.toContain("could not be matched");
     expect(html).not.toContain("<a ");
   });
 
@@ -53,14 +52,15 @@ describe("SourcesPanel", () => {
     },
   );
 
-  it.each([
-    [1, "1 citation could not be matched"],
-    [2, "2 citations could not be matched"],
-  ])("reports %i unverified citations, even with no sources", (count, message) => {
-    const html = render({ sources: [], unverifiedCitations: count });
+  it("shows nothing when no citation could be matched", () => {
+    expect(render({ sources: [], unverifiedCitations: 2 })).toBe("");
+  });
 
-    expect(html).toContain(message);
-    expect(html).not.toContain("Sources (");
+  it("says nothing about unmatched citations next to real sources", () => {
+    const html = render({ sources: [entry], unverifiedCitations: 2 });
+
+    expect(html).toContain("Sources (1)");
+    expect(html).not.toContain("citation");
   });
 
   it("shows record text as plain text, so a source cannot inject markup", () => {

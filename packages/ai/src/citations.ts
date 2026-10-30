@@ -37,7 +37,10 @@ export interface CitedSource {
 /** What the browser receives as a `data-sources` chunk, after an answer's text. */
 export interface ChatSources {
   sources: CitedSource[];
-  /** Citations that match nothing returned in this turn. Their text is not repeated. */
+  /**
+   * Citations that match nothing returned in this turn. Their text is not repeated. Visitors see no
+   * marker for them; the count is for the log and for evaluation.
+   */
   unverifiedCitations: number;
 }
 
