@@ -88,8 +88,14 @@ characters, homepage only as an http or https URL, topic format, length caps), a
 `addObservedRecords` validates the canonical records once more in core. An invalid configuration
 or snapshot fails the profile load, like an invalid profile file.
 
+M10 adds the contact routes. `prepare` uses a strict schema, so a request that names a recipient, sender,
+or subject is rejected, and it normalizes the message first, so the review shows the real text. `send`
+accepts one field, a signed token, and its payload is validated again after the signature passes. The
+dialog in the browser checks nothing itself: it displays the server's answers.
+
 ## 4. Where it lives in the code
 
+- Contact requests: [packages/contact/src/request.ts](../../packages/contact/src/request.ts)
 - File and path checks: [apps/portfolio/src/server/profile.ts](../../apps/portfolio/src/server/profile.ts)
 - Schema and `LIMITS`: [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts)
 - `ProfileLoadResult`, `toProfileIssue`, `formatPath`: [packages/core/src/profile/load.ts](../../packages/core/src/profile/load.ts)

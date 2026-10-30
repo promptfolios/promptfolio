@@ -58,10 +58,18 @@ who has it can start a deployment, so it lives in a repository secret, never in 
 A model key is needed in the job only if regenerating prepared answers is turned on (off by
 default).
 
+M10 adds four secrets, read only in `src/server/contact.ts`, which is also `server-only`:
+`RESEND_API_KEY`, `CONTACT_TOKEN_SECRET`, `UPSTASH_REDIS_REST_TOKEN` (from M10.1), and `CONTACT_TO_EMAIL`.
+The address is not a credential, but it is private ([ADR 0005](../adr/0005-profile-model-and-provenance.md)). The page passes the browser only a
+boolean, `contactEnabled`, and the review shows the owner's name. Provider error messages stay out of
+responses and logs; only the error's name is logged.
+
 ## 4. Where it lives in the code
 
 - Reading the key: [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts),
   tested in [model.test.ts](../../apps/portfolio/src/server/model.test.ts)
+- Contact configuration: [apps/portfolio/src/server/contact.ts](../../apps/portfolio/src/server/contact.ts),
+  leak tests in [packages/contact/src/handlers.test.ts](../../packages/contact/src/handlers.test.ts)
 - The route: [apps/portfolio/src/app/api/chat/route.ts](../../apps/portfolio/src/app/api/chat/route.ts)
 - Generic error messages: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
   (`genericErrorMessage`), with leak tests in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)

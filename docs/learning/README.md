@@ -30,6 +30,8 @@ that builds it; code links are marked "planned").
 | Contributions and evidence     | [contributions-and-evidence.md](contributions-and-evidence.md) | M8.1 | in use |
 | Refresh status and last known good | [refresh-status-and-last-known-good.md](refresh-status-and-last-known-good.md) | M9 | in use |
 | Scheduled jobs                  | [scheduled-jobs.md](scheduled-jobs.md)                       | M9            | planned |
+| Contact confirmation and idempotency | [contact-confirmation-and-idempotency.md](contact-confirmation-and-idempotency.md) | M10 | in use |
+| Abuse protection on serverless  | [abuse-protection-on-serverless.md](abuse-protection-on-serverless.md) | M10 | in use |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").

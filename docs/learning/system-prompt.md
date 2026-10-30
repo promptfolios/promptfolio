@@ -80,6 +80,18 @@ also added two rules after real answers went wrong: one id per pair of brackets,
 repositories, and contributions before saying there is none. A new empty section made the model
 report "no open-source work" when a project was described as open source.
 
+M10 added a rule that the assistant cannot send or pass on messages. The model has no tool for it, so it
+could not send anything anyway. The rule is about honesty: without it, the model could answer "I'll let
+them know".
+
+The rule first said to point to the Contact button "if the page shows one". A real answer named the button
+while the page had none: the model cannot see the page, so a condition it cannot check is not a condition.
+Now the app passes `contactFormAvailable`, and the prompt mentions the button only when it is `true`. Facts
+about the app belong in the prompt as decided text, not as a question for the model.
+
+The option is part of the instructions fingerprint, so prepared answers generated with the form on are not
+served with it off, or the other way round.
+
 ## 4. Where it lives in the code
 
 - Prompt construction: [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
