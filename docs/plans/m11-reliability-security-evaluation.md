@@ -143,7 +143,7 @@ The screenshot could not be taken because the app window was hidden, so results 
 
 Recorded 2026-10-31. Awaiting the developer's review.
 
-**Automated:** `pnpm verify` passes: lint, typecheck, 661 tests (`core` 74, `contact` 48, `source-github` 119, `ai` 170, app 250), and the build, with the same two "dynamic filesystem access" warnings as before. No test uses the network or a model.
+**Automated:** `pnpm verify` passes: lint, typecheck, 678 tests (`core` 74, `contact` 48, `source-github` 119, `ai` 170, app 267), and the build, with the same two "dynamic filesystem access" warnings as before. No test uses the network or a model.
 
 **Runtime check.** A production build in the in-app browser, with the real routes and SDKs, pointed at local stand-ins for Redis and the model. The stand-in model used a real tool call and wrote a verified citation, the identity citation, an invented citation, and its own fake "Sources" section. It shows the mechanism, not how a real model behaves, which is for M11.3.
 
@@ -152,7 +152,10 @@ Recorded 2026-10-31. Awaiting the developer's review.
 | Panel after a lookup | Pass: `Sources (2)` with the record, id, basis, source, and date, below the answer |
 | Invented and fake citations | Pass: neither listed; "2 citations could not be matched to a lookup in this answer" |
 | Model's own "Sources" section | Pass: stays in the answer's text, apart from the panel; its citation counts as unverified |
-| Reload, then reopen the thread | Pass: the panel is restored from browser storage |
+| Numbered markers | Pass: raw ids replaced by `1`, `2`, and `?` for each unmatched citation; none in the panel |
+| Clicking a number with the panel collapsed | Pass: the panel opens and that entry is focused and highlighted |
+| Source label | Pass: "Owner-provided profile", with no file name |
+| Reload, then reopen the thread | Pass: the panel and the markers are restored from browser storage |
 | Follow-up | Pass: no `data-sources` in the request or in what the model received; the new answer has its own panel; no error |
 | Another data part in a request | Pass: 400 |
 | Server log | Pass: `citations { verified: 2, unverified: 2 }`, counts only |
@@ -165,6 +168,13 @@ Recorded 2026-10-31. Awaiting the developer's review.
 - **The panel starts open**, because the request was to see proof alongside the fact. It can be collapsed.
 - **Brackets in code are not citations**, so `items[0]` does not count as unverified.
 
-**Added beyond the file list:** `apps/portfolio/src/chat/sources.ts`, the schema shared by the store and the panel, and `thread-store.ts`, for saving the panel.
+**Changed in review (developer's request, 2026-10-31):**
 
-**Not run:** a real model, so how often it cites correctly, and whether the new prompt rules work, are unmeasured until M11.3. A prepared answer's panel has tests but was not seen in the browser, because the prompt change makes every prepared answer stale until M11.3 regenerates them.
+- **The file name left the source label.** It meant nothing to visitors, and the model could repeat it, so the app's label is now "Owner-provided profile". This changes the profile fingerprint, which the prompt change had already made stale.
+- **Raw citations became numbered markers** that lead to their entry in the panel. Citations stay hidden while an answer streams, so numbers never shift, and an answer with no sources, such as one in an older thread, keeps its raw text. The Copy button still copies the raw `[id]` text.
+
+**Seen in the developer's test, for M11.3:** a real answer listed seven technologies and cited one repository, so the panel made the sentence look better supported than it is. The check proves a record was looked up, not that it supports the sentence. M11.3 gets a test case for this and tries a prompt rule for citing each fact's own record.
+
+**Added beyond the file list:** `apps/portfolio/src/chat/sources.ts`, the schema shared by the store and the panel; `thread-store.ts`, for saving the panel; and `citation-links.ts` and `citation-marker.tsx`, for the markers.
+
+**Not run:** a full check on a real model. The developer saw one real answer with its panel before the markers were added, and the markers themselves have run only against the stand-in. How often a model cites correctly, and whether the new prompt rules work, are unmeasured until M11.3. Hiding citations during streaming has unit tests, but the stand-in answered too quickly to see it. A prepared answer's panel has tests but was not seen in the browser, because the prompt change makes every prepared answer stale until M11.3 regenerates them.

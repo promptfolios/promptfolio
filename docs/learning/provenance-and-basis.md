@@ -28,7 +28,7 @@ profile.experience[0].provenance = {
 }
 
 profile.sources[0] = { id: "owner-profile", kind: "structured-file",
-                       label: "Owner-provided profile file (example.profile.json)", ... }
+                       label: "Owner-provided profile", ... }
 ```
 
 Unknown is **absence**, not a fourth basis: a skill that is not listed means "not in the profile",
@@ -62,12 +62,15 @@ its verified citations, built from these fields on the profile, and the page sho
 The model cannot write that proof, because it never touches it. A repository with owner notes lists both
 its public source and the notes, because naming only the public source would claim it shows more than it
 does. A panel shows where a fact comes from, not that the sentence restates it correctly, and a fact
-stated without a citation gets no entry.
+stated without a citation gets no entry. One citation can also look like more proof than it is: a
+sentence listing seven technologies may cite one repository that shows only one of them.
 
 ## 4. Where it lives in the code
 
 - `ClaimBasis`, `Provenance`, `SourceRef`: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
 - Stamping in `normalize()`: [packages/core/src/profile/load.ts](../../packages/core/src/profile/load.ts)
+- Citations drawn as numbered markers: [apps/portfolio/src/chat/citation-links.ts](../../apps/portfolio/src/chat/citation-links.ts) and
+  [apps/portfolio/src/components/citation-marker.tsx](../../apps/portfolio/src/components/citation-marker.tsx)
 - Source id and observation time chosen by the app: [apps/portfolio/src/server/profile.ts](../../apps/portfolio/src/server/profile.ts)
 - Tests ("stamps every record…", "registers the source…"): [packages/core/src/profile/load.test.ts](../../packages/core/src/profile/load.test.ts)
 - Decision: [ADR 0005](../adr/0005-profile-model-and-provenance.md)
