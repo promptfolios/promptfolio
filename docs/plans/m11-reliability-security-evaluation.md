@@ -1,6 +1,6 @@
 # M11 plan: reliability, security, and AI evaluation
 
-- **Status:** Plan approved with every recommended default (2026-10-31). M11.1 is done and approved (2026-10-31). M11.2 is done and approved (2026-10-31). M11.3 has not started.
+- **Status:** Plan approved with every recommended default (2026-10-31). M11.1 is done and approved (2026-10-31). M11.2 is done and approved (2026-10-31). M11.3 is partly done and in review: three cases and the prepared answers wait for model quota.
 - **Date:** 2026-10-30
 - **Roadmap:** [M11](../ROADMAP.md#m11--reliability-security-and-ai-evaluation). Design input: [M5, Deferred to M11](m5-tools-grounded-lookup.md#deferred-to-m11-server-built-provenance-for-cited-facts).
 
@@ -182,3 +182,21 @@ Recorded 2026-10-31. Approved by the developer in review on the same day.
 **Added beyond the file list:** `apps/portfolio/src/chat/sources.ts`, the schema shared by the store and the panel; `thread-store.ts`, for saving the panel; and `citation-links.ts` and `citation-marker.tsx`, for the markers.
 
 **Not run:** a full check on a real model. The developer saw one real answer with its panel before the markers were added, and the markers themselves have run only against the stand-in. How often a model cites correctly, and whether the new prompt rules work, are unmeasured until M11.3. Hiding citations during streaming has unit tests, but the stand-in answered too quickly to see it. A prepared answer's panel has tests but was not seen in the browser, because the prompt change makes every prepared answer stale until M11.3 regenerates them.
+
+### M11.3
+
+Recorded 2026-10-31. Partly done, awaiting the developer's review.
+
+**Done:** the runner, 27 cases on a fictional profile with injected source data, offline tests of the scoring and report, [three real runs](../evaluation/README.md) on the configured model (`gemini-3.5-flash-lite`, free tier), [known limitations](../KNOWN_LIMITATIONS.md), and the accessibility assessment.
+
+**Results in short:** every run looked records up when the case required it, and no injected text or invented fact reached an answer. Three prompt rules were tried: one helped, one showed no effect, and one did not stop garbled ids. Reading the answers found problems the checks missed, and the checks failed some good answers, which were corrected.
+
+**Found and fixed:** the "Add Attachment" button was shown and enabled, because the AI SDK runtime turns on an attachment adapter by default, while the server accepts only text, so a message with a file would have failed. Attachments are now off.
+
+**Added beyond the plan:** a `follow-ups` category, cases for what the developer saw on a real profile, and the runner saving its report after every case and logging why a call failed, after a run looked stuck.
+
+**Not done, waiting for model quota:** the three cases the last run could not finish, and regenerating prepared answers, which also completes M10's check 4. The free tier returned 429 even after waits of over a minute. That this is the daily limit is an inference: the logged summary does not include the provider's message, by M11.1's design.
+
+**Not covered:** the default model, `gemini-3.8-flash`, and a profile as large as a real one.
+
+**During this work:** edits made through the shell briefly reached the main checkout and broke the running dev server's chat. They were reverted, the worktree was recreated at the developer's choice, and `main` is now only changed by fast-forward.

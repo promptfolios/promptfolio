@@ -99,6 +99,12 @@ Without a key the app still builds and renders, but chat replies show an error. 
 live answers also need the daily limit's settings; see
 [docs/guides/chat-limit-setup.md](docs/guides/chat-limit-setup.md). Deployment is decided in M12.
 
+## Evaluating answers
+
+`pnpm --filter portfolio evaluate --label=my-run` asks a set of questions about a fictional profile, using the
+configured model, and writes a report to `docs/evaluation/`. It makes real model calls, and can use up a free tier's
+daily quota. See [the results](docs/evaluation/README.md) and [known limitations](docs/KNOWN_LIMITATIONS.md).
+
 ## Workspace conventions
 
 - Packages expose their public API only through the `exports` field in `package.json`; importing
