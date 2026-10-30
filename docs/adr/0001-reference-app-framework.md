@@ -53,6 +53,10 @@ To limit its downsides:
   *Update (M9):* profile versions needed none either: the version is the content fingerprint, and
   refresh status is a file written next to the snapshot. The cron trigger is a documented GitHub
   Actions workflow ([ADR 0010](0010-refresh-status-and-content-versions.md)).
+  *Update (M10.1):* as expected here, the contact limit needed small external storage: Upstash Redis
+  holds one email per visitor per day, a host's firewall stops bursts, and the email provider's
+  idempotency key stops duplicates ([ADR 0012](0012-contact-workflow.md)). M11 reviews this together
+  with chat limits.
 - Workspace packages are consumed from TypeScript source. Next.js 16.4 (Turbopack) compiles them
   without `transpilePackages`.
 - Next.js 16.4 type-checks with the project-local `tsc` CLI by default, so TypeScript 7 works for

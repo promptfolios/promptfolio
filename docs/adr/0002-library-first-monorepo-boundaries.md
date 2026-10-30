@@ -48,3 +48,7 @@ Rules:
   zod only, uses the global `fetch`, and keeps all GitHub-specific knowledge. `core` gained the
   source-neutral `Repository` record and `addObservedRecords`; the app owns the files and the
   fetch command ([ADR 0009](0009-github-source-as-fetched-snapshot.md)).
+- *Update (M10):* `@promptfolio/contact` was added: it depends on zod only, because contact needs no
+  model or AI SDK, and it does not depend on `core`. It owns the `ContactSender` and `ContactSendLimiter`
+  interfaces; the app owns the configuration and the Resend and Redis adapters
+  ([ADR 0012](0012-contact-workflow.md)).

@@ -205,6 +205,8 @@ Plan and decisions: [M9 plan](plans/m9-refresh-pipeline-and-versions.md), [ADR 0
 
 **Exit criteria:** No email is sent without confirmation, and the UI accurately reports whether sending succeeded.
 
+Plan and decisions: [M10 plan](plans/m10-contact-workflow.md), [ADR 0012](adr/0012-contact-workflow.md). Setup: [docs/guides/contact-setup.md](guides/contact-setup.md). [M10.1](plans/m10-1-daily-send-limit.md) adds a limit of one email per visitor per day, held in Redis. The host rate limit is set at deployment (M12); M11 reviews rate limits together with chat.
+
 ### M11 — Reliability, security, and AI evaluation
 
 **Objective:** Improve correctness and failure handling across the MVP.

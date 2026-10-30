@@ -10,7 +10,7 @@ in [`ROADMAP.md`](ROADMAP.md#status).
 flowchart TB
     subgraph app["apps/portfolio (Next.js reference app)"]
         direction TB
-        env[".env.local<br/>PROMPTFOLIO_PROFILE_FILE, provider key and model,<br/>optional GITHUB_TOKEN (refresh command only)"]
+        env[".env.local<br/>PROMPTFOLIO_PROFILE_FILE, provider key and model,<br/>optional GITHUB_TOKEN (refresh command only),<br/>optional contact settings"]
         files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.answers.json (prepared starter answers)<br/>*.github.json and *.github-snapshot.json (GitHub source)<br/>*.refresh-status.json (last refresh, M9)"]
         page["src/app/page.tsx<br/>server: load profile, then render workspace or issues"]
         route["src/app/api/chat/route.ts<br/>server: POST /api/chat"]
@@ -19,6 +19,12 @@ flowchart TB
         fetchScript["scripts/refresh.ts and src/server/refresh.ts<br/>owner-run or scheduled: pnpm --filter portfolio refresh"]
         serverModel["src/server/model.ts<br/>server-only: PROMPTFOLIO_MODEL = provider:model"]
         serverAnswers["src/server/prepared-answers.ts<br/>reads profile/*.answers.json"]
+        contactRoutes["src/app/api/contact/prepare and send<br/>server: POST routes"]
+        serverContact["src/server/contact.ts<br/>server-only: contact configuration,<br/>Resend and Redis adapters, visitor hash"]
+        contactRoutes --> serverContact
+        env --> serverContact
+        serverContact --> serverProfile
+        page --> serverContact
         script["scripts/prepare-answers.ts<br/>owner-run: pnpm --filter portfolio prepare-answers"]
         workspace["src/components/chat-workspace.tsx<br/>client, see Chat workspace"]
         page --> serverProfile
@@ -73,6 +79,20 @@ flowchart TB
         turn --> tools
     end
 
+    subgraph contactpkg["packages/contact (@promptfolio/contact), server handlers"]
+        direction TB
+        contactIndex["src/index.ts<br/>the only entry point"]
+        contactHandlers["handlers.ts<br/>handleContactPrepare, handleContactSend,<br/>ContactSender and ContactSendLimiter interfaces"]
+        contactRequest["request.ts<br/>size cap, strict schemas, honeypot"]
+        contactToken["token.ts<br/>signed confirmation token"]
+        contactMessage["message.ts<br/>email text, idempotency key"]
+        contactIndex --> contactHandlers
+        contactHandlers --> contactRequest
+        contactHandlers --> contactToken
+        contactHandlers --> contactMessage
+        contactToken --> contactRequest
+    end
+
     subgraph core["packages/core (@promptfolio/core)"]
         direction TB
         index["src/index.ts<br/>the only entry point (package.json exports)"]
@@ -94,6 +114,7 @@ flowchart TB
 
     app -- "import from @promptfolio/core<br/>(public entry point only)" --> index
     route -- "import from @promptfolio/ai" --> aiIndex
+    contactRoutes -- "import from @promptfolio/contact" --> contactIndex
     script -- "generatePreparedAnswer" --> aiIndex
     aipkg -- "Profile types, lookups" --> index
     serverGitHub -- "parse, normalize" --> ghIndex
@@ -104,6 +125,7 @@ flowchart TB
 
 `core` depends on zod only: no Node.js, browser, React, Next.js, or AI SDK code. `ai` depends on
 `core`, zod, and the AI SDK (`ai`), but on no provider package: the app passes in a model.
+`contact` depends on zod only, and the app supplies its recipient, email provider, and store (M10).
 `source-github` depends on `core` and zod and uses the global `fetch`; only the refresh command
 calls it with the network, the app only parses and normalizes the snapshot file (M8).
 The refresh command also uses its `carryForward` and `@promptfolio/ai`'s `profileFingerprint` (M9).
@@ -276,6 +298,38 @@ the shape the server accepts, validates what it reads back, and enforces thread,
 retention limits. See [browser persistence](learning/browser-persistence.md) and the
 [M6 plan](plans/m6-browser-conversation-persistence.md).
 
+## Contact flow
+
+A Contact button, shown only when the server has a complete configuration, opens a dialog (M10). The
+model plays no part: it has no contact tool, and the routes call no model.
+
+```mermaid
+sequenceDiagram
+    participant B as Browser<br/>contact-dialog and contact-flow
+    participant H as @promptfolio/contact<br/>through the app's routes
+    participant L as ContactSendLimiter<br/>Redis adapter in the app
+    participant S as ContactSender<br/>Resend adapter in the app
+    B->>H: POST /api/contact/prepare with name, email, message, honeypot
+    H-->>B: recipient name, normalized draft, signed token (15 minutes)
+    B->>H: POST /api/contact/send with the token only
+    H->>H: verify signature and expiry, add the configured recipient
+    H->>L: claim the visitor's slot for this email, 24 hours
+    L-->>H: claimed, limited, or no answer
+    H-->>B: if not claimed: 429 limited, or 503 and nothing sent
+    H->>S: email, idempotency key from its content, 8 s timeout
+    S-->>H: sent with an id, failed, or unknown
+    H->>L: on failed only: release the slot
+    H-->>B: 200 sent, 502 failed, or 504 unknown
+```
+
+The owner's address stays in the server environment; the browser sees the owner's name. The server stores
+no message: Redis holds only a keyed hash of the visitor's IP address and the email's hash, for 24 hours,
+which limits a visitor to one email a day (M10.1). Duplicates are stopped by the provider's idempotency key
+([ADR 0012](adr/0012-contact-workflow.md),
+[contact confirmation and idempotency](learning/contact-confirmation-and-idempotency.md),
+[abuse protection on serverless](learning/abuse-protection-on-serverless.md),
+[setup guide](guides/contact-setup.md)).
+
 ## Canonical profile model
 
 ```
@@ -317,6 +371,7 @@ flowchart LR
     github["@promptfolio/source-github (M8, done)"] -- "repositories with<br/>basis source-observed" --> core
     contributions["contributions: attributed commits (M8.1, done)"] --> github
     refresh["refresh: status, versions, last known good (M9, done)<br/>schedule: template, active in M12"] --> github
+    app --> contact["@promptfolio/contact: confirmed email to the owner (M10)"]
 ```
 
 ## Decision records
@@ -334,3 +389,4 @@ flowchart LR
 | [0009](adr/0009-github-source-as-fetched-snapshot.md) | GitHub as a fetched snapshot, source-key ids  | Accepted |
 | [0010](adr/0010-refresh-status-and-content-versions.md) | Refresh status, last known good, content versions | Accepted |
 | [0011](adr/0011-contributions-as-attributed-commits.md) | Contributions as attributed commits | Accepted |
+| [0012](adr/0012-contact-workflow.md) | Contact through a signed confirmation and a daily limit | Accepted |
