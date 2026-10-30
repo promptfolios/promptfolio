@@ -121,6 +121,13 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("without calling it expertise");
   });
 
+  it("does not let the model assume a gender", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt).toContain('Use Jordan Example\'s name or "they"');
+    expect(prompt).toContain("never assume a gender");
+  });
+
   it("leaves the sources section to the page", () => {
     expect(buildSystemPrompt(identity)).toContain("do not write a sources section yourself");
   });

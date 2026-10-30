@@ -43,7 +43,8 @@ describe("remarkCitations", () => {
   });
 
   it("reads each text node's citations as the server does", () => {
-    const value = "A [one], B [two, three] and [one] again, then [ , ] and [ four ].";
+    const value =
+      "A [one], B [two, three] and [one] again, then [ , ], [ four ], and [fi\u2011ve].";
 
     expect([...new Set(linkedIds(transformed(paragraph(text(value)))))]).toEqual(citedIds(value));
   });

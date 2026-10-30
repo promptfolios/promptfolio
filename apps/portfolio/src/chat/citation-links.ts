@@ -22,9 +22,13 @@ export function citationIdFromHref(href: string | undefined): string | undefined
   }
 }
 
-/** The ids in one `[...]`. Keeps the server's reading of a citation, including a drifted `[a, b]`. */
+/**
+ * The ids in one `[...]`. Keeps the server's reading of a citation, including a drifted `[a, b]` and
+ * look-alike hyphens.
+ */
 function idsIn(bracketContent: string): string[] {
   return bracketContent
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
     .split(",")
     .map((id) => id.trim())
     .filter((id) => id !== "");

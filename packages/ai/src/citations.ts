@@ -44,14 +44,21 @@ export interface ChatSources {
   unverifiedCitations: number;
 }
 
+/** Unicode hyphens and dashes that models write in place of the `-` in an id. */
+const LOOK_ALIKE_HYPHENS = /[\u2010-\u2015\u2212]/g;
+
 /**
  * The ids an answer cites: the content of every `[...]` that is not a Markdown link, split at commas
- * because models sometimes write `[a, b]`. Code is skipped, where brackets are not citations.
+ * because models sometimes write `[a, b]`. Look-alike hyphens become `-`, since an id never holds
+ * one. Code is skipped, where brackets are not citations.
  */
 export function citedIds(text: string): string[] {
   const withoutCode = text.replace(/```[\s\S]*?```|`[^`\n]*`/g, "");
   const ids = Array.from(withoutCode.matchAll(/\[([^[\]]+)\](?!\()/g)).flatMap((match) =>
-    (match[1] ?? "").split(",").map((id) => id.trim()),
+    (match[1] ?? "")
+      .replace(LOOK_ALIKE_HYPHENS, "-")
+      .split(",")
+      .map((id) => id.trim()),
   );
   return [...new Set(ids.filter((id) => id !== ""))];
 }

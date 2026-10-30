@@ -62,6 +62,15 @@ describe("citedIds", () => {
     ]);
   });
 
+  it.each([
+    ["non-breaking hyphen", "\u2011"],
+    ["hyphen", "\u2010"],
+    ["en dash", "\u2013"],
+    ["minus sign", "\u2212"],
+  ])("reads a %s in an id as a normal hyphen", (_name, hyphen) => {
+    expect(citedIds(`See [northwind${hyphen}backend].`)).toEqual(["northwind-backend"]);
+  });
+
   it("lists an id once, and ignores empty parts", () => {
     expect(citedIds("[a] and [a] and [b,] and [ , ]")).toEqual(["a", "b"]);
   });
