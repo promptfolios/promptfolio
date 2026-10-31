@@ -1,6 +1,6 @@
 # M12.4 plan: small fixes from the evaluation runs
 
-- **Status:** Proposed, waiting for approval. Nothing is implemented.
+- **Status:** Fix 1 is done, at the developer's request (2026-10-31), and in review. Fixes 2 to 4 are proposed, waiting for approval.
 - **Date:** 2026-10-31
 - **Background:** [M12 review results](m12-second-consumer-and-deployment.md#review-results) and [the Ling run](../evaluation/README.md#the-run-on-ling-failed-the-gate). M12.3 stays reserved for deployment.
 
@@ -74,3 +74,20 @@ Automated tests use no network or model. `pnpm verify` passes.
 | 1 | What a rerun does | Keep current answers, and fill the gaps | Regenerate all by default (repeats model calls, and can lose good answers) |
 | 2 | Retries | 3 attempts, 65 seconds apart, as in the evaluation | Fewer (more gaps); configurable (a setting nobody needs yet) |
 | 3 | Interval between starters | None | A short gap (slower, and you removed the evaluation's) |
+
+## Review results
+
+### Fix 1: prepared answers
+
+Recorded 2026-10-31. In review.
+
+**Automated:** `pnpm verify` passes: lint, typecheck, 738 tests (`core` 74, `contact` 48, `source-github` 123, `ai` 197, minimal consumer 6, app 290), and the build, with the same two warnings as before.
+
+**Real runs, on the fictional example, contact form off:**
+
+| Run | Result | Time |
+| --- | ------ | ---- |
+| Plain, all answers current | Kept 5, no model call, file unchanged | Under 1 second |
+| `--all` through Ling | 5 of 5, after one retry each on 2 starters | 4 minutes |
+
+The `--all` answers were only a test of the command, so they were discarded and the answers reviewed in M12.2 stay committed. A real run on the developer's own profile has not happened.

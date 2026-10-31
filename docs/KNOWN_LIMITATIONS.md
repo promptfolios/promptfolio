@@ -50,7 +50,7 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
 ## Prepared answers
 
 - **The example's answers come from Ling with the contact form off.** With the form on, they count as stale, because the
-  system prompt differs. Generating them took retries: one pass wrote 2 of 5, and the script does not retry by itself.
+  system prompt differs. Provider errors are common on Ling, so `prepare-answers` retries them and can take a few minutes.
 - **They go stale when the profile or prompt changes,** and starters are then answered live and counted until someone
   runs `prepare-answers`. A scheduled refresh that changes content does this, and regenerating in that job is off by
   default, and the plan keeps it off.
