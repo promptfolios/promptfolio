@@ -3,48 +3,48 @@
   "answers": [
     {
       "question": "Give me a short professional overview.",
-      "text": "According to Jordan Example's self-reported profile, Jordan is a full-stack engineer focused on TypeScript and developer tools, based remotely. Jordan's experience includes working as a Frontend Engineer at Acme Corp [acme-frontend] and as a Full-stack Engineer at Globex [globex-fullstack].",
-      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
-      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
-      "evidenceIds": ["acme-frontend", "globex-fullstack"],
-      "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-30T08:56:19.718Z"
+      "text": "Jordan Example is a full-stack engineer focused on TypeScript and developer tools, working remotely. Jordan's profile describes them as building web applications with TypeScript and React, with an interest in improving developer experience [owner_identity].\n\n**Experience**\n- Frontend Engineer at Acme Corp (March 2021 – August 2023), working on the customer dashboard team [acme-frontend]\n- Full-stack Engineer at Globex (September 2023 – present), building internal developer tools [globex-fullstack]\n\n**Education**\n- BSc in Computer Science, Example University (2017–2021) [example-university]\n\nJordan's profile lists skills in TypeScript, React, Node.js, PostgreSQL, and testing. All of this information is self-reported in Jordan Example's profile.",
+      "profileFingerprint": "sha256:4b024c7bdf6042f7357e532ad5023c479833f13999e6fa305491330d6edf051f",
+      "instructionsFingerprint": "sha256:86602897782ce1fba9bec8e32fd5b7c6288dbb4b62e3794b117dca1f02f2d739",
+      "evidenceIds": ["acme-frontend", "globex-fullstack", "example-university"],
+      "model": "gateway:inclusionai/ling-3.1-flash-1019",
+      "generatedAt": "2026-10-31T16:37:12.950Z"
     },
     {
       "question": "What are the most relevant projects?",
-      "text": "According to Jordan Example's self-reported profile, the projects are:\n\n- **Service Catalog**: An internal catalog of services, their owners, and their documentation [service-catalog].\n- **Markdown Linter**: A small open-source tool that checks Markdown documents for broken links [markdown-linter].",
-      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
-      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
-      "evidenceIds": ["service-catalog", "markdown-linter"],
-      "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-30T08:56:21.319Z"
+      "text": "Jordan Example's profile lists two projects, both TypeScript-based and aligned with their focus on developer tools. The information comes from Jordan Example's own profile description (self-reported) [service-catalog] [markdown-linter].\n\n1. **Service Catalog** — An internal catalog of services, their owners, and their documentation. Jordan Example designed the data model and implemented the API and search. It was adopted by internal engineering teams, and it's associated with their Full-stack Engineer role at Globex (since September 2023), where they build internal developer tools. Skills listed: TypeScript, Node.js, PostgreSQL [service-catalog].\n\n2. **Markdown Linter** — A small open-source tool that checks Markdown documents for broken links. Jordan Example is its sole maintainer, and a repository link is listed on the profile. Skills listed: TypeScript, Testing [markdown-linter].\n\nFor a profile centered on TypeScript and developer tools, Service Catalog stands out as the most substantial professional project (with a documented adoption outcome), while Markdown Linter shows open-source developer-tool work. The repositories and contributions sections of the profile are currently empty, so no additional projects are listed there.",
+      "profileFingerprint": "sha256:4b024c7bdf6042f7357e532ad5023c479833f13999e6fa305491330d6edf051f",
+      "instructionsFingerprint": "sha256:86602897782ce1fba9bec8e32fd5b7c6288dbb4b62e3794b117dca1f02f2d739",
+      "evidenceIds": ["service-catalog", "markdown-linter", "globex-fullstack"],
+      "model": "gateway:inclusionai/ling-3.1-flash-1019",
+      "generatedAt": "2026-10-31T16:37:26.141Z"
     },
     {
       "question": "What are the main technical skills?",
-      "text": "According to Jordan Example's self-reported profile, the main technical skills are:\n\n* **Languages:** TypeScript\n* **Frontend:** React\n* **Backend:** Node.js\n* **Databases:** PostgreSQL\n* **Practices:** Testing",
-      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
-      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
+      "text": "According to Jordan Example's profile, the main technical skills are:\n\n- **TypeScript** (language)\n- **React** (frontend)\n- **Node.js** (backend)\n- **PostgreSQL** (databases)\n- **Testing** (practices)\n\nThese are listed in Jordan Example's own profile, so they are self-reported rather than independently verified. The profile's summary also mentions building web applications with TypeScript and React [owner_identity].",
+      "profileFingerprint": "sha256:4b024c7bdf6042f7357e532ad5023c479833f13999e6fa305491330d6edf051f",
+      "instructionsFingerprint": "sha256:86602897782ce1fba9bec8e32fd5b7c6288dbb4b62e3794b117dca1f02f2d739",
       "evidenceIds": [],
-      "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-30T08:56:23.132Z"
+      "model": "gateway:inclusionai/ling-3.1-flash-1019",
+      "generatedAt": "2026-10-31T16:41:03.922Z"
     },
     {
       "question": "Summarize the work experience.",
-      "text": "Jordan Example's self-reported work experience includes:\n\n- **Frontend Engineer** at Acme Corp (March 2021 – August 2023), working on the customer dashboard team [acme-frontend].\n- **Full-stack Engineer** at Globex (September 2023 – Present), building internal developer tools [globex-fullstack].",
-      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
-      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
+      "text": "Jordan Example's profile lists two roles (self-reported):\n\n- **Frontend Engineer at Acme Corp** (March 2021 – August 2023, Remote): Worked on the customer dashboard team, migrated the dashboard from a legacy framework to React, and introduced component tests for shared UI [acme-frontend].\n- **Full-stack Engineer at Globex** (September 2023 – present): Builds internal developer tools, including a service catalog used by internal teams [globex-fullstack].\n\nBoth roles involve TypeScript, aligning with Jordan Example's headline focus on TypeScript and developer tools [owner_identity].\n\nSources: acme-frontend, globex-fullstack (owner-provided profile, self-reported, observed 2026-10-30).",
+      "profileFingerprint": "sha256:4b024c7bdf6042f7357e532ad5023c479833f13999e6fa305491330d6edf051f",
+      "instructionsFingerprint": "sha256:86602897782ce1fba9bec8e32fd5b7c6288dbb4b62e3794b117dca1f02f2d739",
       "evidenceIds": ["acme-frontend", "globex-fullstack"],
-      "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-30T08:56:25.274Z"
+      "model": "gateway:inclusionai/ling-3.1-flash-1019",
+      "generatedAt": "2026-10-31T16:42:27.602Z"
     },
     {
       "question": "What open-source work is there?",
-      "text": "Jordan Example's profile lists one open-source project: the Markdown Linter, which is a small tool that checks Markdown documents for broken links [markdown-linter]. According to Jordan Example's self-reported profile, this project involves TypeScript and Testing [markdown-linter].",
-      "profileFingerprint": "sha256:9b38e066b5a27868896eb5e6b0a2dedb602b6dfe1c2cad7a6ac61891a2cb0536",
-      "instructionsFingerprint": "sha256:831931f3e0a6f0f056082e98ddd3fe28b39065f3f408236ad4018b9ead8a6691",
+      "text": "I'll check Jordan Example's projects, repositories, and contributions to see what open-source work is listed.\n\nThe projects list shows one open-source item, so let me get its full details, including any links.\n\nThe only open-source work listed in Jordan Example's profile is the **Markdown Linter** project. Jordan Example's profile describes it as a small open-source tool that checks Markdown documents for broken links, lists TypeScript and Testing as its skills, and says Jordan Example is its sole maintainer [markdown-linter]. The profile links to a repository at https://example.com/jordan/markdown-linter.\n\nTwo related notes:\n- The profile's repositories section is empty, so no public repositories with details (such as a README or language breakdown) are listed.\n- The contributions section is also empty, so no contributions to other projects are listed here.\n\nSources: markdown-linter (owner-provided profile, self-reported, observed 2026-10-30).",
+      "profileFingerprint": "sha256:4b024c7bdf6042f7357e532ad5023c479833f13999e6fa305491330d6edf051f",
+      "instructionsFingerprint": "sha256:86602897782ce1fba9bec8e32fd5b7c6288dbb4b62e3794b117dca1f02f2d739",
       "evidenceIds": ["service-catalog", "markdown-linter"],
-      "model": "google:gemini-3.5-flash-lite",
-      "generatedAt": "2026-10-30T08:56:27.362Z"
+      "model": "gateway:inclusionai/ling-3.1-flash-1019",
+      "generatedAt": "2026-10-31T16:43:55.617Z"
     }
   ]
 }
