@@ -55,6 +55,7 @@ Rules the code enforces, whatever the model or the prompt says:
 | Only the server's tools exist | `tools` comes from `createProfileTools`; the client's `tools` field is stripped. A call to any other name (`sendEmail`) fails before anything runs. |
 | Arguments are validated | strict zod schemas; invalid arguments are never passed to `execute`, and the model gets the validation error as the tool result |
 | A bounded loop | `stopWhen: isStepCount(4)`; on the last step `prepareStep` sets `toolChoice: "none"`, so the answer ends in text |
+| A tool call written as text is stopped | some models write the call as text instead of making it. `raw-tool-calls.ts` drops `<tool_call` and `<function=`, and the visitor gets the generic error |
 | A bounded number of calls | at most 8 per request, counted in the tool set's closure; later calls return `limit_reached` |
 | Tool activity stays on the server | the stream to the browser is an allowlist of text chunks; tool calls and results never reach it, so the browser has no tool parts to send back (the request allowlist rejects them) |
 
@@ -99,6 +100,8 @@ skill filter does not apply to this section.
 - Trusting tool results sent back by the browser. The AI SDK's default stream sends tool parts to
   the client, which stores and resends them; anything resent can be forged.
 - Throwing for "not found". The model then sees an error instead of a fact it can explain.
+- Assuming `toolChoice: "none"` means no tool-call text. It forbids a real call, but a model can still write one as
+  text. Reports now record steps, so a run can show whether this happens on the last step.
 - Counting a model's per-step limits as per-request limits: `maxOutputTokens` applies to each step,
   and a lookup turn makes two or three model calls, which also counts against provider rate
   limits.
