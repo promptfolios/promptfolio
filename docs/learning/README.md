@@ -34,6 +34,7 @@ that builds it; code links are marked "planned").
 | Abuse protection on serverless  | [abuse-protection-on-serverless.md](abuse-protection-on-serverless.md) | M10 | in use |
 | Prompt-injection exposure       | [prompt-injection-exposure.md](prompt-injection-exposure.md) | M11.1 | in use |
 | AI evaluation                   | [ai-evaluation.md](ai-evaluation.md)                         | M11.3 | in use |
+| Public API and a second consumer | [public-api-and-second-consumer.md](public-api-and-second-consumer.md) | M12.1 | in use |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").
