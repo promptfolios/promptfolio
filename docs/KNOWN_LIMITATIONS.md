@@ -19,6 +19,9 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
   and no source. Only the server log's `citations { verified, unverified }` counts record that. Model text streams
   as it arrives, so it cannot be corrected afterwards.
 - **Skills and links have no ids,** so they never get a source entry.
+- **Long answers can be cut off.** On a real profile with many repositories, an answer can reach the whole-reply limit, now 55
+  seconds, which shows the error after the text so far, with raw `[id]` citations and no sources. Or it can reach the 2,000-token
+  limit per step and simply stop. A prompt rule asking for short answers would be the fix, and would need a new evaluation.
 - **Long ids can come out garbled,** such as `[github.com/pixel-notes]` or `[queue‑lab]`, or in other brackets such as
   `【id】`. The sentence then has no marker. Look-alike hyphens are handled. See [the evaluation](evaluation/README.md).
 - **The evaluation is small.** It covers one fictional profile. The full set on the final prompt ran on one model, which

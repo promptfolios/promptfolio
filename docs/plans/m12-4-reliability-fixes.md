@@ -1,6 +1,6 @@
 # M12.4 plan: small fixes from the evaluation runs
 
-- **Status:** Fix 1 is done, at the developer's request (2026-10-31), and in review. Fixes 2 to 4 are proposed, waiting for approval.
+- **Status:** Done (2026-11-01), including a fifth fix the developer approved after seeing a live answer cut off. In review.
 - **Date:** 2026-10-31
 - **Background:** [M12 review results](m12-second-consumer-and-deployment.md#review-results) and [the Ling run](../evaluation/README.md#the-run-on-ling-failed-the-gate). M12.3 stays reserved for deployment.
 
@@ -76,6 +76,19 @@ Automated tests use no network or model. `pnpm verify` passes.
 | 3 | Interval between starters | None | A short gap (slower, and you removed the evaluation's) |
 
 ## Review results
+
+### Fixes 2 to 5
+
+Recorded 2026-11-01. In review.
+
+**Automated:** `pnpm verify` passes: lint, typecheck, 744 tests (`core` 74, `contact` 48, `source-github` 123, `ai` 199, minimal consumer 6, app 294), and the build. No test uses a real model. The new gateway test sends a stubbed 403 through the real gateway adapter.
+
+- **Fix 2, citations:** semicolons split ids, as planned. **Added:** bracketed text with a space is no longer a citation, after a real answer's `[source: public GitHub data ...]` got it rejected. So a citation written with spaces is no longer counted as unverified. An existing test used such a citation as its input; it now uses an id-shaped one, and still checks that the text is never repeated.
+- **Fix 3, checks:** "isn't listed" and "No evidence" count as declining. A confident claim still fails. The Ling reports stay as written.
+- **Fix 4, log:** any error's numeric status is logged, with no message.
+- **Fix 5, added: the whole-reply limit is 55 seconds, and the route's `maxDuration` is 60.** The developer's screenshot showed a live answer cut off mid-sentence while it was still writing. The first-chunk and between-chunk limits stay at 15 and 10 seconds, so a stopped model still fails quickly. The prompt did not change, so prepared answers stay current.
+
+**Not run:** the longer limit against a real model. Evaluation numbers from before it, including Ling's 21 timeouts, are not comparable. An answer this long may now hit the 2,000-token limit, and the 4,000-character cap still applies to prepared answers.
 
 ### Fix 1: prepared answers
 
