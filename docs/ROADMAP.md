@@ -31,6 +31,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M11.1 — Protection and failure paths       | Done      | `pnpm test`; [the guide](guides/chat-limit-setup.md): 30 live answers per visitor and 200 for the site per day, then a limit message; [plan](plans/m11-reliability-security-evaluation.md) |
 | M11.2 — Citations and provenance          | Done      | `pnpm dev`: an answer with citations shows a Sources panel below it; [plan](plans/m11-reliability-security-evaluation.md) |
 | M11.3 — Evaluation and limitations        | Done      | `pnpm --filter portfolio evaluate --label=my-run`; [results](evaluation/README.md); [limitations](KNOWN_LIMITATIONS.md); prepared answers wait for the deployed model (M12); [plan](plans/m11-reliability-security-evaluation.md) |
+| M12.1 — Second consumer and package docs   | Done      | `pnpm --filter minimal-consumer test`; package READMEs; [plan](plans/m12-second-consumer-and-deployment.md) |
 
 Update this table when a milestone is approved.
 

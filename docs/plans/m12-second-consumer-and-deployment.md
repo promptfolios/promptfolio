@@ -1,6 +1,6 @@
 # M12 plan: second consumer, documentation, and deployment decision
 
-- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and in review.
+- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and approved (2026-10-31). M12.2 is in progress.
 - **Date:** 2026-10-31
 - **Roadmap:** [M12](../ROADMAP.md#m12--second-consumer-test-documentation-and-deployment-decision). Carried over: [M11, "For M12"](m11-reliability-security-evaluation.md#m113).
 
@@ -130,7 +130,7 @@ Automated tests use no network, Redis, email, or model. `pnpm verify` passes aft
 
 ### M12.1
 
-Recorded 2026-10-31. In review.
+Recorded 2026-10-31. Approved by the developer in review on the same day.
 
 **Automated:** `pnpm verify` passes: lint, typecheck, 715 tests (`core` 74, `contact` 48, `source-github` 123, `ai` 184, minimal consumer 6, app 280), and the build, with the same two "dynamic filesystem access" warnings as before.
 

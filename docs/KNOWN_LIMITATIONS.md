@@ -4,9 +4,9 @@ What Promptfolio does not do or guarantee, as of M11. Each item says what happen
 
 ## Answers
 
-- **A model's raw tool call can reach the visitor.** On `nemotron-3.5-lightning`, 2 of 17 answers were literal
-  `<tool_call>` text, which the app shows as the reply. It was not seen on Gemini. Run the evaluation on a model before
-  deploying it.
+- **A model can write a tool call as text.** On `nemotron-3.5-lightning`, 2 of 17 answers were literal `<tool_call>`
+  text. The server now stops `<tool_call` and `<function=` and shows the generic error, so the visitor gets no answer on
+  a turn that still counts. Other models may use other forms, which would still get through.
 - **A citation is not proof that a sentence is right.** The server checks that a cited record was looked up in that
   turn. It cannot check that the record supports the sentence. A real answer listed seven technologies and cited one
   repository, and an evaluation run wrote "note-notes" for a note-taking app with a verified citation.
