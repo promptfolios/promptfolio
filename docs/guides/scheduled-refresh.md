@@ -6,7 +6,7 @@ profile, and commit the GitHub data when the profile version changed.
 > **Status:** template, not run. This reference repository has no active workflow: it has no
 > remote, its example profile has no GitHub source, and it must stay independent of any real
 > profile ([ADR 0006](../adr/0006-profile-data-location.md)). The workflow is activated and its
-> first real run checked in the deployment repository (M12). Design and decisions:
+> first real run checked in the deployment repository (M12.3, not started). Design and decisions:
 > [M9 plan](../plans/m9-refresh-pipeline-and-versions.md#scheduling-decision-6),
 > [ADR 0010](../adr/0010-refresh-status-and-content-versions.md).
 

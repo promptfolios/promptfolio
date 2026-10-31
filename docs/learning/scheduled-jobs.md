@@ -1,7 +1,7 @@
 # Scheduled jobs
 
 First appears in: **M9** (refresh pipeline and profile versions). Status: **planned** (a
-template exists; it runs only in the deployment repository, M12).
+template exists; it runs only in the deployment repository, M12.3, not started).
 
 ## 1. What it is
 
@@ -54,7 +54,7 @@ flowchart LR
 
 - The template and setup checklist: [docs/guides/scheduled-refresh.md](../guides/scheduled-refresh.md)
 - The command it runs: [apps/portfolio/scripts/refresh.ts](../../apps/portfolio/scripts/refresh.ts)
-- Not in this repository: `.github/workflows/` (**planned** for the deployment repository, M12).
+- Not in this repository: `.github/workflows/` (**planned** for the deployment repository, M12.3, not started).
   This repository has no remote, and its example profile has no GitHub source.
 
 ## 5. Common pitfalls and misconceptions

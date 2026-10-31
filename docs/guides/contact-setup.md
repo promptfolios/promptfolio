@@ -6,7 +6,7 @@ as before. Design and decisions: [M10 plan](../plans/m10-contact-workflow.md),
 
 > **Status:** the setup below follows the documentation of Resend, Upstash, and Vercel (checked
 > 2026-10-30). The daily limit has only been tested with fakes, and the host rate limit in step 4 has not
-> been applied anywhere yet; that happens at deployment (M12).
+> been applied anywhere yet; that happens at a later deployment (M12.3, not started).
 
 ## 1. Create a Resend key
 

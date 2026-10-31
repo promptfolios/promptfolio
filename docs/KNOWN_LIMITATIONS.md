@@ -35,7 +35,7 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
   ours. Visitors then see the generic "could not answer" message, and the turn still counts.
 - **Refused requests still use Redis commands,** so heavy traffic could use up the free plan. Live chat and the contact
   form stop if the store stops answering.
-- **The firewall rule is not applied yet,** and the deployed IP header has not been seen. Both wait for M12.
+- **The firewall rule is not applied yet,** and the deployed IP header has not been seen. Both wait for a later deployment (M12.3, not started).
 - **Another host must overwrite the IP headers.** Vercel does. Without that, anyone can get around the limits.
 
 ## Prompt injection
@@ -53,7 +53,7 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
   system prompt differs. Generating them took retries: one pass wrote 2 of 5, and the script does not retry by itself.
 - **They go stale when the profile or prompt changes,** and starters are then answered live and counted until someone
   runs `prepare-answers`. A scheduled refresh that changes content does this, and regenerating in that job is off by
-  default. M12 decides.
+  default, and the plan keeps it off.
 - **Only the first message of a new chat qualifies,** and only an exact match with a starter.
 
 ## Contact form

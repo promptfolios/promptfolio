@@ -32,6 +32,8 @@ This document describes the suggested milestone sequence and future directions. 
 | M11.2 — Citations and provenance          | Done      | `pnpm dev`: an answer with citations shows a Sources panel below it; [plan](plans/m11-reliability-security-evaluation.md) |
 | M11.3 — Evaluation and limitations        | Done      | `pnpm --filter portfolio evaluate --label=my-run`; [results](evaluation/README.md); [limitations](KNOWN_LIMITATIONS.md); prepared answers wait for the deployed model (M12); [plan](plans/m11-reliability-security-evaluation.md) |
 | M12.1 — Second consumer and package docs   | Done      | `pnpm --filter minimal-consumer test`; package READMEs; [plan](plans/m12-second-consumer-and-deployment.md) |
+| M12.2 — Answer readiness                   | Done      | `pnpm test`; [results](evaluation/README.md): the chosen model failed its gate, chosen anyway; [limitations](KNOWN_LIMITATIONS.md) |
+| M12.3 — Deployment                         | Not started | Optional, and the developer chose to stop before it; [plan](plans/m12-second-consumer-and-deployment.md) |
 
 Update this table when a milestone is approved.
 
@@ -250,6 +252,8 @@ Plan and decisions: [M11 plan](plans/m11-reliability-security-evaluation.md), sp
 - Check how much of the refresh a second consumer has to copy from `apps/portfolio/src/server/refresh.ts` (raised during M9 review, deliberately not moved yet). Candidates for `@promptfolio/source-github`: `mergeGitHubSnapshot` (pure, now in the app's `github-source.ts`) and a `refreshGitHubSnapshot` that combines `fetchGitHubSnapshot` and `carryForward`. The refresh status schema is source-neutral, so it would go to `core`, and only once a second source exists. These stay in the app: the "write only on a new profile version" rule (needs `profileFingerprint` from `@promptfolio/ai`), files, environment, and exit codes. The scheduled workflow stays a deployment template.
 
 **Exit criteria:** The second consumer works through documented public APIs and configuration/data changes. Deployment is optional until separately approved.
+
+Plan and results: [M12 plan](plans/m12-second-consumer-and-deployment.md). The exit criteria are met. The developer chose not to deploy for now (2026-10-31), so the firewall rule, the real 429 and IP header checks, the scheduled refresh, and a deployment path for a real profile remain in M12.3, which stays optional.
 
 ## Deferred product phases
 

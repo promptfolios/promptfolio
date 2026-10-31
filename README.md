@@ -102,7 +102,7 @@ your provider, and check its data terms (some free tiers allow the provider to u
 
 Without a key the app still builds and renders, but chat replies show an error. Outside `next dev`,
 live answers also need the daily limit's settings; see
-[docs/guides/chat-limit-setup.md](docs/guides/chat-limit-setup.md). Deployment is decided in M12.
+[docs/guides/chat-limit-setup.md](docs/guides/chat-limit-setup.md). Nothing is deployed yet; [the M12 plan](docs/plans/m12-second-consumer-and-deployment.md) describes how.
 
 ## Evaluating answers
 

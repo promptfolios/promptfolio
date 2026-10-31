@@ -6,7 +6,7 @@ outside `next dev`, the assistant refuses live answers. Design and decisions:
 
 > **Status:** counting has been checked on a real Upstash database under `next dev` (2026-10-31). Reaching the
 > limits has been tested only against a local stand-in. The firewall rule has not been applied anywhere; that
-> happens at deployment (M12).
+> happens at a later deployment (M12.3, not started).
 
 ## 1. Create a Redis database
 

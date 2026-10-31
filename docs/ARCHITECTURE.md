@@ -387,7 +387,7 @@ flowchart LR
     ai --> prepared["prepared starter answers (M7, done)"]
     github["@promptfolio/source-github (M8, done)"] -- "repositories with<br/>basis source-observed" --> core
     contributions["contributions: attributed commits (M8.1, done)"] --> github
-    refresh["refresh: status, versions, last known good (M9, done)<br/>schedule: template, active in M12"] --> github
+    refresh["refresh: status, versions, last known good (M9, done)<br/>schedule: template, not active"] --> github
     app --> contact["@promptfolio/contact: confirmed email to the owner (M10)"]
 ```
 

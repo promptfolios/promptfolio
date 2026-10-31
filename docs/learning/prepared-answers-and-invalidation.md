@@ -62,6 +62,10 @@ GitHub data (M8) is part of the profile content. A refetch that finds the same d
 description, topic, language share, license, or month of last push invalidates every prepared
 answer. That is why the adapter keeps dates by month and leaves out star counts.
 
+**The contact form counts too (M12).** The system prompt names the Contact button only when the form is on, and the
+instructions fingerprint covers the prompt. So answers generated with the form off are stale on a site with it on, even
+if their text never mentions contact. Generate them with production's setting.
+
 **The fingerprint is the profile version (M9).** No counter is kept anywhere: the profile
 fingerprint *is* the version id, and an answer belongs to the version in its `profileFingerprint`.
 `pnpm --filter portfolio refresh` prints the version before and after, records it in the refresh

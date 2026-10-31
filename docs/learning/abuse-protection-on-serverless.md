@@ -1,7 +1,7 @@
 # Abuse protection on serverless
 
 First appears in: **M10** (contact workflow), with the daily limit from **M10.1** and chat's limits from
-**M11.1**. Status: **in use**, except the host rate limit, which is **planned** for deployment (M12).
+**M11.1**. Status: **in use**, except the host rate limit, which is **planned** for a later deployment (M12.3, not started).
 
 ## 1. What it is
 

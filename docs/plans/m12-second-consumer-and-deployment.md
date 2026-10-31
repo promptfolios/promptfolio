@@ -1,6 +1,6 @@
 # M12 plan: second consumer, documentation, and deployment decision
 
-- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and approved (2026-10-31). M12.2 is done and in review: Ling failed the gate, and the developer chose it anyway.
+- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and approved (2026-10-31). M12.2 is done and approved (2026-10-31): Ling failed the gate, and the developer chose it anyway. The developer chose to stop before M12.3, so nothing is deployed, and M12's exit criteria are met.
 - **Date:** 2026-10-31
 - **Roadmap:** [M12](../ROADMAP.md#m12--second-consumer-test-documentation-and-deployment-decision). Carried over: [M11, "For M12"](m11-reliability-security-evaluation.md#m113).
 
@@ -148,7 +148,7 @@ Recorded 2026-10-31. Approved by the developer in review on the same day.
 
 ### M12.2
 
-Recorded 2026-10-31. In review.
+Recorded 2026-10-31. Approved by the developer in review on the same day, which also settled decision 6: not deploying for now.
 
 **Automated:** `pnpm verify` passes: lint, typecheck, 728 tests (`core` 74, `contact` 48, `source-github` 123, `ai` 196, minimal consumer 6, app 281), and the build. No test uses a real model.
 
