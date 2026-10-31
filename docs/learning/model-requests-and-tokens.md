@@ -35,16 +35,18 @@ Where size is bounded:
 | Characters per visitor message / in total | 4,000 / 20,000              | `CHAT_LIMITS`, `request.ts` |
 | Live answers per day: per visitor / for the site | 30 / 200             | `CHAT_LIMITS`, `chat-limit.ts` |
 | Output tokens per model call (incl. thinking) | 2,000 (1,000 before M7.1) | `maxOutputTokens`   |
-| Wait for the first content / between chunks / whole reply | 15 s / 10 s / 25 s | `CHAT_LIMITS.timeouts`, AI SDK `timeout` |
+| Wait for the first content / between chunks / whole reply | 15 s / 10 s / 55 s | `CHAT_LIMITS.timeouts`, AI SDK `timeout` |
 | Retries after a failed provider call   | 1                              | `CHAT_LIMITS.maxRetries`  |
-| Time per reply on serverless hosts     | 30 s                           | `maxDuration` in `route.ts` |
+| Time per reply on serverless hosts     | 60 s                           | `maxDuration` in `route.ts` |
 
 Characters stand in for tokens because they are cheap to count before calling the provider.
 
 Providers can be slow or overloaded. During M4 review, Gemini answered HTTP 503 ("high demand")
 after up to 30 seconds, and the AI SDK's two default retries stretched one visitor's wait past a
-minute with no feedback. The timeouts make that fail within 25 seconds instead, below the route's
-30-second limit, so the visitor sees the generic error before a serverless host stops the function.
+minute with no feedback. The timeouts make that fail within the limits above, below the route's own
+limit, so the visitor sees the generic error before a serverless host stops the function. The whole
+reply's limit was 25 seconds until M12.4, when a free model was cut off mid-sentence while still
+writing. Text streams as it arrives, so waiting longer for a long answer is not a silent wait.
 
 `PROMPTFOLIO_MODEL=provider:model` picks the model, for example `google:gemini-3.8-flash` or
 `anthropic:claude-haiku-5-5`. Both think before answering by default, and thinking tokens count against
