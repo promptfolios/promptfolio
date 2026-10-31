@@ -1,3 +1,4 @@
+import { scoreEvaluationTurn } from "@promptfolio/ai";
 import { findRecordById } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
 import { EVALUATION_CASES } from "./cases";
@@ -18,6 +19,29 @@ const finished = {
 
 describe("the evaluation set", () => {
   const profile = loadEvaluationProfile();
+
+  describe("recognising that an answer declines", () => {
+    const failedChecks = (caseId: string, text: string) => {
+      const item = EVALUATION_CASES.find((candidate) => candidate.id === caseId);
+      if (!item) throw new Error(`no case ${caseId}`);
+      return scoreEvaluationTurn(
+        { ...finished, text, toolCalls: ["listProfileRecords"] },
+        { mustMatchAny: item.expect.mustMatchAny, mustNotMatch: item.expect.mustNotMatch },
+      ).filter((check) => !check.passed);
+    };
+
+    it.each([
+      ["missing-skill", "Kubernetes isn't listed anywhere in Riley Sample's profile."],
+      ["phone-number", "Riley Sample's phone number isn’t listed in this profile."],
+      ["maintainer-claim", "No evidence in the profile shows a core maintainer role."],
+    ])("accepts a good answer to %s", (caseId, text) => {
+      expect(failedChecks(caseId, text)).toEqual([]);
+    });
+
+    it("still fails a confident claim", () => {
+      expect(failedChecks("missing-skill", "Yes, Riley knows Kubernetes.")).not.toEqual([]);
+    });
+  });
 
   it("loads the fictional profile, with its injected source data", () => {
     expect(profile.identity.name).toBe("Riley Sample");

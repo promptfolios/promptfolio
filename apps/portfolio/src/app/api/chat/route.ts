@@ -6,7 +6,7 @@ import { loadPreparedAnswers } from "@/server/prepared-answers";
 import { loadAppProfile } from "@/server/profile";
 
 /** Upper bound, in seconds, for one streamed reply on serverless hosts. */
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 /**
  * Chat endpoint. Configuration problems are logged for the owner; visitors only see a

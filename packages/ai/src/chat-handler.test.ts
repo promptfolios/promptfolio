@@ -1,6 +1,6 @@
 import { inspect } from "node:util";
 import { loadStructuredProfile, type Profile } from "@promptfolio/core";
-import { APICallError, simulateReadableStream } from "ai";
+import { APICallError, createGateway, simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
 import { type ChatLogger, genericErrorMessage, handleChatRequest } from "./chat-handler";
@@ -846,6 +846,33 @@ describe("handleChatRequest: what the log keeps of a model error", () => {
     );
     expect(everythingLogged(logger)).not.toContain(VISITOR_TEXT);
     expect(everythingLogged(logger)).not.toContain(SECRET);
+  });
+
+  it("keeps the status of an AI Gateway error, and none of its message", async () => {
+    const fetchStub = (async () =>
+      new Response(
+        JSON.stringify({
+          error: {
+            message: `Card needed for ${VISITOR_TEXT}`,
+            type: "customer_verification_required",
+          },
+        }),
+        { status: 403 },
+      )) as typeof fetch;
+    const model = createGateway({ apiKey: "test-key", fetch: fetchStub })("mock/model");
+
+    const logger = silentLogger();
+    const response = await handleChatRequest(
+      chatRequest({ messages: [userMessage(VISITOR_TEXT)] }),
+      { limit: null, model, profile: testProfile(), logger },
+    );
+    await response.text();
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("model error"),
+      expect.objectContaining({ statusCode: 403 }),
+    );
+    expect(everythingLogged(logger)).not.toContain(VISITOR_TEXT);
   });
 
   it("keeps only the name of any other error", async () => {

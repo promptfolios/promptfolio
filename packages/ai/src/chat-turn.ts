@@ -125,12 +125,15 @@ export async function runChatTurn(
 function modelErrorSummary(error: unknown) {
   // After its retries, the AI SDK wraps the provider's error.
   const cause = RetryError.isInstance(error) ? error.lastError : error;
+  // Read by shape: AI Gateway's errors carry a status too, and `ai` does not export their class.
+  const statusCode =
+    typeof cause === "object" && cause !== null && "statusCode" in cause
+      ? cause.statusCode
+      : undefined;
   return {
     name: cause instanceof Error ? cause.name : "unknown",
-    ...(APICallError.isInstance(cause) && {
-      statusCode: cause.statusCode,
-      isRetryable: cause.isRetryable,
-    }),
+    ...(typeof statusCode === "number" && { statusCode }),
+    ...(APICallError.isInstance(cause) && { isRetryable: cause.isRetryable }),
     ...(RetryError.isInstance(error) && { attempts: error.errors.length }),
   };
 }

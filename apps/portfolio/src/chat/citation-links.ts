@@ -23,15 +23,15 @@ export function citationIdFromHref(href: string | undefined): string | undefined
 }
 
 /**
- * The ids in one `[...]`. Keeps the server's reading of a citation, including a drifted `[a, b]` and
- * look-alike hyphens.
+ * The ids in one `[...]`. Keeps the server's reading of a citation, including a drifted `[a, b]` or
+ * `[a; b]`, look-alike hyphens, and leaving out text with a space, which no id has.
  */
 function idsIn(bracketContent: string): string[] {
   return bracketContent
     .replace(/[\u2010-\u2015\u2212]/g, "-")
-    .split(",")
+    .split(/[,;]/)
     .map((id) => id.trim())
-    .filter((id) => id !== "");
+    .filter((id) => id !== "" && !/\s/.test(id));
 }
 
 /** The parts of a Markdown syntax tree node this plugin reads or writes. */

@@ -32,8 +32,10 @@ export const CHAT_LIMITS = {
   /**
    * Provider timeouts, so an overloaded provider fails with a clear error instead of
    * leaving the visitor waiting. The total covers all steps and, with `limiterTimeoutMs`, stays
-   * under the app route's 30-second `maxDuration`, so the error reaches the visitor before a
-   * serverless host stops the function.
+   * under the app route's 60-second `maxDuration`, so the error reaches the visitor before a
+   * serverless host stops the function. Text streams as it arrives, so a long total does not mean a
+   * silent wait: the other two limits catch a model that has stopped. Raised from 25 seconds in
+   * M12.4, when a free model was cut off mid-sentence while still writing a long answer.
    */
   timeouts: {
     /** Until the first content arrives. */
@@ -41,7 +43,7 @@ export const CHAT_LIMITS = {
     /** Longest silence between content chunks. */
     chunkMs: 10_000,
     /** The whole reply, including retries. */
-    totalMs: 25_000,
+    totalMs: 55_000,
   },
   /** Retries after a failed provider call (for example HTTP 503); the AI SDK default is 2. */
   maxRetries: 1,

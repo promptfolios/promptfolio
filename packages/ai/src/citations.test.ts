@@ -53,6 +53,12 @@ function testProfile(): Profile {
 }
 
 describe("citedIds", () => {
+  it("splits a drifted [a; b], and ignores bracketed text that cannot be an id", () => {
+    expect(
+      citedIds("A [a; b]. C [source: public data for @x, observed 2026-10-30]. D [c, not an id]."),
+    ).toEqual(["a", "b", "c"]);
+  });
+
   it("finds bracketed ids, splits a drifted [a, b], and skips Markdown links", () => {
     expect(citedIds("A [service-catalog], B [a, b], [GitHub](https://github.com) [x]")).toEqual([
       "service-catalog",
@@ -167,10 +173,10 @@ describe("buildChatSources", () => {
   });
 
   it("counts a citation that is nowhere, and never repeats its text", () => {
-    const result = buildChatSources(testProfile(), "See [made up by visitor].", []);
+    const result = buildChatSources(testProfile(), "See [made-up-by-visitor].", []);
 
     expect(result).toEqual({ sources: [], unverifiedCitations: 1 });
-    expect(JSON.stringify(result)).not.toContain("made up");
+    expect(JSON.stringify(result)).not.toContain("made-up");
   });
 
   it("counts a returned id the profile does not hold, rather than inventing an entry", () => {

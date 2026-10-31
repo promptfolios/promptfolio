@@ -49,18 +49,19 @@ const LOOK_ALIKE_HYPHENS = /[\u2010-\u2015\u2212]/g;
 
 /**
  * The ids an answer cites: the content of every `[...]` that is not a Markdown link, split at commas
- * because models sometimes write `[a, b]`. Look-alike hyphens become `-`, since an id never holds
- * one. Code is skipped, where brackets are not citations.
+ * and semicolons because models sometimes write `[a, b]` or `[a; b]`. Text with a space is left out,
+ * such as `[source: public data]`, because no id has one. Look-alike hyphens become `-`, since an id
+ * never holds one. Code is skipped, where brackets are not citations.
  */
 export function citedIds(text: string): string[] {
   const withoutCode = text.replace(/```[\s\S]*?```|`[^`\n]*`/g, "");
   const ids = Array.from(withoutCode.matchAll(/\[([^[\]]+)\](?!\()/g)).flatMap((match) =>
     (match[1] ?? "")
       .replace(LOOK_ALIKE_HYPHENS, "-")
-      .split(",")
+      .split(/[,;]/)
       .map((id) => id.trim()),
   );
-  return [...new Set(ids.filter((id) => id !== ""))];
+  return [...new Set(ids.filter((id) => id !== "" && !/\s/.test(id)))];
 }
 
 /**
