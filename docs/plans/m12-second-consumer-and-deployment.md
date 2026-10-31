@@ -1,6 +1,6 @@
 # M12 plan: second consumer, documentation, and deployment decision
 
-- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and approved (2026-10-31). M12.2 is in progress.
+- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and approved (2026-10-31). M12.2 is in progress: Ling failed the gate, and the next model is the developer's call.
 - **Date:** 2026-10-31
 - **Roadmap:** [M12](../ROADMAP.md#m12--second-consumer-test-documentation-and-deployment-decision). Carried over: [M11, "For M12"](m11-reliability-security-evaluation.md#m113).
 
@@ -145,3 +145,15 @@ Recorded 2026-10-31. Approved by the developer in review on the same day.
 **Changed from the plan:** `mergeGitHubSnapshot` takes an optional snapshot name instead of returning plain issues for the app to label. An existing test showed why: the app could not tell a snapshot's issues from the profile's, so a profile warning got the snapshot's file name.
 
 **Added beyond the file list:** `second-profile.test.ts`, `merge.test.ts`, a sentence in `docs/ARCHITECTURE.md`, and the two missing providers in the README.
+
+### M12.2, so far
+
+Recorded 2026-10-31. Not finished, so not ready for review.
+
+**Automated:** `pnpm verify` passes: lint, typecheck, 728 tests (`core` 74, `contact` 48, `source-github` 123, `ai` 196, minimal consumer 6, app 281), and the build. No test uses a real model.
+
+**Cause of raw tool calls:** all 4 in the [cause check](../evaluation/README.md#which-step-raw-tool-calls-come-from) came on step 4, after three lookups, where tools are off, and the guard blocked them. A fifth run reached step 4 and answered normally, so the step is confirmed, not why a model does this there.
+
+**Ling failed the gate.** It held on raw tool calls and lookups, but one answer quoted injected text, and 25 of 78 recorded attempts failed. [Results](../evaluation/README.md#the-run-on-ling-failed-the-gate). Prepared answers were not regenerated, because they should come from the deployed model.
+
+**Changed during the run (developer's request):** the interval between calls was removed after 10 cases, so the results are in two reports.
