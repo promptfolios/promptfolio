@@ -87,3 +87,5 @@ Recorded 2026-11-01. In review.
 **Browser check,** on a dev server with a fake model key: a new chat shows the heading and message box with no starters; a former starter question goes live, gets a 400 on the fake key, and shows the generic error, and the log has no prepared-answer line. No real model answered.
 
 **Seen once, not reproduced:** on the first load after one dev server start, the thread list stayed in its loading state for over 20 seconds, and sending was disabled. A reload cleared it. It did not return after a second reload, a load with empty storage, or a restarted server. The cause is unknown. It could be related to removing the starters' `config` from the provider, or to the first compile, so it is worth watching.
+
+**Confirmed by the developer (2026-11-01):** the starter buttons stay removed.
