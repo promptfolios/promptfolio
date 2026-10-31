@@ -10,7 +10,6 @@ vi.mock("@/server/model", () => ({ createChatModel }));
 
 const loadAppProfile = vi.fn();
 vi.mock("@/server/profile", () => ({ loadAppProfile }));
-vi.mock("@/server/prepared-answers", () => ({ loadPreparedAnswers: async () => [] }));
 
 /** Every key the app asks Redis to count, and how often. */
 const redisCounts = new Map<string, number>();

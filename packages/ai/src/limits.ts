@@ -47,7 +47,7 @@ export const CHAT_LIMITS = {
   },
   /** Retries after a failed provider call (for example HTTP 503); the AI SDK default is 2. */
   maxRetries: 1,
-  /** Live answers one visitor can get per `liveTurnWindowMs`. Prepared answers do not count. */
+  /** Live answers one visitor can get per `liveTurnWindowMs`. */
   maxLiveTurnsPerVisitor: 30,
   /** Live answers the whole site can give per `liveTurnWindowMs`, whatever the visitor's address. */
   maxLiveTurnsForSite: 200,

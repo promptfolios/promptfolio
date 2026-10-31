@@ -9,7 +9,7 @@ const OBSERVATION_TIME_KEYS: ReadonlySet<string> = new Set(["observedAt", "retri
 
 /**
  * A stable JSON serialization of the profile's content, for comparing two profiles or
- * fingerprinting one (for example, to tell whether a prepared answer is still current).
+ * fingerprinting one (see `profileFingerprint`).
  *
  * - Object keys are sorted, so the result does not depend on how the profile was built.
  * - Array order is kept: the order of records is part of the profile.
@@ -32,4 +32,15 @@ function canonicalize(value: unknown): unknown {
     sorted[key] = canonicalize(child);
   }
   return sorted;
+}
+
+/**
+ * The profile version: a hash of its content, without observation timestamps. Equal content gives
+ * an equal fingerprint, so a refresh can tell whether anything really changed.
+ */
+export async function profileFingerprint(profile: Profile): Promise<string> {
+  const content = new TextEncoder().encode(canonicalProfileContent(profile));
+  const digest = await crypto.subtle.digest("SHA-256", content);
+  const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0"));
+  return `sha256:${hex.join("")}`;
 }

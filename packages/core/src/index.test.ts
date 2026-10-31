@@ -9,6 +9,7 @@ describe("public API", () => {
       "findRecordById",
       "isRecordId",
       "loadStructuredProfile",
+      "profileFingerprint",
       "recordsUsingSkill",
     ]);
   });

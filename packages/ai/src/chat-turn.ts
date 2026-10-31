@@ -31,7 +31,7 @@ export interface ChatTimeouts {
 /** Where the handler reports errors and usage. Defaults to `console`. */
 export type ChatLogger = Pick<Console, "info" | "error">;
 
-/** Everything one model turn needs. Shared by live chat and prepared-answer generation. */
+/** Everything one model turn needs. Shared by live chat and the evaluation. */
 export interface ChatTurnOptions extends SystemPromptOptions {
   /** Any AI SDK language model; the application chooses the provider. */
   model: LanguageModel;
@@ -171,8 +171,6 @@ const VISITOR_CHUNK_TYPES: ReadonlySet<UIMessageChunk["type"]> = new Set([
  *   browser does not need it, and the request allowlist would drop it on the way back anyway;
  * - turns an `abort` the visitor did not cause (a timeout) into the generic error. The browser
  *   treats `abort` like pressing Stop, so the reply would otherwise end silently.
- *
- * Prepared answers go through the same filter, so both paths share one allowlist.
  */
 export function forVisitor(
   clientSignal: AbortSignal,

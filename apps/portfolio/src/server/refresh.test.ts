@@ -2,10 +2,9 @@ import { execFileSync } from "node:child_process";
 import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { profileFingerprint } from "@promptfolio/ai";
+import { profileFingerprint } from "@promptfolio/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { githubConfigFileName, githubSnapshotFileName } from "./github-source";
-import { preparedAnswersFileName } from "./prepared-answers";
 import { loadAppProfile } from "./profile";
 import { runRefresh } from "./refresh";
 import { refreshStatusFileName, refreshStatusWarnings } from "./refresh-status";
@@ -277,38 +276,6 @@ describe("runRefresh", () => {
     expect(result.exitCode).toBe(1);
     await expect(read(SNAPSHOT)).rejects.toThrow();
     expect(JSON.parse(await read(STATUS)).sources.github.errors[0].kind).toBe("invalid-data");
-  });
-
-  it("reports how many prepared answers belong to the new version", async () => {
-    await refresh(routes(), T1);
-    const loaded = await loadAppProfile({ dir });
-    if (!loaded.result.ok) throw new Error("Expected the profile to load");
-    const entry = {
-      text: "Jordan is an engineer.",
-      instructionsFingerprint: `sha256:${"b".repeat(64)}`,
-      evidenceIds: [],
-      model: "test:model",
-      generatedAt: T1,
-    };
-    await write(preparedAnswersFileName(PROFILE_FILE), {
-      formatVersion: 1,
-      answers: [
-        {
-          ...entry,
-          question: "One?",
-          profileFingerprint: await profileFingerprint(loaded.result.profile),
-        },
-        { ...entry, question: "Two?", profileFingerprint: `sha256:${"a".repeat(64)}` },
-      ],
-    });
-
-    await refresh(routes(), T2);
-    expect(output.join("\n")).toContain("Prepared answers: 1 of 2 belong to this version");
-
-    output = [];
-    await refresh(routes("A changed tool."), T2);
-    expect(output.join("\n")).toContain("Profile version changed");
-    expect(output.join("\n")).toContain("0 of 2 belong to this version");
   });
 
   it("stops without a status when there is no GitHub configuration", async () => {

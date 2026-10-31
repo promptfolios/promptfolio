@@ -256,6 +256,28 @@ describe("handleChatRequest: a tool call written as text", () => {
   });
 });
 
+describe("handleChatRequest: the contact form", () => {
+  it("tells the model about the button only when the form exists", async () => {
+    const promptWith = async (contactFormAvailable: boolean) => {
+      const model = mockModel();
+      const response = await handleChatRequest(chatRequest({ messages: [userMessage("Hi")] }), {
+        limit: null,
+        model,
+        profile: testProfile(),
+        logger: silentLogger(),
+        contactFormAvailable,
+      });
+      await response.text();
+      return JSON.stringify(
+        model.doStreamCalls[0]?.prompt.filter((part) => part.role === "system"),
+      );
+    };
+
+    expect(await promptWith(true)).toContain("Contact button");
+    expect(await promptWith(false)).not.toContain("Contact button");
+  });
+});
+
 describe("handleChatRequest: rejected input never reaches the model", () => {
   const cases: Array<[string, unknown, number]> = [
     ["malformed JSON", "{not json", 400],
@@ -929,7 +951,6 @@ describe("handleChatRequest: the daily limit", () => {
     const { response, model, logger } = await ask(limit);
 
     expect(response.status).toBe(429);
-    // Exact: promising anything else may still work would be wrong when prepared answers are stale.
     expect(await response.text()).toBe(message);
     expect(model.doStreamCalls).toHaveLength(0);
     expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("limited"), {

@@ -1,4 +1,4 @@
-import { generatePreparedAnswer, handleChatRequest } from "@promptfolio/ai";
+import { handleChatRequest } from "@promptfolio/ai";
 import { loadStructuredProfile } from "@promptfolio/core";
 import { readUIMessageStream, simulateReadableStream, type UIMessageChunk } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
@@ -165,7 +165,7 @@ describe("an answer's sources in a saved thread", () => {
   });
 });
 
-describe("a prepared answer saved in a thread", () => {
+describe("an answer saved in a thread", () => {
   const question = "Give me a short professional overview.";
   const logger = { info: () => {}, error: () => {} };
 
@@ -173,7 +173,7 @@ describe("a prepared answer saved in a thread", () => {
     return new Request("http://localhost/api/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id: "t1", trigger: "submit-message", messages }),
+      body: JSON.stringify({ id: "t1", messages }),
     });
   }
 
@@ -193,23 +193,14 @@ describe("a prepared answer saved in a thread", () => {
     return lastOf(readUIMessageStream({ stream: streamOf(chunks) }));
   }
 
-  it("is served without a model call, saved like any answer, and continued live", async () => {
-    const generated = await generatePreparedAnswer(question, {
-      model: answeringModel(),
-      profile: profile(),
-      logger,
-      modelLabel: "mock:model",
-    });
-    if (!generated.ok) throw new Error(`generation failed: ${generated.reason}`);
-    const preparedAnswers = [generated.answer];
-
-    const starterModel = answeringModel();
+  it("is saved, restored, and continued", async () => {
+    const firstModel = answeringModel();
     const served = await handleChatRequest(
       chatRequest([{ id: "u1", role: "user", parts: [{ type: "text", text: question }] }]),
-      { model: starterModel, profile: profile(), logger, preparedAnswers, limit: null },
+      { model: firstModel, profile: profile(), logger, limit: null },
     );
     const received = await receivedMessage(served);
-    expect(starterModel.doStreamCalls).toHaveLength(0);
+    expect(firstModel.doStreamCalls).toHaveLength(1);
 
     const store = new ThreadStore({ storage: createMemoryStorage(), warn: () => {} });
     store.createThread("t1");
@@ -226,10 +217,9 @@ describe("a prepared answer saved in a thread", () => {
       parts: received?.parts ?? [],
     });
     const restored = store.loadMessages("t1").map(({ id, role, parts }) => ({ id, role, parts }));
-    expect(restored[1]?.parts).toEqual([
-      { type: "step-start" },
-      { type: "text", text: generated.answer.text },
-    ]);
+    const text = received?.parts.find((part) => part.type === "text")?.text;
+    expect(text).toBeTruthy();
+    expect(restored[1]?.parts).toEqual([{ type: "step-start" }, { type: "text", text }]);
 
     const followUpModel = answeringModel();
     const followUp = await handleChatRequest(
@@ -237,7 +227,7 @@ describe("a prepared answer saved in a thread", () => {
         ...restored,
         { id: "u2", role: "user", parts: [{ type: "text", text: "Tell me more." }] },
       ]),
-      { model: followUpModel, profile: profile(), logger, preparedAnswers, limit: null },
+      { model: followUpModel, profile: profile(), logger, limit: null },
     );
     await followUp.text();
     expect(followUp.status).toBe(200);

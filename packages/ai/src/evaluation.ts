@@ -1,7 +1,6 @@
-import type { UIMessage } from "ai";
+import type { UIMessage, UIMessageChunk } from "ai";
 import { type ChatTurnOptions, runChatTurn } from "./chat-turn";
 import { citedIds, evidenceIdsIn, unverifiedIds } from "./citations";
-import { readVisitorText } from "./prepared-answers";
 
 /**
  * Evaluation: run a question through the same turn a visitor gets, and check what can be checked
@@ -166,4 +165,25 @@ export function scoreEvaluationTurn(
     checks.push(check(`does not say ${pattern}`, !pattern.test(turn.text)));
   }
   return checks;
+}
+
+/**
+ * Reads the visitor stream to its end and returns its text: text parts joined by a blank
+ * line, as they would appear in the chat. `failed` is set when the stream carried an error.
+ */
+async function readVisitorText(
+  stream: ReadableStream<UIMessageChunk>,
+): Promise<{ text: string; failed: boolean }> {
+  const parts: string[] = [];
+  let current: string | undefined;
+  let failed = false;
+  for await (const chunk of stream) {
+    if (chunk.type === "text-start") current = "";
+    else if (chunk.type === "text-delta") current = (current ?? "") + chunk.delta;
+    else if (chunk.type === "text-end" && current !== undefined) {
+      if (current.trim() !== "") parts.push(current.trim());
+      current = undefined;
+    } else if (chunk.type === "error" || chunk.type === "abort") failed = true;
+  }
+  return { text: parts.join("\n\n"), failed };
 }

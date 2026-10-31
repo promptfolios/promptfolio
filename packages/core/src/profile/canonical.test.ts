@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalProfileContent } from "./canonical";
+import { canonicalProfileContent, profileFingerprint } from "./canonical";
 import { loadStructuredProfile } from "./load";
 import type { Profile } from "./types";
 
@@ -46,6 +46,22 @@ function reverseKeys(value: unknown): unknown {
       .map(([key, child]) => [key, reverseKeys(child)]),
   );
 }
+
+describe("profileFingerprint", () => {
+  it("is stable for the same content and ignores observation times", async () => {
+    const fingerprint = await profileFingerprint(testProfile());
+
+    expect(fingerprint).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(await profileFingerprint(testProfile())).toBe(fingerprint);
+    expect(await profileFingerprint(testProfile(new Date("2027-01-01")))).toBe(fingerprint);
+  });
+
+  it("changes when the content changes", async () => {
+    expect(await profileFingerprint(testProfile(undefined, "Another label"))).not.toBe(
+      await profileFingerprint(testProfile()),
+    );
+  });
+});
 
 describe("canonicalProfileContent", () => {
   it("does not depend on object key order", () => {

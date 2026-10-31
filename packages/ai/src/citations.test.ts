@@ -200,6 +200,26 @@ describe("buildChatSources", () => {
 });
 
 describe("evidenceIdsIn", () => {
+  it("matches a cited contribution id that a tool returned", () => {
+    const id = `github.com/other-org/tool/commit/${"a".repeat(40)}`;
+    const evidence = evidenceIdsIn([
+      { output: { status: "listed", section: "contributions", records: [{ id }] } },
+    ]);
+
+    expect(citedIds(`A commit is attributed to them [${id}].`)).toEqual([id]);
+    expect(evidence).toEqual([id]);
+  });
+
+  it("matches a cited repository id that a tool returned", () => {
+    const id = "github.com/jordan-example/markdown-linter";
+    const evidence = evidenceIdsIn([
+      { output: { status: "found", kind: "repository", record: { id }, ownerNotes: { id } } },
+    ]);
+
+    expect(evidence).toEqual([id]);
+    expect(citedIds(`The public repository checks links [${id}].`)).toEqual([id]);
+  });
+
   it("collects record ids from lists, fetched records, and role summaries, but not sources", () => {
     expect(
       evidenceIdsIn([

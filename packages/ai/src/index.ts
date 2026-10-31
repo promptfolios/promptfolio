@@ -21,16 +21,4 @@ export {
   scoreEvaluationTurn,
 } from "./evaluation";
 export { CHAT_LIMITS } from "./limits";
-export {
-  type GeneratePreparedAnswerOptions,
-  type GeneratePreparedAnswerResult,
-  generatePreparedAnswer,
-  isPreparedAnswerCurrent,
-  type ParsePreparedAnswersResult,
-  type PreparedAnswer,
-  type PreparedAnswerRejection,
-  type PreparedAnswersFile,
-  parsePreparedAnswers,
-  profileFingerprint,
-} from "./prepared-answers";
 export type { SystemPromptOptions } from "./system-prompt";

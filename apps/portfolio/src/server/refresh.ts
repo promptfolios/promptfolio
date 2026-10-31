@@ -1,6 +1,6 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { profileFingerprint } from "@promptfolio/ai";
+import { profileFingerprint } from "@promptfolio/core";
 import {
   type CarryForwardResult,
   carryForward,
@@ -10,7 +10,6 @@ import {
   parseGitHubSnapshot,
 } from "@promptfolio/source-github";
 import { githubConfigFileName, githubSnapshotFileName, readGitHubConfig } from "./github-source";
-import { loadPreparedAnswers } from "./prepared-answers";
 import { loadAppProfile, loadOwnerProfile, PROFILE_DIR } from "./profile";
 import {
   parseRefreshStatus,
@@ -170,7 +169,6 @@ export async function runRefresh(options: RunRefreshOptions = {}): Promise<Refre
       ? `\nProfile version changed:\n  before ${versionBefore ?? "(none)"}\n  after  ${versionAfter}`
       : `\nProfile version unchanged: ${versionAfter}`,
   );
-  await reportPreparedAnswers(owner.fileName, versionAfter);
 
   return finish({
     formatVersion: 1,
@@ -240,17 +238,6 @@ export async function runRefresh(options: RunRefreshOptions = {}): Promise<Refre
       for (const name of result.notAdded) logger.warn(`  not added yet: ${name}`);
       if (result.contributionsKept) logger.warn("  earlier contributions kept");
     }
-  }
-
-  async function reportPreparedAnswers(profileFileName: string, version: string): Promise<void> {
-    const answers = await loadPreparedAnswers(profileFileName, { dir, logger });
-    if (answers.length === 0) return;
-    const current = answers.filter((answer) => answer.profileFingerprint === version).length;
-    logger.log(
-      current === answers.length
-        ? `Prepared answers: all ${answers.length} belong to this version.`
-        : `Prepared answers: ${current} of ${answers.length} belong to this version; the others are answered live until you run pnpm --filter portfolio prepare-answers.`,
-    );
   }
 }
 

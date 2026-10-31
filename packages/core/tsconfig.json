@@ -1,4 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // For the web crypto global, which Node.js provides.
+    "types": ["node"]
+  },
   "include": ["src"]
 }
