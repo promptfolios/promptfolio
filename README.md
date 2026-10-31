@@ -10,14 +10,18 @@ Status: early development. See [`PROMPTFOLIO_SPEC.md`](PROMPTFOLIO_SPEC.md) for 
 
 ## Repository layout
 
-| Path             | Package             | Purpose                                                       |
-| ---------------- | ------------------- | ------------------------------------------------------------- |
-| `packages/core`  | `@promptfolio/core` | Canonical profile model and framework-agnostic core logic.    |
-| `packages/ai`    | `@promptfolio/ai`   | Server-only chat handler: validation, limits, streaming.      |
-| `apps/portfolio` | `portfolio`         | Reference Next.js application; consumes the packages.         |
-| `docs/`          | —                   | Roadmap, architecture decision records, and background notes. |
+| Path                     | Package                      | Purpose                                                       |
+| ------------------------ | ---------------------------- | ------------------------------------------------------------- |
+| `packages/core`          | `@promptfolio/core`          | Canonical profile model and framework-agnostic core logic.    |
+| `packages/ai`            | `@promptfolio/ai`            | Server-only chat handler: validation, limits, streaming.      |
+| `packages/contact`       | `@promptfolio/contact`       | Confirmed contact messages, with no email provider or store.  |
+| `packages/source-github` | `@promptfolio/source-github` | Public GitHub data: fetching, validating, and merging.        |
+| `apps/portfolio`         | `portfolio`                  | Reference Next.js application; consumes the packages.         |
+| `apps/minimal-consumer`  | `minimal-consumer`           | A small test-backed consumer with no framework.               |
+| `docs/`                  | —                            | Roadmap, architecture decision records, and background notes. |
 
-Dependency direction: apps depend on packages; packages never depend on apps.
+Dependency direction: apps depend on packages; packages never depend on apps. Each package has a README with its
+entry points and an example. The packages are not published, so use them from this workspace.
 
 The reference app's chat UI uses [assistant-ui](https://www.assistant-ui.com/) with Tailwind CSS
 and shadcn/ui. Component code copied by their CLIs lives in `apps/portfolio/src/components/ui/`,
@@ -26,9 +30,8 @@ vendored and excluded from linting (see
 [ADR 0007](docs/adr/0007-chat-ui-assistant-ui.md)).
 
 Replies come from a model through the app's own `/api/chat` route, using the
-[Vercel AI SDK](https://ai-sdk.dev/) with Google Gemini or Anthropic Claude. In this
-milestone the model only knows the owner's name, headline, and summary; other questions get "this
-information is not available here" until profile lookups arrive in M5.
+[Vercel AI SDK](https://ai-sdk.dev/). The model knows the owner's name, headline, and summary, and looks everything
+else up with read-only profile tools. Answers cite the records they used, and the server checks those citations.
 
 ## Requirements
 
@@ -81,13 +84,15 @@ model. Do not include private information.
 
 ## Model access
 
-The app supports two providers. Configure them in `apps/portfolio/.env.local` (see
+The app supports four providers. Configure them in `apps/portfolio/.env.local` (see
 `.env.example`):
 
-| Provider         | `PROMPTFOLIO_MODEL` value              | Key variable                   |
-| ---------------- | -------------------------------------- | ------------------------------ |
-| Google Gemini    | `google:gemini-3.8-flash` (default)    | `GOOGLE_GENERATIVE_AI_API_KEY` |
-| Anthropic Claude | `anthropic:claude-haiku-5-5` (default) | `ANTHROPIC_API_KEY`            |
+| Provider          | `PROMPTFOLIO_MODEL` value                             | Key variable                   |
+| ----------------- | ----------------------------------------------------- | ------------------------------ |
+| Google Gemini     | `google:gemini-3.8-flash` (default)                   | `GOOGLE_GENERATIVE_AI_API_KEY` |
+| Anthropic Claude  | `anthropic:claude-haiku-5-5` (default)                | `ANTHROPIC_API_KEY`            |
+| OpenRouter        | `openrouter:google/gemma-4-31b-it:free` (default)     | `OPENROUTER_API_KEY`           |
+| Vercel AI Gateway | `gateway:nvidia/nemotron-3.5-lightning-free` (default) | `AI_GATEWAY_API_KEY`           |
 
 `PROMPTFOLIO_MODEL` is `provider:model`; `provider` alone uses its default model. Keep both keys in
 the file and switch providers by changing that one line. If it is unset, the first provider in the

@@ -1,6 +1,6 @@
 # M12 plan: second consumer, documentation, and deployment decision
 
-- **Status:** Proposed, waiting for approval. Nothing is implemented.
+- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and in review.
 - **Date:** 2026-10-31
 - **Roadmap:** [M12](../ROADMAP.md#m12--second-consumer-test-documentation-and-deployment-decision). Carried over: [M11, "For M12"](m11-reliability-security-evaluation.md#m113).
 
@@ -125,3 +125,23 @@ Automated tests use no network, Redis, email, or model. `pnpm verify` passes aft
 | 8 | Where the real profile lives | Separate private repository, with the deploy hook because a bot's push may not deploy on Hobby | Public repository (no hook, but the 60-day rule applies and the profile's history is public); deploying from the local machine (no scheduled refresh) |
 | 9 | Contact form at first deploy | Off until M10's check 3 passes. Turning it on later means regenerating prepared answers | On from the start, with real sends unchecked |
 | 10 | Title and starters | Title from the profile's name, a few lines in M12.3. Starters stay code, with the one-file edit documented | Leave both; per-profile starters (more design, and prepared answers depend on them) |
+
+## Review results
+
+### M12.1
+
+Recorded 2026-10-31. In review.
+
+**Automated:** `pnpm verify` passes: lint, typecheck, 715 tests (`core` 74, `contact` 48, `source-github` 123, `ai` 184, minimal consumer 6, app 280), and the build, with the same two "dynamic filesystem access" warnings as before.
+
+**Second profile:** a production build with only `PROMPTFOLIO_PROFILE_FILE=second.profile.json` changed prerendered Morgan Sample and not Jordan Example, and the chat route's trace includes the file. This was read from the build output, not seen in a browser, and no real model answered about this profile. Its welcome screen still offers "Open-source work" to a designer, as decision 10 accepts.
+
+**Minimal consumer:** chat with sources, its own limiter, a confirmed contact message, and a refresh that succeeds or keeps the previous data all pass with a mock model and stubbed `fetch`, through public exports. No package needed a change for it beyond the planned merge move. Its refresh is about 10 lines; the reference app's `refresh.ts` stays longer for files, status, and reporting.
+
+**Import check:** no package source imports an app, Next.js, React, or a provider SDK.
+
+**Exports removed, because nothing outside the package used them:** `skillKey`, `isSourceKey`, `genericErrorMessage`, `buildSystemPrompt`, `PREPARED_ANSWER_LIMITS`, `repositoryKey`, `GITHUB_SOURCE_ID`, and five `source-github` limit constants. `citedIds` stays, because an app test checks that the app and package read citations alike.
+
+**Changed from the plan:** `mergeGitHubSnapshot` takes an optional snapshot name instead of returning plain issues for the app to label. An existing test showed why: the app could not tell a snapshot's issues from the profile's, so a profile warning got the snapshot's file name.
+
+**Added beyond the file list:** `second-profile.test.ts`, `merge.test.ts`, a sentence in `docs/ARCHITECTURE.md`, and the two missing providers in the README.

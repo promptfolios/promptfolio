@@ -6,6 +6,8 @@ in [`ROADMAP.md`](ROADMAP.md#status).
 
 ## Packages and dependency direction
 
+`apps/minimal-consumer` (M12.1) is a second, test-backed consumer with no framework. It uses the same entry points as the reference app, and is left out of the diagram below.
+
 ```mermaid
 flowchart TB
     subgraph app["apps/portfolio (Next.js reference app)"]
