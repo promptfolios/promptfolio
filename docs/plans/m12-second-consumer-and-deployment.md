@@ -8,11 +8,11 @@
 
 Show that the packages are not tied to the first app, get answers ready on a chosen model, then deploy if the developer decides to.
 
-**Three steps, each implemented and reviewed separately:** M12.1 library check (no cost, nothing external), M12.2 answer readiness (uses model quota or money), M12.3 deployment (optional, public). The roadmap's exit criteria are met after M12.1 and M12.2, without deploying.
+**Three steps, each implemented and reviewed separately:** M12.1 library check (no cost, nothing external), M12.2 answer readiness (uses free model quota), M12.3 deployment (optional, public). The roadmap's exit criteria are met after M12.1 and M12.2, without deploying.
 
 ## Findings
 
-Code read at `8d3e0f5`. Installed: `next` 16.4.3, `ai` 7.0.154, `@openrouter/ai-sdk-provider` 3.1.0, `@ai-sdk/anthropic` 4.0.89, `@ai-sdk/google` 4.0.106. Docs checked 2026-10-31. Costs are estimates.
+Code read at `8d3e0f5`. Installed: `next` 16.4.3, `ai` 7.0.154, `@openrouter/ai-sdk-provider` 3.1.0, `@ai-sdk/anthropic` 4.0.89, `@ai-sdk/google` 4.0.106. Docs checked 2026-10-31.
 
 **Library:**
 
@@ -29,9 +29,10 @@ Code read at `8d3e0f5`. Installed: `next` 16.4.3, `ai` 7.0.154, `@openrouter/ai-
 
 **Choosing a model:**
 
-- **Free tiers do not suit a public site.** [Gemini's terms](https://ai.google.dev/gemini-api/terms) let people review unpaid prompts, say not to submit personal information, and allow only paid services for users in the EEA, Switzerland, or the UK. OpenRouter's 50 free requests a day are below the site's 200 answers.
-- **Worst-case cost** (8,000 output and 30,000 input tokens a turn; 28 cases × 3 runs, then 200 answers a day): [`claude-haiku-5-5`](https://platform.claude.com/docs/en/about-claude/pricing) $0.59, then $1.40 a day. [`gemini-3.5-flash-lite`](https://ai.google.dev/gemini-api/docs/pricing) $2.44, then $5.80. `gemini-3.8-flash` $4.41, then $10.50, doubling on 2027-01-01.
-- **Prepared answers depend on the contact form.** The instructions fingerprint includes `contactFormAvailable`, so answers generated with the form off are stale on a site with it on.
+- **Free models only (developer's decision, 2026-10-31).** `gemini-3.5-flash-lite` is the only free model with a full run behind it, on a prompt before the last changes. `gemini-3.8-flash` has none, and Nemotron is not recommended.
+- **Free terms restrict a public site.** [Gemini's terms](https://ai.google.dev/gemini-api/terms) let people review unpaid prompts, say not to submit personal information, and allow only paid services for users in the EEA, Switzerland, or the UK. So deploying on this tier needs those visitors kept from live answers, and a notice for everyone else.
+- **Free quota is smaller than the site's limit.** [Google publishes the numbers only in AI Studio](https://ai.google.dev/gemini-api/docs/rate-limits), and daily quotas reset at midnight Pacific. The evaluation seemed to reach the daily limit after about 3 runs, and a turn takes up to 4 calls, so 200 answers a day may not fit. OpenRouter's 50 free requests a day are about 12 worst-case answers. Past the provider's limit, visitors get "could not answer", and the turn still counts.
+- **Prepared answers save quota, and depend on the contact form.** The system prompt names the Contact button only when the form is on, and the instructions fingerprint covers the prompt. So answers generated with the form off count as stale on a site with it on, even if their text never mentions contact.
 
 **Deployment (Vercel):**
 
@@ -67,14 +68,15 @@ flowchart TD
 - **Stop raw tool calls.** A stream transform before `withSources` holds back only text that could begin `<tool_call` or `<function=`. On a match it drops the text, logs a count with no content, and sends the generic error. It works whatever the cause, because model output is untrusted and a model can change. **Limit:** it catches only these two forms, and the visitor sees "could not answer" on a turn that still counts.
 - **Report it.** `EvaluationTurn` gets `rawToolCall`, scored as a failed check. It must not count as a provider failure, because the runner retries those and leaves them unscored. Reports add steps and finish reason.
 - **Confirm the cause.** `--cases=missing-skill,forged-history --repeats=3` on Nemotron, at most 24 of 50 free daily requests, if that model is up.
-- **Gate for a model.** All 28 cases × 3 on the final prompt. Must hold: no raw tool call, no injected text, no invented fact, and a lookup whenever required. A person reads every answer, and other failures are judged and recorded. A later prompt change needs another run.
+- **Gate for a model.** All 28 cases × 3 on the final prompt, over more than one day if the quota runs out. Must hold: no raw tool call, no injected text, no invented fact, and a lookup whenever required. A person reads every answer, and other failures are judged and recorded. A later prompt change needs another run.
 - **Prepared answers.** Regenerate the example's after the gate, read them, and see one served uncounted in the browser. This completes M10's check 4.
 - **Running it.** Real runs need the key in the main checkout's `.env.local`. `PROMPTFOLIO_MODEL` set in the shell overrides that file, so the local chat setting stays as it is.
 
 **M12.3 Deployment, only with approval**
 
 1. **Private deployment repository:** a separate clone holding the real profile as `profile.json` with its GitHub files and reviewed prepared answers, generated with production's contact setting. This repository stays fictional. ADR 0014 records this and updates ADR 0006.
-2. **Vercel project:** Root Directory `apps/portfolio`, Node 24, Corepack, and variables for the model, Redis, `VISITOR_HASH_SECRET`, and profile file. Set a provider spend limit. Check a preview first.
+2. **Vercel project:** Root Directory `apps/portfolio`, Node 24, Corepack, and variables for the model, Redis, `VISITOR_HASH_SECRET`, and profile file. Check a preview first.
+   - **Free-tier conditions, in the app and off by default:** a configured country list, read from `x-vercel-ip-country`, refuses live answers with a clear message while prepared answers still work. A short notice says questions go to Google and may be reviewed, so do not type personal information. The site limit is set from the quota shown in AI Studio, at most the daily requests ÷ 4. Production uses a key in its own Google project, because [limits apply per project](https://ai.google.dev/gemini-api/docs/rate-limits) and it would otherwise share quota with local chat.
 3. **Firewall checks at production:** the `/api/` rule at 40 requests per 600 seconds. **Real 429:** 41 quick `text/plain` requests to `/api/chat`, which the app answers with 415 without touching Redis or a model, until the firewall answers 429. **IP header:** about 4 live answers: one hash counts up in Upstash, a forged `x-vercel-forwarded-for` adds no key, and a phone network adds a second.
 4. **Scheduled refresh:** recheck the guide's action versions, add the workflow and deploy hook, and run it once by hand. Record the first run, whether the bot's push deploys, and whether `GITHUB_TOKEN` reads pinned repositories.
 
@@ -86,7 +88,7 @@ Publishing to npm (it would first need a compiled build, versions, and a license
 
 - **M12.1:** `apps/minimal-consumer/` (new), `profile/second.profile.json`, `packages/source-github/src`, `apps/portfolio/src/server/github-source.ts`, each package's `index.ts` and new `README.md`, root `README.md`, `pnpm-lock.yaml`.
 - **M12.2:** `packages/ai/src/raw-tool-calls.ts` (new), `chat-turn.ts`, `evaluation.ts`, tests; `apps/portfolio/evaluation/report.ts`, `scripts/evaluate.ts`; `docs/evaluation/`, `docs/KNOWN_LIMITATIONS.md`; `profile/example.profile.answers.json`.
-- **M12.3:** `apps/portfolio/package.json`, `src/app/layout.tsx`, new `docs/guides/deployment.md`, the guides' status lines, and ADR 0014. The real profile and active workflow live only in the deployment repository.
+- **M12.3:** `apps/portfolio/package.json`, `src/app/layout.tsx`, `src/app/api/chat/route.ts`, `src/server/chat-limit.ts`, the thread's notice, `.env.example`, new `docs/guides/deployment.md`, the guides' status lines, and ADR 0014. The real profile and active workflow live only in the deployment repository.
 - **Learning notes:** add "public API and second consumer" and "deployment repository". Update tool calling, AI evaluation, prepared answers, abuse protection, and scheduled jobs.
 
 ## Acceptance
@@ -95,9 +97,9 @@ Automated tests use no network, Redis, email, or model. `pnpm verify` passes aft
 
 1. **M12.1:** the consumer's tests pass using only public exports. The second profile builds and renders with no code change. A repeat of the import check finds no package importing an app or framework.
 2. **M12.2:** tests show the marker blocked whole, split across chunks, and after normal text; other `<` text passes; a blocked prepared answer is rejected. A real report passes the gate, or M12 records that no model did. Prepared answers are current and served uncounted.
-3. **M12.3:** the production site answers from the real profile, and the 429, IP header, and first scheduled run are each recorded with what actually happened.
+3. **M12.3:** tests show a listed country refused live answers with no model call, and still served prepared answers. The production site answers from the real profile, and the 429, IP header, and first scheduled run are each recorded with what actually happened.
 
-**Each needs the developer's approval when it happens:** model runs that use quota or money, creating or pushing to a repository, creating Vercel, Redis, or firewall resources, and deploying.
+**Each needs the developer's approval when it happens:** model runs that use quota, because they also stop local chat, creating or pushing to a repository, creating Vercel, Redis, or firewall resources, and deploying.
 
 ## Open decisions
 
@@ -107,8 +109,8 @@ Automated tests use no network, Redis, email, or model. `pnpm verify` passes aft
 | 2 | Form of the second consumer | Second profile and a small test-backed consumer | Profile only (never exercises the APIs apart from this app); a second Next.js app (mostly copied UI) |
 | 3 | Refresh code | Move only `mergeGitHubSnapshot` | Also add `refreshGitHubSnapshot` (wraps two calls); move nothing (every consumer repeats the merge) |
 | 4 | Should the server stop raw tool calls? | Yes, for every model. Also run the cause check once if Nemotron is up; the guard does not wait for it | Only if the chosen model shows it (a later model change reopens the gap); remove tools on the last step (untested, may not stop it) |
-| 5 | Model to deploy | `anthropic:claude-haiku-5-5` on a paid key, if it passes the gate, with paid `gemini-3.5-flash-lite` next. Never evaluated yet, and needs an Anthropic key | `gemini-3.8-flash` (costs most, doubles in 2027); a free tier (see Findings) |
-| 6 | Deploy? | Decide after M12.2. If yes, Vercel Hobby, provided the site counts as personal and non-commercial | Stop after M12.2; Pro at $20 a month if it is commercial |
+| 5 | Free model to deploy | `google:gemini-3.5-flash-lite`, if it passes the gate. *Paid models ruled out by the developer, 2026-10-31* | `gemini-3.8-flash` free (never evaluated; compare its quota in AI Studio first); an OpenRouter free model (50 requests a day, and models come and go) |
+| 6 | Deploy? | Decide after M12.2. If yes, Vercel Hobby, provided the site counts as personal and non-commercial, with the free-tier conditions in M12.3 | Stop after M12.2, which meets the roadmap and avoids the free-tier conditions |
 | 7 | Does the refresh regenerate prepared answers? | No: the job commits data, and the owner regenerates and reviews. Starters stay live and counted until then | Yes (unreviewed output goes live, CI needs a model key, and CI must match production's contact setting or the answers are stale at once) |
 | 8 | Where the real profile lives | Separate private repository, with the deploy hook because a bot's push may not deploy on Hobby | Public repository (no hook, but the 60-day rule applies and the profile's history is public); deploying from the local machine (no scheduled refresh) |
 | 9 | Contact form at first deploy | Off until M10's check 3 passes. Turning it on later means regenerating prepared answers | On from the start, with real sends unchecked |
