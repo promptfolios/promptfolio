@@ -57,6 +57,34 @@ importers:
         specifier: 'catalog:'
         version: 2.5.15
 
+  apps/minimal-consumer:
+    dependencies:
+      '@promptfolio/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
+      '@promptfolio/contact':
+        specifier: workspace:*
+        version: link:../../packages/contact
+      '@promptfolio/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@promptfolio/source-github':
+        specifier: workspace:*
+        version: link:../../packages/source-github
+      ai:
+        specifier: 'catalog:'
+        version: 7.0.154(zod@4.6.7)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0))
+
   apps/portfolio:
     dependencies:
       '@ai-sdk/anthropic':

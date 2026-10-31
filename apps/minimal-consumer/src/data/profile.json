@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "identity": {
+    "name": "Avery Sample",
+    "headline": "Data analyst",
+    "summary": "Avery is a fictional analyst used to check the packages outside the reference app."
+  },
+  "experience": [
+    {
+      "id": "harbor-analyst",
+      "organization": "Harbor Freight Co",
+      "title": "Data Analyst",
+      "start": "2022-05",
+      "skills": ["SQL"]
+    }
+  ],
+  "skills": [{ "name": "SQL", "category": "Languages" }]
+}

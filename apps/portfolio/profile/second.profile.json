@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "identity": {
+    "name": "Morgan Sample",
+    "headline": "Product designer for public services",
+    "summary": "Morgan is a fictional designer used to check that Promptfolio is not tied to one profile. Morgan designs services that people use to apply for public benefits.",
+    "location": "Porto"
+  },
+  "links": [{ "label": "Portfolio", "url": "https://example.com/morgan" }],
+  "experience": [
+    {
+      "id": "civic-design-lead",
+      "organization": "Civic Studio",
+      "title": "Lead Product Designer",
+      "start": "2020-02",
+      "summary": "Leads design for benefit application services.",
+      "highlights": ["Reduced a 40-question form to 12 questions."],
+      "skills": ["Service design", "User research"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "benefits-form",
+      "name": "Benefits Application",
+      "description": "A shorter online application for housing benefit.",
+      "roleId": "civic-design-lead",
+      "responsibilities": ["Ran interviews with applicants.", "Designed the form."],
+      "skills": ["Service design", "User research"]
+    }
+  ],
+  "skills": [
+    { "name": "Service design", "category": "Design" },
+    { "name": "User research", "category": "Research" }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "formatVersion": 2,
+  "retrievedAt": "2026-10-30T06:00:00.000Z",
+  "authenticated": false,
+  "user": { "login": "avery-sample", "htmlUrl": "https://github.com/avery-sample" },
+  "contributions": [],
+  "repositories": [
+    {
+      "retrievedAt": "2026-10-30T06:00:00.000Z",
+      "name": "tide-tables",
+      "fullName": "avery-sample/tide-tables",
+      "htmlUrl": "https://github.com/avery-sample/tide-tables",
+      "description": "Reports on shipping delays.",
+      "homepage": null,
+      "language": "Python",
+      "languages": { "Python": 1000 },
+      "topics": [],
+      "fork": false,
+      "archived": false,
+      "createdAt": "2024-02-11T09:00:00Z",
+      "pushedAt": "2026-09-30T10:00:00Z",
+      "license": "MIT",
+      "pinned": false,
+      "readme": "# Tide Tables\n\nReports on shipping delays.\n",
+      "readmeTruncated": false
+    }
+  ]
+}

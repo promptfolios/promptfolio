@@ -1,0 +1,22 @@
+{
+  "name": "minimal-consumer",
+  "private": true,
+  "description": "A small second consumer: proves the packages work through their public APIs, without a framework or the reference app.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@promptfolio/ai": "workspace:*",
+    "@promptfolio/contact": "workspace:*",
+    "@promptfolio/core": "workspace:*",
+    "@promptfolio/source-github": "workspace:*",
+    "ai": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
