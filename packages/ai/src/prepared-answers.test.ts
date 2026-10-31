@@ -534,6 +534,12 @@ describe("generatePreparedAnswer", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("rejects a raw tool call, so it can never be stored for visitors", async () => {
+    const model = stepsModel(listCallChunks("projects"), textChunks("<tool_call>"));
+    const result = await generatePreparedAnswer(QUESTION, options(model));
+    expect(result).toMatchObject({ ok: false, reason: "error" });
+  });
+
   it("rejects an answer longer than the message limit", async () => {
     const text = "x".repeat(CHAT_LIMITS.maxMessageChars + 1);
     const result = await generatePreparedAnswer(QUESTION, options(stepsModel(textChunks(text))));

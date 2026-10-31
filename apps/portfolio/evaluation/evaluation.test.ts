@@ -7,6 +7,7 @@ import { type EvaluationRun, formatReport, runPassed, summarize } from "./report
 const finished = {
   text: "An answer.",
   failed: false,
+  rawToolCall: false,
   finishReason: "stop",
   steps: 1,
   toolCalls: [],
@@ -102,5 +103,20 @@ describe("the report", () => {
     expect(report).toContain("> A | B");
     expect(report).toContain("> ![leak](u)");
     expect(report).not.toMatch(/^!\[leak/m);
+    expect(report).toContain("Steps: 1. Finish: stop.");
+    expect(report).toContain("| Runs with a raw tool call, blocked | 0 |");
+  });
+
+  it("counts a blocked raw tool call as a failed run, not a provider failure", () => {
+    const [item] = EVALUATION_CASES;
+    if (!item) throw new Error("no cases");
+    const run: EvaluationRun = {
+      caseId: item.id,
+      turn: { ...finished, rawToolCall: true, text: "" },
+      checks: [{ name: "no raw tool call", passed: false }],
+    };
+
+    const summary = summarize([item], [run]);
+    expect(summary).toMatchObject({ rawToolCallRuns: 1, failedRuns: 0, passedRuns: 0 });
   });
 });

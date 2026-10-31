@@ -15,6 +15,8 @@ export interface EvaluationTurn {
   text: string;
   /** The turn ended in a provider error or a timeout, so it says nothing about the answer. */
   failed: boolean;
+  /** The model wrote a tool call as text, and the server stopped it. A fault of the model's. */
+  rawToolCall: boolean;
   finishReason?: string;
   /** Model calls made in this turn. */
   steps: number;
@@ -47,20 +49,23 @@ export async function evaluateQuestion(
     ...history,
     { id: "question", role: "user", parts: [{ type: "text", text: question }] },
   ];
-  const { result, stream } = await runChatTurn(messages, options, {
+  const { result, stream, wasRawToolCallBlocked } = await runChatTurn(messages, options, {
     requestId: `eval-${crypto.randomUUID().slice(0, 8)}`,
     signal: new AbortController().signal,
   });
   const { text, failed } = await readVisitorText(stream);
+  const rawToolCall = wasRawToolCallBlocked();
 
   const empty = {
+    rawToolCall,
     steps: 0,
     toolCalls: [],
     returnedIds: [],
     verifiedIds: [],
     unverifiedIds: [],
   };
-  if (failed) return { ...empty, text, failed: true };
+  // A blocked tool call also ends the stream in an error, but this turn can and must be scored.
+  if (failed && !rawToolCall) return { ...empty, text, failed: true };
   try {
     const steps = await result.steps;
     const returnedIds = evidenceIdsIn(steps.flatMap((step) => step.toolResults));
@@ -69,6 +74,7 @@ export async function evaluateQuestion(
     return {
       text,
       failed: false,
+      rawToolCall,
       finishReason: await result.finishReason,
       steps: steps.length,
       toolCalls: steps.flatMap((step) => step.toolCalls.map((call) => call.toolName)),
@@ -107,8 +113,8 @@ export interface EvaluationCheck {
 }
 
 /**
- * The checks for one finished turn. Every turn must finish normally, say something, and have no
- * unverified citations. The rest comes from the case. Exact wording is deliberately not required.
+ * The checks for one finished turn. Every turn must write no raw tool call, finish normally, say
+ * something, and have no unverified citations. The rest comes from the case. Exact wording is deliberately not required.
  */
 export function scoreEvaluationTurn(
   turn: EvaluationTurn,
@@ -120,6 +126,7 @@ export function scoreEvaluationTurn(
     ...(!passed && detail !== undefined && { detail }),
   });
   const checks = [
+    check("no raw tool call", !turn.rawToolCall),
     check("finished", turn.finishReason === "stop", `finish reason ${turn.finishReason}`),
     check("has an answer", turn.text.trim() !== ""),
     check(

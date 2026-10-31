@@ -104,6 +104,21 @@ describe("evaluateQuestion", () => {
     });
 
     expect(turn.failed).toBe(true);
+    expect(turn.rawToolCall).toBe(false);
+  });
+
+  it("scores a raw tool call as the model's fault, not as a provider failure", async () => {
+    const turn = await evaluateQuestion("Projects?", {
+      ...options(),
+      model: model(toolStep, textStep("<tool_call><function=listProfileRecords>")),
+    });
+
+    expect(turn).toMatchObject({ failed: false, rawToolCall: true, text: "", steps: 2 });
+    expect(
+      scoreEvaluationTurn(turn, {})
+        .filter((check) => !check.passed)
+        .map((check) => check.name),
+    ).toContain("no raw tool call");
   });
 });
 
@@ -111,6 +126,7 @@ describe("scoreEvaluationTurn", () => {
   const turn: EvaluationTurn = {
     text: "Riley works at Northwind [northwind-backend].",
     failed: false,
+    rawToolCall: false,
     finishReason: "stop",
     steps: 2,
     toolCalls: ["listProfileRecords"],

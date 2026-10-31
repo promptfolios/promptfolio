@@ -13,6 +13,7 @@ import {
 import { withSources } from "./citations";
 import { CHAT_LIMITS } from "./limits";
 import { createProfileTools } from "./profile-tools";
+import { withoutRawToolCalls } from "./raw-tool-calls";
 import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";
 
 type StreamTextOptions = Parameters<typeof streamText>[0];
@@ -50,7 +51,8 @@ export function genericErrorMessage(requestId: string): string {
 /**
  * Runs one model turn over already validated messages: the server-owned system prompt, the
  * profile lookup tools, and the step and call budgets. Returns the AI SDK result (for
- * server-side details such as tool results) and the stream exactly as a visitor receives it.
+ * server-side details such as tool results), the stream exactly as a visitor receives it, and
+ * whether that stream stopped a raw tool call, which is known once the stream has been read.
  */
 export async function runChatTurn(
   messages: UIMessage[],
@@ -94,15 +96,25 @@ export async function runChatTurn(
     },
   });
 
+  let rawToolCallBlocked = false;
   const stream = toUIMessageStream({
     stream: result.stream,
     sendReasoning: false,
     onError: () => genericErrorMessage(requestId),
   })
     .pipeThrough(logToolCalls(requestId, logger))
+    .pipeThrough(
+      withoutRawToolCalls({
+        errorText: genericErrorMessage(requestId),
+        onBlocked: () => {
+          rawToolCallBlocked = true;
+          logger.error(`[chat ${requestId}] raw tool call blocked`);
+        },
+      }),
+    )
     .pipeThrough(withSources(profile, requestId, logger))
     .pipeThrough(forVisitor(signal, requestId));
-  return { result, stream };
+  return { result, stream, wasRawToolCallBlocked: () => rawToolCallBlocked };
 }
 
 /**

@@ -236,6 +236,26 @@ describe("handleChatRequest: valid requests", () => {
   });
 });
 
+describe("handleChatRequest: a tool call written as text", () => {
+  it("shows the visitor the generic error, and logs no content", async () => {
+    const logger = silentLogger();
+    const { response } = await handle(
+      { messages: [userMessage("Hi")] },
+      mockModel(textChunks("<tool_call>", "<function=listProfileRecords>")),
+      logger,
+    );
+
+    const chunks = await readChunks(response);
+    expect(JSON.stringify(chunks)).not.toContain("listProfileRecords");
+    expect(chunks.find((chunk) => chunk.type === "error")?.errorText).toContain(
+      "could not answer right now",
+    );
+    expect(logger.error.mock.calls.map((call) => String(call[0]))).toEqual([
+      expect.stringContaining("raw tool call blocked"),
+    ]);
+  });
+});
+
 describe("handleChatRequest: rejected input never reaches the model", () => {
   const cases: Array<[string, unknown, number]> = [
     ["malformed JSON", "{not json", 400],

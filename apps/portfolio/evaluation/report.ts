@@ -23,6 +23,8 @@ export interface EvaluationSummary {
   unverified: { runs: number; citations: number };
   /** Scored runs with a non-empty answer but no verified citation. */
   uncitedRuns: number;
+  /** Runs where the server stopped a tool call written as text. */
+  rawToolCallRuns: number;
   averageInputTokens: number;
   averageOutputTokens: number;
 }
@@ -50,6 +52,7 @@ export function summarize(cases: EvaluationCase[], runs: EvaluationRun[]): Evalu
     uncitedRuns: scored.filter(
       (run) => run.turn.text.trim() !== "" && run.turn.verifiedIds.length === 0,
     ).length,
+    rawToolCallRuns: scored.filter((run) => run.turn.rawToolCall).length,
     averageInputTokens: average(scored.map((run) => run.turn.inputTokens)),
     averageOutputTokens: average(scored.map((run) => run.turn.outputTokens)),
   };
@@ -99,6 +102,7 @@ export function formatReport(
     `| Looked up when the case requires it | ${summary.lookedUp.runs} of ${summary.lookedUp.ofRuns} |`,
     `| Runs with an unverified citation | ${summary.unverified.runs} (${summary.unverified.citations} citations) |`,
     `| Runs with no verified citation | ${summary.uncitedRuns} |`,
+    `| Runs with a raw tool call, blocked | ${summary.rawToolCallRuns} |`,
     `| Average tokens per turn | ${summary.averageInputTokens} in, ${summary.averageOutputTokens} out |`,
     "",
     "Passing means the checks found nothing wrong, not that the answer is right. Read the answers below.",
@@ -134,7 +138,7 @@ export function formatReport(
         lines.push(
           `**Run ${index + 1}:** ${heading}`,
           "",
-          `Tools: ${turn.toolCalls.join(", ") || "none"}. Verified: ${
+          `Steps: ${turn.steps}. Finish: ${turn.finishReason ?? "unknown"}. Tools: ${turn.toolCalls.join(", ") || "none"}. Verified: ${
             turn.verifiedIds.join(", ") || "none"
           }. Unverified: ${turn.unverifiedIds.join(", ") || "none"}.`,
           "",
