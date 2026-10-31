@@ -62,6 +62,11 @@ GitHub data (M8) is part of the profile content. A refetch that finds the same d
 description, topic, language share, license, or month of last push invalidates every prepared
 answer. That is why the adapter keeps dates by month and leaves out star counts.
 
+**A rerun fills the gaps (M12.4).** `prepare-answers` keeps answers the server would still serve, with no model call, and
+tries a provider error up to 3 times, 65 seconds apart. It saves after each accepted answer. `--all` regenerates every
+answer, for a change of model, and keeps an existing one if its replacement fails. An answer rejected for its content is
+not retried, so the owner can read why.
+
 **The contact form counts too (M12).** The system prompt names the Contact button only when the form is on, and the
 instructions fingerprint covers the prompt. So answers generated with the form off are stale on a site with it on, even
 if their text never mentions contact. Generate them with production's setting.
