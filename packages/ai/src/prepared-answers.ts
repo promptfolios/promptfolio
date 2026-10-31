@@ -146,13 +146,32 @@ export async function selectPreparedAnswer(
   const answer = answers.find((entry) => entry.question === question);
   if (answer === undefined) return miss("no-entry");
 
-  if (answer.profileFingerprint !== (await profileFingerprint(profile))) {
-    return miss("stale-profile");
-  }
+  const stale = await staleReason(answer, profile, promptOptions);
+  return stale === undefined ? { outcome: "hit", answer } : miss(stale);
+}
+
+/**
+ * Whether the server would still serve this answer: its profile and instructions fingerprints both
+ * match. So a command that regenerates answers uses the same rule as the server.
+ */
+export async function isPreparedAnswerCurrent(
+  answer: PreparedAnswer,
+  profile: Profile,
+  promptOptions: SystemPromptOptions = {},
+): Promise<boolean> {
+  return (await staleReason(answer, profile, promptOptions)) === undefined;
+}
+
+async function staleReason(
+  answer: PreparedAnswer,
+  profile: Profile,
+  promptOptions: SystemPromptOptions,
+): Promise<"stale-profile" | "stale-instructions" | undefined> {
+  if (answer.profileFingerprint !== (await profileFingerprint(profile))) return "stale-profile";
   if (answer.instructionsFingerprint !== (await instructionsFingerprint(profile, promptOptions))) {
-    return miss("stale-instructions");
+    return "stale-instructions";
   }
-  return { outcome: "hit", answer };
+  return undefined;
 }
 
 function miss(reason: PreparedAnswerMiss): PreparedAnswerSelection {

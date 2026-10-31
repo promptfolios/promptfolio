@@ -25,6 +25,7 @@ export {
   type GeneratePreparedAnswerOptions,
   type GeneratePreparedAnswerResult,
   generatePreparedAnswer,
+  isPreparedAnswerCurrent,
   type ParsePreparedAnswersResult,
   type PreparedAnswer,
   type PreparedAnswerRejection,

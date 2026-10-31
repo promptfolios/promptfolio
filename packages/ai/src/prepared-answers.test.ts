@@ -8,6 +8,7 @@ import { CHAT_LIMITS } from "./limits";
 import {
   generatePreparedAnswer,
   instructionsFingerprint,
+  isPreparedAnswerCurrent,
   type PreparedAnswer,
   parsePreparedAnswers,
   profileFingerprint,
@@ -532,6 +533,22 @@ describe("generatePreparedAnswer", () => {
     );
     const result = await generatePreparedAnswer(QUESTION, options(model));
     expect(result.ok).toBe(true);
+  });
+
+  it("treats an answer as current only under the same profile and instructions", async () => {
+    const result = await generatePreparedAnswer(
+      QUESTION,
+      options(stepsModel(textChunks("Jordan Example is a full-stack engineer."))),
+    );
+    if (!result.ok) throw new Error("expected an answer");
+
+    expect(await isPreparedAnswerCurrent(result.answer, testProfile())).toBe(true);
+    expect(
+      await isPreparedAnswerCurrent(result.answer, testProfile(), { contactFormAvailable: true }),
+    ).toBe(false);
+    expect(
+      await isPreparedAnswerCurrent(result.answer, testProfile({ description: "Something else." })),
+    ).toBe(false);
   });
 
   it("rejects a raw tool call, so it can never be stored for visitors", async () => {
