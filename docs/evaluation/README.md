@@ -103,6 +103,9 @@ interval between calls, and the rest ran without one. The first report's retries
 
 Otherwise the answers read well: citations were right, exaggeration was declined, and it never claimed to send an email.
 
+**The developer chose to proceed with Ling anyway** (2026-10-31), skipping further model evaluations. So Ling is the chosen
+model without having passed the gate.
+
 ## What the checks got wrong
 
 Failures the checks reported that were good answers, all since corrected:
@@ -136,5 +139,3 @@ These passed every check:
 - The model that will be deployed, and the default model.
 - The full set on the final prompt, on any model that passed.
 - A profile as large as a real one, where citation problems were actually seen.
-- Prepared answers, which are not regenerated: they serve one model's wording to every visitor, so they should come from
-  the deployed model, which M12 decides. Until then, starters are answered live and counted.

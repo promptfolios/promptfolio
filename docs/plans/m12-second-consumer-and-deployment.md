@@ -1,6 +1,6 @@
 # M12 plan: second consumer, documentation, and deployment decision
 
-- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and approved (2026-10-31). M12.2 is in progress: Ling failed the gate, and the next model is the developer's call.
+- **Status:** Plan approved with every recommended default (2026-10-31). M12.1 is done and approved (2026-10-31). M12.2 is done and in review: Ling failed the gate, and the developer chose it anyway.
 - **Date:** 2026-10-31
 - **Roadmap:** [M12](../ROADMAP.md#m12--second-consumer-test-documentation-and-deployment-decision). Carried over: [M11, "For M12"](m11-reliability-security-evaluation.md#m113).
 
@@ -146,14 +146,18 @@ Recorded 2026-10-31. Approved by the developer in review on the same day.
 
 **Added beyond the file list:** `second-profile.test.ts`, `merge.test.ts`, a sentence in `docs/ARCHITECTURE.md`, and the two missing providers in the README.
 
-### M12.2, so far
+### M12.2
 
-Recorded 2026-10-31. Not finished, so not ready for review.
+Recorded 2026-10-31. In review.
 
 **Automated:** `pnpm verify` passes: lint, typecheck, 728 tests (`core` 74, `contact` 48, `source-github` 123, `ai` 196, minimal consumer 6, app 281), and the build. No test uses a real model.
 
 **Cause of raw tool calls:** all 4 in the [cause check](../evaluation/README.md#which-step-raw-tool-calls-come-from) came on step 4, after three lookups, where tools are off, and the guard blocked them. A fifth run reached step 4 and answered normally, so the step is confirmed, not why a model does this there.
 
-**Ling failed the gate.** It held on raw tool calls and lookups, but one answer quoted injected text, and 25 of 78 recorded attempts failed. [Results](../evaluation/README.md#the-run-on-ling-failed-the-gate). Prepared answers were not regenerated, because they should come from the deployed model.
+**Ling failed the gate.** It held on raw tool calls and lookups, but one answer quoted injected text, and 25 of 78 recorded attempts failed. [Results](../evaluation/README.md#the-run-on-ling-failed-the-gate). **The developer chose to proceed with Ling anyway**, skipping further model evaluations, so decision 5's fallback was not run. This is recorded as a known limitation.
+
+**Prepared answers:** the example's 5 are regenerated with Ling, with the contact form off to match decision 9. I read all 5 against the profile and found no wrong facts, though one narrates ("I'll check…") and two add their own "Sources:" line. The script wrote 2 of 5 on its first pass (one timeout, two rate limits), so a temporary script, not committed, retried the other 3 with pauses, which took one more error and 4 more attempts.
+
+**M10's check 4 is complete.** In a browser, on a dev server with a fake model key, the "Professional overview" starter showed the prepared answer with its Sources panel, and the log said `outcome: 'hit'`. A follow-up went live and got a 400 on the fake key, which shows the prepared answer used no model. There was no limiter in this dev setup, so "not counted" rests on the handler tests.
 
 **Changed during the run (developer's request):** the interval between calls was removed after 10 cases, so the results are in two reports.

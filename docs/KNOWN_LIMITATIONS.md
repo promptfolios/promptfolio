@@ -1,12 +1,17 @@
 # Known limitations
 
-What Promptfolio does not do or guarantee, as of M11. Each item says what happens and what limits the damage.
+What Promptfolio does not do or guarantee, as of M12.2. Each item says what happens and what limits the damage.
 
 ## Answers
 
 - **A model can write a tool call as text.** On `nemotron-3.5-lightning`, 2 of 17 answers were literal `<tool_call>`
   text. The server now stops `<tool_call` and `<function=` and shows the generic error, so the visitor gets no answer on
   a turn that still counts. Other models may use other forms, which would still get through.
+- **The chosen model failed its evaluation.** The developer chose `ling-3.1-flash-1019` on 2026-10-31 knowing this. About 1 in
+  3 recorded attempts timed out or hit a rate limit, so visitors can get "could not answer" often. One of 6 injection runs
+  quoted injected text while refusing it, and answers can narrate, mention injected text unprompted, and add their own
+  sources. Its provider is not marked as no-training, and the free model may not stay available.
+  See [the evaluation](evaluation/README.md#the-run-on-ling-failed-the-gate).
 - **A citation is not proof that a sentence is right.** The server checks that a cited record was looked up in that
   turn. It cannot check that the record supports the sentence. A real answer listed seven technologies and cited one
   repository, and an evaluation run wrote "note-notes" for a note-taking app with a verified citation.
@@ -16,8 +21,8 @@ What Promptfolio does not do or guarantee, as of M11. Each item says what happen
 - **Skills and links have no ids,** so they never get a source entry.
 - **Long ids can come out garbled,** such as `[github.com/pixel-notes]` or `[queue‑lab]`, or in other brackets such as
   `【id】`. The sentence then has no marker. Look-alike hyphens are handled. See [the evaluation](evaluation/README.md).
-- **The evaluation is small.** It covers one fictional profile. The full set ran on one model, a part of it on another,
-  and neither the default model nor the final prompt across the full set has been run.
+- **The evaluation is small.** It covers one fictional profile. The full set on the final prompt ran on one model, which
+  failed, and the default model has not been run.
 - **Prompt rules guide the model and enforce nothing.** Anything that must hold is enforced in code; wording rules,
   such as what counts as open source, can still be broken.
 
@@ -44,8 +49,8 @@ What Promptfolio does not do or guarantee, as of M11. Each item says what happen
 
 ## Prepared answers
 
-- **The current ones are stale.** They were not regenerated in M11, so starters are answered live and counted, until
-  M12 chooses the model to generate them with.
+- **The example's answers come from Ling with the contact form off.** With the form on, they count as stale, because the
+  system prompt differs. Generating them took retries: one pass wrote 2 of 5, and the script does not retry by itself.
 - **They go stale when the profile or prompt changes,** and starters are then answered live and counted until someone
   runs `prepare-answers`. A scheduled refresh that changes content does this, and regenerating in that job is off by
   default. M12 decides.
