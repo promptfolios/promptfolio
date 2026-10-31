@@ -1,7 +1,6 @@
 # @promptfolio/ai
 
-The server side of chat: validates a request, serves a prepared answer or runs a model turn with read-only profile
-tools, checks citations, and streams the reply. Server-only, because the model you pass carries your provider key.
+The server side of chat: validates a request, runs a model turn with read-only profile tools, checks citations, and streams the reply. Server-only, because the model you pass carries your provider key.
 
 Not published. Use it from this workspace as `"@promptfolio/ai": "workspace:*"`.
 
@@ -11,7 +10,6 @@ Not published. Use it from this workspace as `"@promptfolio/ai": "workspace:*"`.
 | ------ | ------- |
 | `handleChatRequest` | Takes a web `Request`, returns a streaming `Response` |
 | `ChatLimit`, `ChatTurnLimiter` | The daily limit you implement. `limit` is required; `null` turns it off on purpose |
-| `generatePreparedAnswer`, `parsePreparedAnswers`, `profileFingerprint` | Prepared starter answers and when they are current |
 | `evaluateQuestion`, `scoreEvaluationTurn` | Run a question through the live turn and check what code can check |
 | `citedIds`, `CHAT_LIMITS` | Read citations from text; the request and model limits |
 

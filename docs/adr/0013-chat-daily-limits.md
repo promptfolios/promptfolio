@@ -17,11 +17,10 @@ instances ([ADR 0001](0001-reference-app-framework.md)), and Upstash Redis is al
 1. **Two counters in Redis, per 24 hours from the first count:** 30 live answers per visitor and 200 for
    the site. The site counter is what bounds spend when addresses rotate. The visitor counts first, so a
    blocked visitor does not use up the site's allowance.
-2. **Only live answers count.** The check runs after request validation and after the prepared-answer
-   lookup, because neither costs a model call. Every live answer counts, including failed and stopped
+2. **Only live answers count.** The check runs after request validation, which costs no model call. Every live answer counts, including failed and stopped
    ones, because the provider may bill them.
 3. **It fails closed.** If the store errors or takes over 2 seconds, or no address can be read, the model
-   is not called and the visitor gets a generic 503. Prepared answers keep working.
+   is not called and the visitor gets a generic 503.
 4. **The package names no store.** `@promptfolio/ai` defines `ChatTurnLimiter` and a required `limit`
    option. `null` is an explicit choice, so a consumer cannot lose the limit by omission. The app holds the
    Redis adapter.

@@ -22,7 +22,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M4 — First AI integration                 | Done      | `pnpm dev` with a Gemini or Claude key: streamed replies; [plan](plans/m4-first-ai-integration.md) |
 | M5 — Tools and grounded profile lookup    | Done      | `pnpm dev`: answers cite record ids; tool calls in the server log; [plan](plans/m5-tools-grounded-lookup.md) |
 | M6 — Conversation persistence             | Done      | `pnpm dev`: conversations survive a reload, saved only in this browser; [plan](plans/m6-browser-conversation-persistence.md) |
-| M7 — Seeded conversations and cache       | Done      | `pnpm --filter portfolio prepare-answers`, then a starter answers at once; [plan](plans/m7-prepared-starter-answers.md) |
+| M7 — Seeded conversations and cache       | Removed in M12.5 | Was: `pnpm --filter portfolio prepare-answers`, then a starter answers at once; [plan](plans/m7-prepared-starter-answers.md) |
 | M7.1 — OpenRouter provider                | Done      | `PROMPTFOLIO_MODEL=openrouter` with `OPENROUTER_API_KEY`: a free model answers with tools; [plan](plans/m7-1-openrouter-provider.md) |
 | M7.2 — AI Gateway provider                | Done      | `PROMPTFOLIO_MODEL=gateway` with `AI_GATEWAY_API_KEY` (needs a card on the Vercel team): a $0 model answers; [plan](plans/m7-2-ai-gateway-provider.md) |
 | M8 — GitHub source adapter                | Done      | `pnpm --filter portfolio refresh` (named `fetch-github` until M9) with `profile/<profile>.github.json`; answers cite `github.com/…` repositories; [plan](plans/m8-github-source-adapter.md) |
@@ -33,6 +33,8 @@ This document describes the suggested milestone sequence and future directions. 
 | M11.3 — Evaluation and limitations        | Done      | `pnpm --filter portfolio evaluate --label=my-run`; [results](evaluation/README.md); [limitations](KNOWN_LIMITATIONS.md); prepared answers wait for the deployed model (M12); [plan](plans/m11-reliability-security-evaluation.md) |
 | M12.1 — Second consumer and package docs   | Done      | `pnpm --filter minimal-consumer test`; package READMEs; [plan](plans/m12-second-consumer-and-deployment.md) |
 | M12.2 — Answer readiness                   | Done      | `pnpm test`; [results](evaluation/README.md): the chosen model failed its gate, chosen anyway; [limitations](KNOWN_LIMITATIONS.md) |
+| M12.4 — Fixes from the evaluation runs     | Done      | `pnpm test`; [plan](plans/m12-4-reliability-fixes.md) |
+| M12.5 — Remove prepared answers and starters | Done     | `pnpm dev`: a new chat shows only the message box; [plan](plans/m12-5-remove-prepared-answers.md). Replaces M7's starters and answers |
 | M12.3 — Deployment                         | Not started | Optional, and the developer chose to stop before it; [plan](plans/m12-second-consumer-and-deployment.md) |
 
 Update this table when a milestone is approved.

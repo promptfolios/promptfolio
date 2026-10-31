@@ -13,14 +13,13 @@ flowchart TB
     subgraph app["apps/portfolio (Next.js reference app)"]
         direction TB
         env[".env.local<br/>PROMPTFOLIO_PROFILE_FILE, provider key and model,<br/>optional GITHUB_TOKEN (refresh command only),<br/>optional contact settings"]
-        files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.answers.json (prepared starter answers)<br/>*.github.json and *.github-snapshot.json (GitHub source)<br/>*.refresh-status.json (last refresh, M9)"]
+        files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.github.json and *.github-snapshot.json (GitHub source)<br/>*.refresh-status.json (last refresh, M9)"]
         page["src/app/page.tsx<br/>server: load profile, then render workspace or issues"]
         route["src/app/api/chat/route.ts<br/>server: POST /api/chat"]
         serverProfile["src/server/profile.ts<br/>fs + env"]
         serverGitHub["src/server/github-source.ts<br/>GitHub configuration and snapshot"]
         fetchScript["scripts/refresh.ts and src/server/refresh.ts<br/>owner-run or scheduled: pnpm --filter portfolio refresh"]
         serverModel["src/server/model.ts<br/>server-only: PROMPTFOLIO_MODEL = provider:model"]
-        serverAnswers["src/server/prepared-answers.ts<br/>reads profile/*.answers.json"]
         contactRoutes["src/app/api/contact/prepare and send<br/>server: POST routes"]
         serverContact["src/server/contact.ts<br/>server-only: contact configuration,<br/>Resend and Redis adapters"]
         serverChatLimit["src/server/chat-limit.ts<br/>server-only: daily limits on live answers"]
@@ -33,14 +32,11 @@ flowchart TB
         env --> serverContact
         serverContact --> serverProfile
         page --> serverContact
-        script["scripts/prepare-answers.ts<br/>owner-run: pnpm --filter portfolio prepare-answers"]
         workspace["src/components/chat-workspace.tsx<br/>client, see Chat workspace"]
         page --> serverProfile
         page --> workspace
         route --> serverProfile
         route --> serverModel
-        route --> serverAnswers
-        serverAnswers -- reads --> files
         script -- writes --> files
         env --> serverProfile
         env --> serverModel
@@ -71,19 +67,15 @@ flowchart TB
     subgraph aipkg["packages/ai (@promptfolio/ai), server-only"]
         direction TB
         aiIndex["src/index.ts<br/>the only entry point"]
-        handler["chat-handler.ts<br/>handleChatRequest(request, options)<br/>prepared answer or live turn"]
+        handler["chat-handler.ts<br/>handleChatRequest(request, options)"]
         turn["chat-turn.ts<br/>runChatTurn: tool loop, output allowlist"]
-        prepared["prepared-answers.ts<br/>file schema, fingerprints,<br/>selection, generator"]
         request["request.ts<br/>body size cap, allowlist, limits"]
         prompt["system-prompt.ts<br/>buildSystemPrompt(identity)"]
         tools["profile-tools.ts<br/>createProfileTools(profile, budget)"]
         citations["citations.ts<br/>checks cited ids, builds sources from the profile"]
         aiIndex --> handler
-        aiIndex --> prepared
         handler --> request
-        handler --> prepared
         handler --> turn
-        prepared --> turn
         turn --> prompt
         turn --> tools
     end
@@ -124,7 +116,6 @@ flowchart TB
     app -- "import from @promptfolio/core<br/>(public entry point only)" --> index
     route -- "import from @promptfolio/ai" --> aiIndex
     contactRoutes -- "import from @promptfolio/contact" --> contactIndex
-    script -- "generatePreparedAnswer" --> aiIndex
     aipkg -- "Profile types, lookups" --> index
     serverGitHub -- "parse, normalize" --> ghIndex
     fetchScript -- "fetchGitHubSnapshot, carryForward" --> ghIndex
@@ -155,14 +146,10 @@ sequenceDiagram
     opt key missing or profile invalid
         R-->>B: 500 generic message (details in the server log)
     end
-    R->>R: loadPreparedAnswers() (missing or invalid file: none)
-    R->>H: handleChatRequest(request, { model, profile, providerOptions, preparedAnswers })
+    R->>H: handleChatRequest(request, { model, profile, providerOptions, limit })
     H->>H: cap body at 100 KB, parse allowlist, check limits
     opt invalid input
         H-->>B: 4xx with a safe message (model is not called)
-    end
-    opt first message matches a prepared answer whose fingerprints are current
-        H-->>B: the stored text through the output allowlist (model is not called)
     end
     H->>P: streamText({ instructions, messages, tools, stopWhen: isStepCount(4), … })
     loop up to 4 steps (the last one must answer in text)
@@ -172,15 +159,13 @@ sequenceDiagram
     end
     P-->>H: answer text with cited ids
     H-->>B: UI message stream: text, step boundaries, and sources for cited ids (output allowlist)
-    Note over B,H: Provider errors and timeouts (15 s to first content, 25 s total) become a generic message with a ref id
+    Note over B,H: Provider errors and timeouts (15 s to first content, 55 s total) become a generic message with a ref id
     B-)H: Stop or disconnect fires request.signal
     H-)P: abortSignal cancels the model request
 ```
 
-A prepared answer is used only for the first message of a conversation, on an exact question
-match, when the profile content and the instructions are unchanged since it was generated;
-otherwise the request is answered live (M7, [ADR 0008](adr/0008-prepared-answers-as-files.md),
-[prepared answers and invalidation](learning/prepared-answers-and-invalidation.md)).
+Every question is answered live. Prepared answers and fixed starters were removed in M12.5
+([plan](plans/m12-5-remove-prepared-answers.md)).
 
 A live answer first takes one count from the daily limits, 30 per visitor and 200 for the site, held in
 Redis. If the limit is reached the visitor gets a 429, and if it cannot be checked a 503; the model is not
@@ -270,8 +255,7 @@ flowchart TD
     keep --> status
 ```
 
-The profile version is the content fingerprint that prepared answers already carry, so a new
-version makes them stale (answered live) until the owner regenerates them. A refresh that finds
+The profile version is a fingerprint of the profile's content. A refresh that finds
 nothing new writes only the status file, so a scheduled job commits nothing
 ([ADR 0010](adr/0010-refresh-status-and-content-versions.md),
 [refresh status and last known good](learning/refresh-status-and-last-known-good.md),
@@ -290,8 +274,7 @@ flowchart TD
     store["ThreadStore (src/chat/)<br/>validate on read, sanitize and limit on write"]
     ls[("localStorage<br/>promptfolio:v1:*<br/>(memory if unavailable)")]
     thread["useThreadRuntime(), once per thread<br/>useAISDKRuntime(useChat({ transport }))"]
-    transport["DefaultChatTransport({ api: /api/chat })<br/>sends id, messages, trigger: no system, no tools"]
-    config["AuiConfig({ suggestions: Suggestions(STARTERS) })<br/>src/config/starters.ts<br/>(a starter sends its prompt as the first message)"]
+    transport["DefaultChatTransport({ api: /api/chat })<br/>sends id, messages: no system, no tools"]
     ui["ThreadList in the sidebar, Thread in the main area<br/>vendored: src/components/assistant-ui/, src/components/ui/, src/hooks/"]
 
     ws --> list
@@ -384,7 +367,6 @@ flowchart LR
     ui --> route["route /api/chat (M4, done)"]
     route --> ai["@promptfolio/ai (M4, done)<br/>tools and profile lookups (M5, done)"]
     ai --> core["@promptfolio/core"]
-    ai --> prepared["prepared starter answers (M7, done)"]
     github["@promptfolio/source-github (M8, done)"] -- "repositories with<br/>basis source-observed" --> core
     contributions["contributions: attributed commits (M8.1, done)"] --> github
     refresh["refresh: status, versions, last known good (M9, done)<br/>schedule: template, not active"] --> github
@@ -402,7 +384,7 @@ flowchart LR
 | [0005](adr/0005-profile-model-and-provenance.md)      | Canonical profile model and provenance        | Accepted |
 | [0006](adr/0006-profile-data-location.md)             | Profile data location in the reference app    | Accepted |
 | [0007](adr/0007-chat-ui-assistant-ui.md)              | assistant-ui, Tailwind, and shadcn for chat   | Accepted |
-| [0008](adr/0008-prepared-answers-as-files.md)         | Prepared starter answers as reviewed files    | Accepted |
+| [0008](adr/0008-prepared-answers-as-files.md)         | Prepared starter answers as reviewed files    | Superseded |
 | [0009](adr/0009-github-source-as-fetched-snapshot.md) | GitHub as a fetched snapshot, source-key ids  | Accepted |
 | [0010](adr/0010-refresh-status-and-content-versions.md) | Refresh status, last known good, content versions | Accepted |
 | [0011](adr/0011-contributions-as-attributed-commits.md) | Contributions as attributed commits | Accepted |

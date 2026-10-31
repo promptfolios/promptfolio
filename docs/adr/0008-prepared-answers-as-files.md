@@ -1,6 +1,6 @@
 # ADR 0008: Prepared starter answers as reviewed files next to the profile
 
-- **Status:** Accepted
+- **Status:** Superseded on 2026-11-01. Prepared answers were removed, and every question is answered live ([M12.5 plan](../plans/m12-5-remove-prepared-answers.md)).
 - **Date:** 2026-10-29
 
 ## Context

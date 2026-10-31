@@ -51,8 +51,7 @@ The home page is prerendered, so `next build` decides whether the button appears
 before building, and rebuild after turning the form on or off. The routes read them on every request, so
 if the variables change without a rebuild, the assistant and the page can disagree about the button.
 
-Turning the form on or off changes what the assistant is told, so prepared answers go live until you run
-`pnpm --filter portfolio prepare-answers` with the same settings.
+Turning the form on or off changes what the assistant is told.
 
 ## 4. At deployment, add a host rate limit
 

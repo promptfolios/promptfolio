@@ -1,6 +1,6 @@
 # M12.5 plan: remove prepared answers
 
-- **Status:** Proposed, waiting for approval. Nothing is implemented.
+- **Status:** Done (2026-11-01), with every recommended default. In review. The developer asked to "remove all static stuff", so the fixed starters went too.
 - **Date:** 2026-11-01
 - **Background:** the developer's decision (2026-11-01), after the upkeep in [M12.4](m12-4-reliability-fixes.md). Reverses [ADR 0008](../adr/0008-prepared-answers-as-files.md) and the serving part of M7.
 
@@ -69,3 +69,21 @@ Automated tests use no network or model. `pnpm verify` passes.
 | 1 | `*.local.answers.json` in `.gitignore` | Keep the line, because your `check.local.answers.json` holds real answers and could otherwise be committed by accident. You can delete that file yourself | Remove the line |
 | 2 | Where `profileFingerprint` lives | Move it to `core` | Leave it in `ai` (smaller change, but the refresh keeps a dependency it has no other use for) |
 | 3 | The learning note | Keep it, marked removed, with why | Delete it (loses the explanation of what was tried) |
+
+## Review results
+
+Recorded 2026-11-01. In review.
+
+**Changed from the plan:** the plan kept the starters. The developer then asked to "remove all static stuff" and expressed no preference on which parts, so the starter buttons were removed too, in their own commit so they can be restored alone, and the spec was updated to match. Static page rendering and the fictional sample data stay: rendering was not a problem found here, and the sample data is what lets a clone run and what the second-profile check uses.
+
+**Also removed, because only prepared answers read it:** `trigger` in the request body. Regenerating a reply needs no special path now.
+
+**Moved:** `profileFingerprint` to `@promptfolio/core`, which needed `@types/node` as a development dependency there for the web crypto global, like the other packages. `readVisitorText` to `evaluation.ts`. Tests that still applied moved with them: the fingerprint, the contact button reaching the prompt, and citation evidence.
+
+**Automated:** `pnpm verify` passes: lint, typecheck, 688 tests (`core` 76, `contact` 48, `source-github` 123, `ai` 157, minimal consumer 6, app 278), and the build. The count fell from 744 with the removed feature.
+
+**Left alone:** old plans and evaluation reports, which describe what happened then. The `*.local.answers.json` line in `.gitignore` stays, because the developer's real answers file is still on disk.
+
+**Browser check,** on a dev server with a fake model key: a new chat shows the heading and message box with no starters; a former starter question goes live, gets a 400 on the fake key, and shows the generic error, and the log has no prepared-answer line. No real model answered.
+
+**Seen once, not reproduced:** on the first load after one dev server start, the thread list stayed in its loading state for over 20 seconds, and sending was disabled. A reload cleared it. It did not return after a second reload, a load with empty storage, or a restarted server. The cause is unknown. It could be related to removing the starters' `config` from the provider, or to the first compile, so it is worth watching.

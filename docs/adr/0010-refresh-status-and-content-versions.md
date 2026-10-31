@@ -67,3 +67,5 @@ workflow in this repository (it would fail or idle every day on the example prof
 - Details: [M9 plan](../plans/m9-refresh-pipeline-and-versions.md), learning notes on
   [refresh status and last known good](../learning/refresh-status-and-last-known-good.md) and
   [scheduled jobs](../learning/scheduled-jobs.md).
+
+*Update (M12.5):* prepared answers were removed, so the reporting in decision 5 is gone. The content fingerprint remains the profile version, now in `@promptfolio/core`.

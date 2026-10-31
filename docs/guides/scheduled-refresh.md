@@ -108,15 +108,6 @@ jobs:
         if: steps.commit.outputs.pushed == 'true' && env.VERCEL_DEPLOY_HOOK_URL != ''
         run: curl --fail --silent --show-error -X POST "$VERCEL_DEPLOY_HOOK_URL" > /dev/null
 
-      # Optional, off by default: regenerate prepared answers with a model key secret.
-      # Commits model output without the owner's review (see "Prepared answers" below).
-      # - name: Prepare answers
-      #   if: steps.commit.outputs.pushed == 'true'
-      #   run: pnpm --filter portfolio prepare-answers
-      #   env:
-      #     PROMPTFOLIO_MODEL: ${{ vars.PROMPTFOLIO_MODEL }}
-      #     GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
-
       - name: Report a partial or failed refresh
         if: steps.refresh.outcome == 'failure'
         run: |
@@ -154,12 +145,3 @@ Checked in the official documentation on 2026-10-30; recheck when activating.
 **Not verified, check in the first run:** whether `GITHUB_TOKEN` can read a user's pinned
 repositories through GraphQL (the refresh reports `unauthorized` for the pinned query if not);
 whether the host deploys the bot's push.
-
-## Prepared answers
-
-A new profile version makes prepared answers stale; starters are then answered live until they
-are regenerated. The refresh says how many still belong to the current version. Regeneration is
-**not** part of the job by default: prepared answers are reviewed files
-([ADR 0008](../adr/0008-prepared-answers-as-files.md)), it needs a model key secret, and free
-model tiers limit requests per minute and per day. The usual loop: the job commits new data,
-the owner pulls, runs `pnpm --filter portfolio prepare-answers`, reviews, and commits.

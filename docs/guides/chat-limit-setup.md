@@ -49,7 +49,6 @@ Counters are per region. On a host other than Vercel, a proxy must overwrite `x-
 
 | Situation | The visitor sees |
 | --------- | ---------------- |
-| Starter question with a current prepared answer | The answer, not counted |
 | Up to 30 live answers from one address in 24 hours | Answers |
 | The 31st | A message about the daily limit (429) |
 | The site's 201st in 24 hours, from any address | A message about the daily limit (429) |

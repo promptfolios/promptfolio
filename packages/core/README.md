@@ -12,7 +12,7 @@ Not published. Use it from this workspace as `"@promptfolio/core": "workspace:*"
 | `loadStructuredProfile` | Validates owner data and returns a `Profile`, or issues with their paths |
 | `addObservedRecords` | Adds records read from a source, keeping their provenance |
 | `findRecordById`, `recordsUsingSkill` | Look records up |
-| `canonicalProfileContent` | A stable serialization, for telling whether content changed |
+| `canonicalProfileContent`, `profileFingerprint` | A stable serialization and its hash, for telling whether content changed |
 | `isRecordId` | Checks a record id's form |
 | Types | `Profile` and its records, `ProfileIssue`, `ProfileLoadResult`, `Provenance`, and others |
 

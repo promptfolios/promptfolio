@@ -4,6 +4,8 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
 
 ## Answers
 
+- **Nothing answers without the model.** Prepared answers and fixed starters were removed in M12.5. So when the provider
+  fails, every question fails, and each one counts against the daily limits.
 - **A model can write a tool call as text.** On `nemotron-3.5-lightning`, 2 of 17 answers were literal `<tool_call>`
   text. The server now stops `<tool_call` and `<function=` and shows the generic error, so the visitor gets no answer on
   a turn that still counts. Other models may use other forms, which would still get through.
@@ -49,15 +51,6 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
   which is evidence about that model and those attempts, not a guarantee.
 - **No script Content-Security-Policy.** The policy covers images and framing. Limiting scripts would need a nonce on
   every Next.js script.
-
-## Prepared answers
-
-- **The example's answers come from Ling with the contact form off.** With the form on, they count as stale, because the
-  system prompt differs. Provider errors are common on Ling, so `prepare-answers` retries them and can take a few minutes.
-- **They go stale when the profile or prompt changes,** and starters are then answered live and counted until someone
-  runs `prepare-answers`. A scheduled refresh that changes content does this, and regenerating in that job is off by
-  default, and the plan keeps it off.
-- **Only the first message of a new chat qualifies,** and only an exact match with a starter.
 
 ## Contact form
 
