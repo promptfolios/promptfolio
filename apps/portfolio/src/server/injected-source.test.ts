@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { handleChatRequest } from "@promptfolio/ai";
 import { loadStructuredProfile, type Profile } from "@promptfolio/core";
+import { mergeGitHubSnapshot } from "@promptfolio/source-github";
 import { simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
-import { mergeGitHubSnapshot } from "./github-source";
 
 /**
  * The whole path of hostile source text: a README with injected instructions, through the snapshot
@@ -60,7 +60,6 @@ function profileWithInjectedReadme(): Profile {
       ],
       contributions: [],
     },
-    "test.github-snapshot.json",
   );
   if (!merged.ok) throw new Error(`snapshot is invalid: ${JSON.stringify(merged.issues)}`);
   return merged.profile;

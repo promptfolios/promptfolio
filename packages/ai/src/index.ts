@@ -8,7 +8,6 @@ export {
   type ChatLogger,
   type ChatProviderOptions,
   type ChatTimeouts,
-  genericErrorMessage,
   handleChatRequest,
 } from "./chat-handler";
 export type { ChatLimit, ChatTurnDecision, ChatTurnLimiter } from "./chat-limit";
@@ -27,11 +26,10 @@ export {
   type GeneratePreparedAnswerResult,
   generatePreparedAnswer,
   type ParsePreparedAnswersResult,
-  PREPARED_ANSWER_LIMITS,
   type PreparedAnswer,
   type PreparedAnswerRejection,
   type PreparedAnswersFile,
   parsePreparedAnswers,
   profileFingerprint,
 } from "./prepared-answers";
-export { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";
+export type { SystemPromptOptions } from "./system-prompt";

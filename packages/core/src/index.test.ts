@@ -8,10 +8,8 @@ describe("public API", () => {
       "canonicalProfileContent",
       "findRecordById",
       "isRecordId",
-      "isSourceKey",
       "loadStructuredProfile",
       "recordsUsingSkill",
-      "skillKey",
     ]);
   });
 });

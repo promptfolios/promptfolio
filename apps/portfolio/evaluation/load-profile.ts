@@ -1,5 +1,5 @@
 import { loadStructuredProfile, type Profile } from "@promptfolio/core";
-import { mergeGitHubSnapshot } from "../src/server/github-source";
+import { mergeGitHubSnapshot } from "@promptfolio/source-github";
 import snapshot from "./github-snapshot.json";
 import owner from "./profile.json";
 
@@ -20,7 +20,6 @@ export function loadEvaluationProfile(): Profile {
     loaded.profile,
     { user: "riley-sample", exclude: [], excludeContributionsTo: [] },
     snapshot,
-    "github-snapshot.json",
   );
   if (!merged.ok) throw new Error(`the snapshot is invalid: ${JSON.stringify(merged.issues)}`);
   return merged.profile;

@@ -6,14 +6,10 @@ import {
   carryForward,
   fetchGitHubSnapshot,
   type GitHubSnapshot,
+  mergeGitHubSnapshot,
   parseGitHubSnapshot,
 } from "@promptfolio/source-github";
-import {
-  githubConfigFileName,
-  githubSnapshotFileName,
-  mergeGitHubSnapshot,
-  readGitHubConfig,
-} from "./github-source";
+import { githubConfigFileName, githubSnapshotFileName, readGitHubConfig } from "./github-source";
 import { loadPreparedAnswers } from "./prepared-answers";
 import { loadAppProfile, loadOwnerProfile, PROFILE_DIR } from "./profile";
 import {

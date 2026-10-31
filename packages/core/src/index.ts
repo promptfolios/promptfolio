@@ -9,7 +9,6 @@ export {
   type ProfileIssue,
   type ProfileLoadResult,
   type StructuredProfileSource,
-  skillKey,
 } from "./profile/load";
 export {
   addObservedRecords,
@@ -24,7 +23,7 @@ export {
   recordsUsingSkill,
   type SkillUsage,
 } from "./profile/query";
-export { isRecordId, isSourceKey, type ProfileInput } from "./profile/schema";
+export { isRecordId, type ProfileInput } from "./profile/schema";
 export type {
   ClaimBasis,
   Contribution,

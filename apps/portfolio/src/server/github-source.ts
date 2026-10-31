@@ -1,16 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import {
-  addObservedRecords,
-  type Profile,
-  type ProfileIssue,
-  type ProfileLoadResult,
-} from "@promptfolio/core";
+import type { ProfileIssue, ProfileLoadResult } from "@promptfolio/core";
 import {
   type GitHubSourceConfig,
-  normalizeGitHubSnapshot,
+  mergeGitHubSnapshot,
   parseGitHubConfig,
-  parseGitHubSnapshot,
 } from "@promptfolio/source-github";
 
 /*
@@ -57,30 +51,6 @@ export async function readGitHubConfig(
   return parsed.ok
     ? { status: "ok", config: parsed.config }
     : { status: "invalid", issues: inFile(fileName, parsed.issues) };
-}
-
-/**
- * Adds the GitHub snapshot's repositories to an owner profile: validate the snapshot,
- * normalize it with the configuration, and merge it with `addObservedRecords`. Pure apart
- * from the inputs, so the fetch command can check a new snapshot before writing it.
- */
-export function mergeGitHubSnapshot(
-  owner: Profile,
-  config: GitHubSourceConfig,
-  snapshotData: unknown,
-  snapshotFileName: string,
-): ProfileLoadResult {
-  const snapshot = parseGitHubSnapshot(snapshotData);
-  if (!snapshot.ok) return { ok: false, issues: inFile(snapshotFileName, snapshot.issues) };
-  const normalized = normalizeGitHubSnapshot(snapshot.snapshot, config);
-  if (!normalized.ok) return { ok: false, issues: inFile(snapshotFileName, normalized.issues) };
-  const merged = addObservedRecords(owner, normalized.records);
-  if (!merged.ok) return merged;
-  return {
-    ok: true,
-    profile: merged.profile,
-    warnings: [...inFile(snapshotFileName, normalized.warnings), ...merged.warnings],
-  };
 }
 
 /**
