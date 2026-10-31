@@ -57,8 +57,7 @@ In the scheduled job (M9 template, [docs/guides/scheduled-refresh.md](../guides/
 GitHub Actions supplies `GITHUB_TOKEN` itself, limited to the permissions the workflow declares
 (`contents: write`); no personal token is stored. A Vercel deploy hook URL is a secret too: anyone
 who has it can start a deployment, so it lives in a repository secret, never in the workflow file.
-A model key is needed in the job only if regenerating prepared answers is turned on (off by
-default).
+The job needs no model key.
 
 M10 adds four secrets, read only in `src/server/contact.ts`, which is also `server-only`:
 `RESEND_API_KEY`, `CONTACT_TOKEN_SECRET`, `UPSTASH_REDIS_REST_TOKEN` (from M10.1), and `CONTACT_TO_EMAIL`.

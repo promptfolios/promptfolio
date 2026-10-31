@@ -65,7 +65,7 @@ differently there:
   `openrouter:google/gemma-4-31b-it:free` keeps the `:free` suffix.
 - The default is that free model. Free models allow 20 requests per minute and 50 per day (1,000
   per day once 10 credits have been bought), and they are added and removed often. One
-  `prepare-answers` run is 10 to 20 requests. Free models are served by hosts with their own
+  live answer is up to 4 requests. Free models are served by hosts with their own
   logging and training policies, so prefer a paid model when the real profile is loaded.
 - Low reasoning is `providerOptions.openrouter.reasoning.effort: "low"`. The adapter
   (`@openrouter/ai-sdk-provider`) ignores the AI SDK's call-level `reasoning` option, and it copies
@@ -75,7 +75,7 @@ differently there:
   metadata and returns them, which `@ai-sdk/openai-compatible` does not. The output allowlist
   still keeps reasoning and metadata away from the browser.
 - `effort: "low"` is a hint, not a limit. During M7.1's checks `recursive/flint-v1.0:free` reasoned
-  for 1,219 tokens on one starter, used up the 1,000-token cap, and finished with `length` and
+  for 1,219 tokens on one question, used up the 1,000-token cap, and finished with `length` and
   no answer. `maxOutputTokens` was raised to 2,000 per call. The cap counts only generated
   tokens; the conversation sent in is input and does not reduce it.
 
@@ -104,8 +104,6 @@ Each finished reply logs its token usage on the server, for example
 - Chat limits: [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts) (`CHAT_LIMITS`), enforced in
   [packages/ai/src/request.ts](../../packages/ai/src/request.ts)
 - Provider call and usage logging: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
-- Prepared starter answers (no model call on a hit): [packages/ai/src/prepared-answers.ts](../../packages/ai/src/prepared-answers.ts);
-  see [prepared answers and invalidation](prepared-answers-and-invalidation.md)
 - Provider selection, model ids, and thinking settings:
   [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts)
 - SDK choice: [ADR 0003](../adr/0003-ai-sdk-selection.md); model choice:
@@ -121,8 +119,6 @@ Each finished reply logs its token usage on the server, for example
   surprise costs on long threads.
 - Calling the provider from client code exposes the API key in the bundle.
 - A successful, fluent response is not evidence that it is correct.
-- The cheapest model call is the one not made. Since M7, a current prepared answer to a starter
-  makes no call at all; generating the five answers costs about 10 calls, once per profile change.
 
 ## 6. Further reading
 

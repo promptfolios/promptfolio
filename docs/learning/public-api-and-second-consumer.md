@@ -43,8 +43,8 @@ flowchart LR
 
 - **A consumer in the same workspace is not an outside consumer.** The packages are private and export TypeScript
   source, so they cannot be installed elsewhere until they get a compiled build and are published.
-- **Passing here does not mean a good experience for everyone.** The second profile loads and renders, but the
-  starters are code and assume an engineer ("Open-source work").
+- **Passing here does not mean a good experience for everyone.** The second profile loads and renders, but no real model
+  has answered about it.
 - **The UI is not covered.** The chat components, thread store, and citation markers live in the reference app. A
   consumer with its own UI writes those itself.
 - **Exporting for a test is not a reason to keep an export,** unless the test checks that app and package agree, as

@@ -107,7 +107,7 @@ skill filter does not apply to this section.
   limits.
 - A tool result is not proof. A cited id shows which record the model *claims* to have used; the
   server checks each one against the ids the tools returned in that turn (M11.2, `citations.ts`).
-  A live answer shows a count of those that fail, and the prepared-answer generator rejects the answer.
+  The server log counts those that fail.
 
 ## 6. Further reading
 

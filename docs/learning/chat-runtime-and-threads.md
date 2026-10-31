@@ -55,7 +55,6 @@ message once it settles. Both write through one `ThreadStore`; see
 - Thread list and history adapters: [apps/portfolio/src/chat/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.ts)
 - Titles: [apps/portfolio/src/chat/thread-title.ts](../../apps/portfolio/src/chat/thread-title.ts)
 - Saved threads: [apps/portfolio/src/chat/thread-store.ts](../../apps/portfolio/src/chat/thread-store.ts)
-- Starters: [apps/portfolio/src/config/starters.ts](../../apps/portfolio/src/config/starters.ts)
 - Tests: [thread-title.test.ts](../../apps/portfolio/src/chat/thread-title.test.ts),
   [browser-thread-list-adapter.test.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.test.ts),
   [thread-store.test.ts](../../apps/portfolio/src/chat/thread-store.test.ts)
@@ -71,9 +70,7 @@ message once it settles. Both write through one `ThreadStore`; see
   render reloads the list and drops cached threads.
 - `unstable_useAdapters` and `withFormat` are experimental assistant-ui APIs; check the adapter
   tests and a reload in the browser after upgrading assistant-ui.
-- A starter is still a real first message; the browser does not know about prepared answers.
-  Since M7 the server answers it from a prepared answer when one is current for the profile, and
-  live otherwise; see [prepared answers and invalidation](prepared-answers-and-invalidation.md).
+- The welcome screen had fixed starters until M12.5. A new chat now starts from the message box alone.
 
 ## 6. Further reading
 

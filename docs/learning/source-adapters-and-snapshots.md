@@ -59,9 +59,8 @@ flowchart LR
   follows the source, not the other way. The two records keep their own provenance, and a
   lookup returns both.
 - **Less churn on purpose.** Dates are kept by month and star counts are left out, because any
-  content change invalidates every prepared answer
-  ([prepared answers and invalidation](prepared-answers-and-invalidation.md)). `retrievedAt` is not
-  content, so a refetch that finds nothing new keeps the answers current.
+  content change is a new profile version, which a scheduled job commits and deploys. `retrievedAt` is
+  not content, so a refetch that finds nothing new commits nothing.
 
 ## 4. Where it lives in the code
 
@@ -88,7 +87,7 @@ flowchart LR
   Keep the I/O in one function and test the rest with fixtures.
 - Writing whatever came back, even partially, replaces good data with incomplete data. Validate
   everything first, then replace the file in one step.
-- Changing source data more often than needed is not free: here it invalidates prepared answers.
+- Changing source data more often than needed is not free: each new version is a commit and a deployment.
 
 ## 6. Further reading
 

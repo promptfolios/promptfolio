@@ -53,7 +53,7 @@ rule that the app never claims a send that did not happen has no exceptions.
 tried to do without one, until the owner wanted one email a day, which only a store can enforce.
 
 **Chat counts answers, not requests ([ADR 0013](../adr/0013-chat-daily-limits.md)).** Spending is the risk, so
-only live answers count, not invalid requests or prepared answers. Each live answer runs `INCR` and
+only live answers count, not invalid requests. Each live answer runs `INCR` and
 `EXPIRE key 86400 NX` in one transaction, so a crash between them cannot leave a counter that never expires, and
 `NX` keeps the window from sliding forward on each count.
 
@@ -65,7 +65,7 @@ There are two counters because they stop different things:
 | 200 for the site | Unbounded spend from any number of addresses | Someone using up the 200 on purpose |
 
 The visitor counts first, so someone already blocked adds nothing to the site's count. If the store fails, the
-model is not called, for the same reason as contact. Prepared answers still work, because they cost nothing.
+model is not called, for the same reason as contact.
 
 Each layer has its own job: the firewall stops bursts cheaply, the counters bound the day, and a provider spend
 limit is the last backstop.

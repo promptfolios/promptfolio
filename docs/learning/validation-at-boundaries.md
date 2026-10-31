@@ -70,10 +70,6 @@ The stream back to the browser mirrors the request allowlist: `forVisitor` passe
 types needed to show a text answer, and removes `providerMetadata` from those chunks. Tool calls and results never leave the server, so the browser
 has no tool parts to send back, and the request allowlist keeps rejecting them.
 
-The prepared-answers file (M7) is another input, even though the owner writes it: it is parsed
-with a strict schema, and a missing, unreadable, or invalid file means "no prepared answers", so
-every question is answered live. The request's `trigger` is now read too, as metadata: an
-unknown value counts as a new message instead of rejecting the request.
 
 Saved conversations (M6) are a boundary in the browser: `ThreadStore` keeps only the shape the
 server accepts when writing, and validates everything it reads back with zod, dropping invalid
@@ -108,8 +104,6 @@ dialog in the browser checks nothing itself: it displays the server's answers.
   tests ("rejects …") in [profile-tools.test.ts](../../packages/ai/src/profile-tools.test.ts), and
   invalid or unknown calls from the model in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
 - Output allowlist (`VISITOR_CHUNK_TYPES`): [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
-- Prepared-answers file (`parsePreparedAnswers`): [packages/ai/src/prepared-answers.ts](../../packages/ai/src/prepared-answers.ts),
-  read by [apps/portfolio/src/server/prepared-answers.ts](../../apps/portfolio/src/server/prepared-answers.ts)
 - Saved conversations: [apps/portfolio/src/chat/thread-store.ts](../../apps/portfolio/src/chat/thread-store.ts);
   tests in [thread-store.test.ts](../../apps/portfolio/src/chat/thread-store.test.ts)
 - GitHub responses and snapshot (`parseGitHubSnapshot`), configuration (`parseGitHubConfig`):

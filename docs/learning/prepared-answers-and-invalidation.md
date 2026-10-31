@@ -1,6 +1,13 @@
 # Prepared answers and cache invalidation
 
-First appears in: **M7** (seeded conversations and cache behavior). Status: **in use**.
+First appears in: **M7** (seeded conversations and cache behavior). Status: **removed in M12.5**.
+
+> The code below no longer exists. The developer removed prepared answers and fixed starters on 2026-11-01, because the
+> upkeep outweighed the benefit: answers had to be regenerated and reviewed after changes, and a free model could rarely
+> produce all of them in one pass. Every question is now answered live. The cost is that no answer works without the model.
+> This note stays as a record of what was tried. Links to code point at files that are gone, so use the Git history.
+> The profile fingerprint survives, as the refresh's profile version, in
+> [packages/core/src/profile/canonical.ts](../../packages/core/src/profile/canonical.ts).
 
 ## 1. What it is
 

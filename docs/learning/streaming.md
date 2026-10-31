@@ -72,9 +72,6 @@ single text chunk, because that is the shape assistant-ui expects.
 - Browser side (`useChat` with `DefaultChatTransport`):
   [apps/portfolio/src/components/chat-workspace.tsx](../../apps/portfolio/src/components/chat-workspace.tsx)
 - Cancellation: `request.signal` passed to `streamText` as `abortSignal` (chat-turn.ts)
-- A stream without a model: `preparedAnswerStream` in
-  [packages/ai/src/prepared-answers.ts](../../packages/ai/src/prepared-answers.ts) writes the chunks of a
-  one-step text answer for a prepared answer (M7); it goes through the same `forVisitor` filter
 - Title stream (`createAssistantStream`): [apps/portfolio/src/chat/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.ts)
 - SDK choice: [ADR 0003](../adr/0003-ai-sdk-selection.md)
 
@@ -87,8 +84,8 @@ single text chunk, because that is the shape assistant-ui expects.
 - A stream can also just stop producing anything. Without a timeout the visitor waits
   indefinitely; with one, check how the timeout reaches the browser (here: as an `abort`).
 - Don't build a custom streaming protocol. The spec says to use the SDK's (ADR 0003). A UI
-  message stream is only a sequence of chunks, though, so the server can write one itself when no
-  model is involved, as M7 does for prepared answers.
+  message stream is only a sequence of chunks, though, so a server could write one itself when no
+  model is involved.
 - Whatever the server streams, the client may store and send back. In M4, Anthropic's `custom`
   metadata part was echoed in the next request and rejected by the allowlist, breaking follow-up
   questions; tests with a mock model missed it because the mock emitted no such part. That is why

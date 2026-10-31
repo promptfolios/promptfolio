@@ -24,7 +24,7 @@ that builds it; code links are marked "planned").
 | Server-side secrets             | [server-side-secrets.md](server-side-secrets.md)             | M4            | in use  |
 | Tool calling                    | [tool-calling.md](tool-calling.md)                           | M5            | in use  |
 | Browser persistence             | [browser-persistence.md](browser-persistence.md)             | M6            | in use  |
-| Prepared answers and invalidation | [prepared-answers-and-invalidation.md](prepared-answers-and-invalidation.md) | M7 | in use |
+| Prepared answers and invalidation | [prepared-answers-and-invalidation.md](prepared-answers-and-invalidation.md) | M7 | removed in M12.5 |
 | Source adapters and snapshots   | [source-adapters-and-snapshots.md](source-adapters-and-snapshots.md) | M8 | in use |
 | Calling external APIs           | [calling-external-apis.md](calling-external-apis.md)         | M8            | in use  |
 | Contributions and evidence     | [contributions-and-evidence.md](contributions-and-evidence.md) | M8.1 | in use |
