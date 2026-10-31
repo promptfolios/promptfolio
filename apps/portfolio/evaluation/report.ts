@@ -19,10 +19,8 @@ export interface EvaluationSummary {
   passedRuns: number;
   /** Of the scored runs in cases that require a lookup: how many made one. */
   lookedUp: { runs: number; ofRuns: number };
-  /** Scored runs with any citation that does not hold up, and how many such citations. */
-  unverified: { runs: number; citations: number };
-  /** Scored runs with a non-empty answer but no verified citation. */
-  uncitedRuns: number;
+  /** Scored runs with any link outside the profile, and how many such links. */
+  unknownLinks: { runs: number; links: number };
   /** Runs where the server stopped a tool call written as text. */
   rawToolCallRuns: number;
   averageInputTokens: number;
@@ -45,13 +43,10 @@ export function summarize(cases: EvaluationCase[], runs: EvaluationRun[]): Evalu
       runs: lookupRuns.filter((run) => run.turn.toolCalls.length > 0).length,
       ofRuns: lookupRuns.length,
     },
-    unverified: {
-      runs: scored.filter((run) => run.turn.unverifiedIds.length > 0).length,
-      citations: scored.reduce((sum, run) => sum + run.turn.unverifiedIds.length, 0),
+    unknownLinks: {
+      runs: scored.filter((run) => run.turn.unknownLinks.length > 0).length,
+      links: scored.reduce((sum, run) => sum + run.turn.unknownLinks.length, 0),
     },
-    uncitedRuns: scored.filter(
-      (run) => run.turn.text.trim() !== "" && run.turn.verifiedIds.length === 0,
-    ).length,
     rawToolCallRuns: scored.filter((run) => run.turn.rawToolCall).length,
     averageInputTokens: average(scored.map((run) => run.turn.inputTokens)),
     averageOutputTokens: average(scored.map((run) => run.turn.outputTokens)),
@@ -100,8 +95,7 @@ export function formatReport(
     `| Scored runs that passed every check | ${summary.passedRuns} of ${summary.runs - summary.failedRuns} |`,
     `| Runs the provider failed (not scored) | ${summary.failedRuns} |`,
     `| Looked up when the case requires it | ${summary.lookedUp.runs} of ${summary.lookedUp.ofRuns} |`,
-    `| Runs with an unverified citation | ${summary.unverified.runs} (${summary.unverified.citations} citations) |`,
-    `| Runs with no verified citation | ${summary.uncitedRuns} |`,
+    `| Runs with a link outside the profile | ${summary.unknownLinks.runs} (${summary.unknownLinks.links} links) |`,
     `| Runs with a raw tool call, blocked | ${summary.rawToolCallRuns} |`,
     `| Average tokens per turn | ${summary.averageInputTokens} in, ${summary.averageOutputTokens} out |`,
     "",
@@ -138,9 +132,7 @@ export function formatReport(
         lines.push(
           `**Run ${index + 1}:** ${heading}`,
           "",
-          `Steps: ${turn.steps}. Finish: ${turn.finishReason ?? "unknown"}. Tools: ${turn.toolCalls.join(", ") || "none"}. Verified: ${
-            turn.verifiedIds.join(", ") || "none"
-          }. Unverified: ${turn.unverifiedIds.join(", ") || "none"}.`,
+          `Steps: ${turn.steps}. Finish: ${turn.finishReason ?? "unknown"}. Tools: ${turn.toolCalls.join(", ") || "none"}. Returned: ${turn.returnedIds.join(", ") || "none"}. Links: ${turn.links.join(", ") || "none"}. Outside the profile: ${turn.unknownLinks.join(", ") || "none"}.`,
           "",
           // Quoted, so an answer's Markdown cannot change the report's structure.
           ...(turn.text.trim() === ""

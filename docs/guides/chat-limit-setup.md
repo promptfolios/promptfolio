@@ -54,7 +54,7 @@ Counters are per region. On a host other than Vercel, a proxy must overwrite `x-
 | The site's 201st in 24 hours, from any address | A message about the daily limit (429) |
 | Redis down or slow, settings missing, or no address readable | "Could not answer right now" (503) |
 
-To change the numbers, pass `allowance` to `createRedisChatLimiter` in `src/server/chat-limit.ts`.
+To change the numbers, pass `allowance` to `createRedisChatLimiter` in `src/server/chat/chat-limit.ts`.
 
 ## What remains the owner's to watch
 

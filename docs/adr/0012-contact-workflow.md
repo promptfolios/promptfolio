@@ -27,7 +27,7 @@ action, not an SDK feature ([ADR 0003](0003-ai-sdk-selection.md)).
    clear answer, where a retry is safe). Only `sent` gives a success response.
 5. **A new package, with the provider and the store in the app.** `@promptfolio/contact` (zod only) owns
    validation, tokens, message building, handlers, and the `ContactSender` and `ContactSendLimiter`
-   interfaces. The app's `src/server/contact.ts` owns the environment, the Resend adapter, the Redis
+   interfaces. The app's `src/server/contact/contact.ts` owns the environment, the Resend adapter, the Redis
    adapter, and how a visitor is identified.
 6. **One email per visitor in 24 hours, enforced in the API
    ([M10.1](../plans/m10-1-daily-send-limit.md)).** A firewall window is too short and counts requests,

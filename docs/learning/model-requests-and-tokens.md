@@ -101,11 +101,11 @@ Each finished reply logs its token usage on the server, for example
 ## 4. Where it lives in the code
 
 - Profile size limits: [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts) (`LIMITS`)
-- Chat limits: [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts) (`CHAT_LIMITS`), enforced in
-  [packages/ai/src/request.ts](../../packages/ai/src/request.ts)
-- Provider call and usage logging: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
+- Chat limits: [packages/ai/src/chat/limits.ts](../../packages/ai/src/chat/limits.ts) (`CHAT_LIMITS`), enforced in
+  [packages/ai/src/chat/request.ts](../../packages/ai/src/chat/request.ts)
+- Provider call and usage logging: [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
 - Provider selection, model ids, and thinking settings:
-  [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts)
+  [apps/portfolio/src/server/chat/model.ts](../../apps/portfolio/src/server/chat/model.ts)
 - SDK choice: [ADR 0003](../adr/0003-ai-sdk-selection.md); model choice:
   [M4 plan, Decisions](../plans/m4-first-ai-integration.md#decisions); OpenRouter:
   [M7.1 plan](../plans/m7-1-openrouter-provider.md); AI Gateway:

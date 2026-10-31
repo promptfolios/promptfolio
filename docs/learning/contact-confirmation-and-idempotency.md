@@ -55,7 +55,7 @@ while blocking a different one.
 **Three outcomes, because "not sent" can be untrue.** After a timeout the request may have arrived, so
 "failed" could be false, and "sent" certainly could be. `unknown` says so, and a retry is safe because of
 the key. Only `sent` gives a success response, and in the browser
-[`confirmContact`](../../apps/portfolio/src/chat/contact-flow.ts) treats anything it cannot read as `unknown`.
+[`confirmContact`](../../apps/portfolio/src/contact/contact-flow.ts) treats anything it cannot read as `unknown`.
 
 ## 4. Where it lives in the code
 
@@ -63,8 +63,8 @@ the key. Only `sent` gives a success response, and in the browser
 - Key and email text: [packages/contact/src/message.ts](../../packages/contact/src/message.ts)
 - Handlers and outcomes: [packages/contact/src/handlers.ts](../../packages/contact/src/handlers.ts), tested
   in [handlers.test.ts](../../packages/contact/src/handlers.test.ts)
-- Provider answers to outcomes: [apps/portfolio/src/server/contact.ts](../../apps/portfolio/src/server/contact.ts)
-- Dialog states: [apps/portfolio/src/chat/contact-flow.ts](../../apps/portfolio/src/chat/contact-flow.ts)
+- Provider answers to outcomes: [apps/portfolio/src/server/contact/contact.ts](../../apps/portfolio/src/server/contact/contact.ts)
+- Dialog states: [apps/portfolio/src/contact/contact-flow.ts](../../apps/portfolio/src/contact/contact-flow.ts)
 - Decision: [ADR 0012](../adr/0012-contact-workflow.md)
 
 ## 5. Common pitfalls and misconceptions

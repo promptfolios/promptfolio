@@ -1,8 +1,8 @@
 import { handleChatRequest } from "@promptfolio/ai";
-import { createChatLimit } from "@/server/chat-limit";
-import { isContactEnabled } from "@/server/contact";
-import { createChatModel } from "@/server/model";
-import { loadAppProfile } from "@/server/profile";
+import { createChatLimit } from "@/server/chat/chat-limit";
+import { createChatModel } from "@/server/chat/model";
+import { isContactEnabled } from "@/server/contact/contact";
+import { loadAppProfile } from "@/server/profile/profile";
 
 /** Upper bound, in seconds, for one streamed reply on serverless hosts. */
 export const maxDuration = 60;

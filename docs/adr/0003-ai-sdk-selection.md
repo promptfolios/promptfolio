@@ -56,7 +56,7 @@ Checked against the installed types of `ai` 7.0.154, `@ai-sdk/anthropic` 4.0.89,
   same `provider:model` convention as the AI SDK's provider registry). Thinking is
   set low through `providerOptions`: `google.thinkingConfig.thinkingLevel` and
   `anthropic.effort`. `@promptfolio/ai` stays provider-agnostic; only the app's
-  `src/server/model.ts` knows the providers.
+  `src/server/chat/model.ts` knows the providers.
 - Tests use `MockLanguageModelV4` from `ai/test` and `simulateReadableStream` from `ai`.
 - The UI message stream forwards provider `custom` parts (for example Anthropic's message id and
   usage) with no option to turn them off; `@promptfolio/ai` filters them out.
@@ -70,7 +70,7 @@ OpenRouter. See the [M7.1 plan](../plans/m7-1-openrouter-provider.md).
 
 - **Why a router is acceptable here.** This ADR prefers direct provider packages to avoid coupling
   to one hosting vendor. OpenRouter is a gateway too, but it is optional: one entry in
-  `src/server/model.ts`, last in the fallback order, and the direct providers stay.
+  `src/server/chat/model.ts`, last in the fallback order, and the direct providers stay.
   `@promptfolio/ai` does not know about it.
 - **Why this package and not `@ai-sdk/openai-compatible`.** Only this one sends OpenRouter's
   documented `reasoning` parameter and returns `reasoning_details` between tool steps, which
@@ -88,7 +88,7 @@ OpenRouter's free models ran out too (most likely the daily cap), so a fourth pr
 
 - **Not a reversal of this ADR.** The ADR chose direct provider packages *instead of* AI Gateway
   model strings. The app still never uses plain model strings: the gateway is one optional entry
-  in `src/server/model.ts`, last in the fallback order, created with `createGateway({ apiKey })`.
+  in `src/server/chat/model.ts`, last in the fallback order, created with `createGateway({ apiKey })`.
   `@promptfolio/ai` does not know about it.
 - **No new dependency.** `ai` already depends on `@ai-sdk/gateway` and re-exports
   `createGateway`.

@@ -36,7 +36,7 @@ flowchart LR
 
 - [`apps/minimal-consumer/src/consumer.ts`](../../apps/minimal-consumer/src/consumer.ts) and its test
 - [`apps/portfolio/profile/second.profile.json`](../../apps/portfolio/profile/second.profile.json) and
-  [`second-profile.test.ts`](../../apps/portfolio/src/server/second-profile.test.ts)
+  [`second-profile.test.ts`](../../apps/portfolio/src/server/profile/second-profile.test.ts)
 - Each package's `src/index.ts` and `README.md`
 
 ## 5. Common pitfalls and misconceptions
@@ -45,10 +45,9 @@ flowchart LR
   source, so they cannot be installed elsewhere until they get a compiled build and are published.
 - **Passing here does not mean a good experience for everyone.** The second profile loads and renders, but no real model
   has answered about it.
-- **The UI is not covered.** The chat components, thread store, and citation markers live in the reference app. A
+- **The UI is not covered.** The chat components, thread store, and link check live in the reference app. A
   consumer with its own UI writes those itself.
-- **Exporting for a test is not a reason to keep an export,** unless the test checks that app and package agree, as
-  `citedIds` does.
+- **Exporting for a test is not a reason to keep an export,** unless the test checks that app and package agree.
 
 ## 6. Further reading
 

@@ -4,7 +4,7 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
 
 ## Answers
 
-- **Nothing answers without the model.** Prepared answers and fixed starters were removed in M12.5. So when the provider
+- **Nothing answers without the model.** Prepared answers were removed in M12.5, and generated starter questions are answered live. So when the provider
   fails, every question fails, and each one counts against the daily limits.
 - **A model can write a tool call as text.** On `nemotron-3.5-lightning`, 2 of 17 answers were literal `<tool_call>`
   text. The server now stops `<tool_call` and `<function=` and shows the generic error, so the visitor gets no answer on
@@ -14,18 +14,22 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
   quoted injected text while refusing it, and answers can narrate, mention injected text unprompted, and add their own
   sources. Its provider is not marked as no-training, and the free model may not stay available.
   See [the evaluation](evaluation/README.md#the-run-on-ling-failed-the-gate).
-- **A citation is not proof that a sentence is right.** The server checks that a cited record was looked up in that
-  turn. It cannot check that the record supports the sentence. A real answer listed seven technologies and cited one
-  repository, and an evaluation run wrote "note-notes" for a note-taking app with a verified citation.
-- **Uncited facts carry no warning.** A claim with no citation, or one the server could not match, shows no marker
-  and no source. Only the server log's `citations { verified, unverified }` counts record that. Model text streams
-  as it arrives, so it cannot be corrected afterwards.
-- **Skills and links have no ids,** so they never get a source entry.
+- **A link is not proof that a sentence is right.** It shows the record exists. It cannot show that the record supports the
+  sentence, and the model can attach a real profile URL to the wrong name.
+- **Nothing shows which record a fact relies on.** Removing citations in M12.7 means a claim with no support shows no
+  warning, and no count records it. Roles, education, and the identity summary usually have no URL, so they carry no link.
+  Model text streams as it arrives, so it cannot be corrected afterwards. See
+  [ADR 0014](adr/0014-markdown-links-instead-of-sources-panel.md).
+- **A failed starter generation lasts until the next build.** That page has no chips.
+- **A starter question can get a bad answer.** Questions are written without any lookup, and a click is answered like anything
+  typed. In the first test of M12.9, "Which languages does Amanx5 use in the ecommerce repository?" got the answer that no such repository
+  is in the profile, after one lookup, though there is one. A question can also assume something, such as a role in a repository.
+  See [ADR 0015](adr/0015-generated-starter-questions.md).
+- **The basis and observation date show only when asked.** They remain in every tool result.
 - **Long answers can be cut off.** On a real profile with many repositories, an answer can reach the whole-reply limit, now 55
-  seconds, which shows the error after the text so far, with raw `[id]` citations and no sources. Or it can reach the 2,000-token
+  seconds, which shows the error after the text so far. Or it can reach the 2,000-token
   limit per step and simply stop. A prompt rule asking for short answers would be the fix, and would need a new evaluation.
-- **Long ids can come out garbled,** such as `[github.com/pixel-notes]` or `[queue‑lab]`, or in other brackets such as
-  `【id】`. The sentence then has no marker. Look-alike hyphens are handled. See [the evaluation](evaluation/README.md).
+- **Threads saved before M12.7 show raw `[record-id]` text** in their old answers.
 - **The evaluation is small.** It covers one fictional profile. The full set on the final prompt ran on one model, which
   failed, and the default model has not been run.
 - **Prompt rules guide the model and enforce nothing.** Anything that must hold is enforced in code; wording rules,
@@ -62,10 +66,8 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
 Assessed in M11.3 from Biome's accessibility rules on the vendored UI, and the page's structure. No screen reader test
 was run.
 
-- **Findings in code visitors can reach:** one, a `div` with `onFocus` around "load earlier" in `thread.aui.tsx`. It
-  only tracks focus and is not interactive, so it is not a problem.
-- **Findings in code visitors cannot reach:** the rest, in the attachment, image, and media components, which nothing
-  renders now that attachments are off. They would need fixing before any of those is turned on.
+- **Findings:** the components with Biome findings (load earlier, attachments, images, and media) were removed in M12.6.
+  Biome does not check the vendored UI, so this was not assessed again. Adding one of them back means reviewing it first.
 - **Checked on the page:** `lang` is set, `main` and `nav` landmarks exist, and every button has a name.
 - **Biome's rules are narrower than a full audit.** Color contrast and keyboard order have not been reviewed.
 
@@ -74,5 +76,4 @@ was run.
 - **The version switcher can disappear.** After a failed reply is retried, viewing the failed version hides the switcher,
   so a visitor has to retry or reload to get back. This comes from the vendored assistant-ui code. It was seen in M4,
   and is not reproduced or fixed here.
-- **The Copy button copies raw `[id]` citations.**
 - **Conversations stay in one browser.** They are not synced, and clearing site data removes them.

@@ -19,7 +19,7 @@ must stay out of reusable package code.
   `apps/portfolio/.env.local` (also ignored); `.env.example` documents it.
 - There is no silent fallback from a configured file to the example: a missing or invalid file is
   reported, so a deployment cannot quietly show a fictional person.
-- File reading happens in the app (`src/server/profile.ts`); `core` receives parsed data and a
+- File reading happens in the app (`src/server/profile/profile.ts`); `core` receives parsed data and a
   source description, including the file's modification time as `observedAt`.
 
 Alternatives considered: committing real data (breaks profile independence), a TypeScript data

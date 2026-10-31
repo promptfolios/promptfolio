@@ -39,7 +39,7 @@ There are three streams, one per hop:
 2. **Server to browser.** `toUIMessageStream()` re-encodes the parts as the AI SDK's *UI message
    stream*: server-sent events whose `data:` lines are small JSON chunks, such as
    `{"type":"text-delta","id":"…","delta":"Jordan is"}`, ending with `finish` and `data: [DONE]`.
-   Promptfolio passes only an allowlist of chunk types (`start`, step boundaries, text, `data-sources` from M11.2, `finish`,
+   Promptfolio passes only an allowlist of chunk types (`start`, step boundaries, text, `finish`,
    `error`, `abort`) and removes `providerMetadata` from the chunks it passes. Provider `custom`
    metadata, Gemini's encrypted `thoughtSignature` on text chunks, and, from M5, tool calls and
    tool results stay on the server.
@@ -66,13 +66,13 @@ single text chunk, because that is the shape assistant-ui expects.
 ## 4. Where it lives in the code
 
 - Server stream, error replacement, chunk allowlist and timeout-to-error conversion
-  (`VISITOR_CHUNK_TYPES`, `forVisitor`): [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts);
+  (`VISITOR_CHUNK_TYPES`, `forVisitor`): [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts);
   tests for a mid-stream error, dropped provider parts, and hidden tool chunks in
-  [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
+  [chat-handler.test.ts](../../packages/ai/src/chat/chat-handler.test.ts)
 - Browser side (`useChat` with `DefaultChatTransport`):
-  [apps/portfolio/src/components/chat-workspace.tsx](../../apps/portfolio/src/components/chat-workspace.tsx)
+  [apps/portfolio/src/components/chat/chat-workspace.tsx](../../apps/portfolio/src/components/chat/chat-workspace.tsx)
 - Cancellation: `request.signal` passed to `streamText` as `abortSignal` (chat-turn.ts)
-- Title stream (`createAssistantStream`): [apps/portfolio/src/chat/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.ts)
+- Title stream (`createAssistantStream`): [apps/portfolio/src/chat/threads/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/threads/browser-thread-list-adapter.ts)
 - SDK choice: [ADR 0003](../adr/0003-ai-sdk-selection.md)
 
 ## 5. Common pitfalls and misconceptions

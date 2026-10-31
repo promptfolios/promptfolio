@@ -9,9 +9,10 @@ export {
   type ChatProviderOptions,
   type ChatTimeouts,
   handleChatRequest,
-} from "./chat-handler";
-export type { ChatLimit, ChatTurnDecision, ChatTurnLimiter } from "./chat-limit";
-export { type ChatSources, type CitedSource, citedIds, type SourceEvidence } from "./citations";
+} from "./chat/chat-handler";
+export type { ChatLimit, ChatTurnDecision, ChatTurnLimiter } from "./chat/chat-limit";
+export { CHAT_LIMITS } from "./chat/limits";
+export type { SystemPromptOptions } from "./chat/system-prompt";
 export {
   type EvaluateQuestionOptions,
   type EvaluationCheck,
@@ -19,6 +20,10 @@ export {
   type EvaluationTurn,
   evaluateQuestion,
   scoreEvaluationTurn,
-} from "./evaluation";
-export { CHAT_LIMITS } from "./limits";
-export type { SystemPromptOptions } from "./system-prompt";
+} from "./evaluation/evaluation";
+export {
+  type GenerateStarterQuestionsOptions,
+  generateStarterQuestions,
+  STARTER_LIMITS,
+  type StarterQuestion,
+} from "./starters/starters";

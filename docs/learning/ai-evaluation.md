@@ -23,8 +23,8 @@ flowchart LR
     report --> person["a person reads the answers"]
 ```
 
-**Checks are deterministic.** They cover which tools ran, which citations hold up, and which phrases must or must not
-appear. No model judges another model, because that would just move the question of who checks the judge.
+**Checks are deterministic.** They cover which tools ran, which records they returned, whether every link is in the profile, and which phrases must
+or must not appear. No model judges another model, because that would just move the question of who checks the judge.
 
 **Patterns are deliberately loose,** so a good answer in other words still passes. They still go wrong both ways. The
 first run failed good answers: "whether Riley is a core maintainer is not available" matched the forbidden phrase "Riley
@@ -42,7 +42,7 @@ a cause.
 
 ## 4. Where it lives in the code
 
-- `evaluateQuestion`, `scoreEvaluationTurn`: [packages/ai/src/evaluation.ts](../../packages/ai/src/evaluation.ts)
+- `evaluateQuestion`, `scoreEvaluationTurn`: [packages/ai/src/evaluation/evaluation.ts](../../packages/ai/src/evaluation/evaluation.ts)
 - Cases, fictional profile, and report: [apps/portfolio/evaluation/](../../apps/portfolio/evaluation/)
 - The runner: [apps/portfolio/scripts/evaluate.ts](../../apps/portfolio/scripts/evaluate.ts)
 - Results: [docs/evaluation/](../evaluation/README.md)

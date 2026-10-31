@@ -20,6 +20,7 @@ export {
 export {
   findRecordById,
   type ProfileRecordMatch,
+  profileLinkUrls,
   recordsUsingSkill,
   type SkillUsage,
 } from "./profile/query";

@@ -88,4 +88,4 @@ Recorded 2026-11-01. In review.
 
 **Seen once, not reproduced:** on the first load after one dev server start, the thread list stayed in its loading state for over 20 seconds, and sending was disabled. A reload cleared it. It did not return after a second reload, a load with empty storage, or a restarted server. The cause is unknown. It could be related to removing the starters' `config` from the provider, or to the first compile, so it is worth watching.
 
-**Confirmed by the developer (2026-11-01):** the starter buttons stay removed.
+**Confirmed by the developer (2026-11-01):** the starter buttons stay removed. *Later the same day,* the developer asked for starters written by a model, so [M12.9](m12-9-generated-starter-questions.md) added those.

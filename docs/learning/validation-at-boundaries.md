@@ -28,7 +28,7 @@ The profile path has two boundaries, one in the app and one in the library:
 
 ```mermaid
 flowchart LR
-    subgraph app["apps/portfolio/src/server/profile.ts"]
+    subgraph app["apps/portfolio/src/server/profile/profile.ts"]
         direction TB
         a1["file name stays inside profile/?"] --> a2["file readable?"] --> a3["valid JSON?"]
     end
@@ -52,7 +52,7 @@ to remove.
 
 1. Read the body, stopping after 100 KB, so an oversized body is never parsed (413).
 2. Parse JSON (400), then check the shape with zod: only `messages` is read; roles are `user` or
-   `assistant` (a `system` role is rejected); parts are `text`, `data-sources` (the server's own sources block, dropped on arrival so a forged one has no effect), or `step-start` (a content-free
+   `assistant` (a `system` role is rejected); parts are `text` or `step-start` (a content-free
    marker the AI SDK adds, dropped). Other body fields, such as `system` and `tools`, are stripped.
 3. Check the limits (413) and that the last message is a non-empty question (400).
 4. Rebuild clean messages from the accepted text only, and pass those on.
@@ -92,22 +92,22 @@ dialog in the browser checks nothing itself: it displays the server's answers.
 ## 4. Where it lives in the code
 
 - Contact requests: [packages/contact/src/request.ts](../../packages/contact/src/request.ts)
-- File and path checks: [apps/portfolio/src/server/profile.ts](../../apps/portfolio/src/server/profile.ts)
+- File and path checks: [apps/portfolio/src/server/profile/profile.ts](../../apps/portfolio/src/server/profile/profile.ts)
 - Schema and `LIMITS`: [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts)
 - `ProfileLoadResult`, `toProfileIssue`, `formatPath`: [packages/core/src/profile/load.ts](../../packages/core/src/profile/load.ts)
 - Owner-facing error page: [apps/portfolio/src/app/page.tsx](../../apps/portfolio/src/app/page.tsx)
 - Tests ("rejects …", "reports every problem at once"): [packages/core/src/profile/load.test.ts](../../packages/core/src/profile/load.test.ts)
-- Chat request allowlist and limits: [packages/ai/src/request.ts](../../packages/ai/src/request.ts),
-  [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts); tests ("rejects …") in
-  [packages/ai/src/chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
-- Tool input schemas (`listInputSchema`, `getInputSchema`): [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
-  tests ("rejects …") in [profile-tools.test.ts](../../packages/ai/src/profile-tools.test.ts), and
-  invalid or unknown calls from the model in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
-- Output allowlist (`VISITOR_CHUNK_TYPES`): [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
-- Saved conversations: [apps/portfolio/src/chat/thread-store.ts](../../apps/portfolio/src/chat/thread-store.ts);
-  tests in [thread-store.test.ts](../../apps/portfolio/src/chat/thread-store.test.ts)
+- Chat request allowlist and limits: [packages/ai/src/chat/request.ts](../../packages/ai/src/chat/request.ts),
+  [packages/ai/src/chat/limits.ts](../../packages/ai/src/chat/limits.ts); tests ("rejects …") in
+  [packages/ai/src/chat/chat-handler.test.ts](../../packages/ai/src/chat/chat-handler.test.ts)
+- Tool input schemas (`listInputSchema`, `getInputSchema`): [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts);
+  tests ("rejects …") in [profile-tools.test.ts](../../packages/ai/src/grounding/profile-tools.test.ts), and
+  invalid or unknown calls from the model in [chat-handler.test.ts](../../packages/ai/src/chat/chat-handler.test.ts)
+- Output allowlist (`VISITOR_CHUNK_TYPES`): [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
+- Saved conversations: [apps/portfolio/src/chat/threads/thread-store.ts](../../apps/portfolio/src/chat/threads/thread-store.ts);
+  tests in [thread-store.test.ts](../../apps/portfolio/src/chat/threads/thread-store.test.ts)
 - GitHub responses and snapshot (`parseGitHubSnapshot`), configuration (`parseGitHubConfig`):
-  [packages/source-github/src/snapshot.ts](../../packages/source-github/src/snapshot.ts),
+  [packages/source-github/src/snapshot/snapshot.ts](../../packages/source-github/src/snapshot/snapshot.ts),
   [config.ts](../../packages/source-github/src/config.ts); observed records in core:
   [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts)
 

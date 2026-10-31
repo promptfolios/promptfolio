@@ -66,15 +66,15 @@ flowchart TD
 
 ## 4. Where it lives in the code
 
-- Carrying entries over: [packages/source-github/src/carry-forward.ts](../../packages/source-github/src/carry-forward.ts)
-- Partial results from the fetcher: [packages/source-github/src/fetch.ts](../../packages/source-github/src/fetch.ts);
-  snapshot version 2: [snapshot.ts](../../packages/source-github/src/snapshot.ts)
+- Carrying entries over: [packages/source-github/src/snapshot/carry-forward.ts](../../packages/source-github/src/snapshot/carry-forward.ts)
+- Partial results from the fetcher: [packages/source-github/src/fetch/fetch.ts](../../packages/source-github/src/fetch/fetch.ts);
+  snapshot version 2: [snapshot.ts](../../packages/source-github/src/snapshot/snapshot.ts)
 - Per-repository `observedAt`: [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts)
-- The refresh itself: [apps/portfolio/src/server/refresh.ts](../../apps/portfolio/src/server/refresh.ts);
-  the status file: [refresh-status.ts](../../apps/portfolio/src/server/refresh-status.ts);
+- The refresh itself: [apps/portfolio/src/server/refresh/refresh.ts](../../apps/portfolio/src/server/refresh/refresh.ts);
+  the status file: [refresh-status.ts](../../apps/portfolio/src/server/refresh/refresh-status.ts);
   the command: [apps/portfolio/scripts/refresh.ts](../../apps/portfolio/scripts/refresh.ts)
-- Tests: [carry-forward.test.ts](../../packages/source-github/src/carry-forward.test.ts),
-  [refresh.test.ts](../../apps/portfolio/src/server/refresh.test.ts)
+- Tests: [carry-forward.test.ts](../../packages/source-github/src/snapshot/carry-forward.test.ts),
+  [refresh.test.ts](../../apps/portfolio/src/server/refresh/refresh.test.ts)
 
 ## 5. Common pitfalls and misconceptions
 

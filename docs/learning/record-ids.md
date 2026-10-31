@@ -15,8 +15,7 @@ Ids are the handles that code and the model use to point at a fact:
 - `Project.roleId` links a project to the role it was done under.
 - The `getProfileRecord` tool takes an id as its argument, and every summary returned by
   `listProfileRecords` carries one.
-- Answers cite ids in square brackets (`[service-catalog]`), so a claim can be traced back to a
-  record.
+- The evaluation checks which ids the tools returned in a turn.
 
 If ids changed whenever a name changed, every one of those links would break.
 
@@ -62,20 +61,13 @@ repository's key instead.
 - Tests: [packages/core/src/profile/load.test.ts](../../packages/core/src/profile/load.test.ts)
 - Decision: [ADR 0005](../adr/0005-profile-model-and-provenance.md), point 4
 - Lookup by id (`findRecordById`, exact match only): [packages/core/src/profile/query.ts](../../packages/core/src/profile/query.ts)
-- Ids as tool arguments: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
-  citation rule in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts).
-  Checking that cited ids were returned in that turn: [packages/ai/src/citations.ts](../../packages/ai/src/citations.ts)
+- Ids as tool arguments: [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts)
 - Both id forms (`isRecordId`, `isSourceKey`): [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts);
-  repository ids from GitHub (`repositoryKey`): [packages/source-github/src/normalize.ts](../../packages/source-github/src/normalize.ts);
+  repository ids from GitHub (`repositoryKey`): [packages/source-github/src/snapshot/normalize.ts](../../packages/source-github/src/snapshot/normalize.ts);
   id conflicts and annotations: [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts)
 
-`owner_identity` is a reserved citation for the identity block, which reaches the model in the system
-prompt rather than through a tool. Record ids cannot contain an underscore, so it cannot collide with one.
-
-Ids are for the model and the server. Visitors see a numbered marker that leads to the record's entry in
-the sources panel; a citation the server could not match shows nothing, so the claim reads as uncited,
-and the server log counts it. The raw `[id]` stays in the stored
-text, which is what the Copy button copies, and it is what a thread saved before M11.2 still shows.
+Ids are for the model and the code. Visitors see names and links ([links in answers](links-in-answers.md)). Answers saved
+between M5 and M12.7 still hold raw `[id]` text, because ids were cited in brackets then.
 
 ## 5. Common pitfalls and misconceptions
 

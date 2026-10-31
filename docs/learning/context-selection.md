@@ -31,7 +31,7 @@ B gives better answers today, but A was chosen for four reasons:
    sentence by sentence against the JSON. M4 tests abstention, which needs the data to be missing.
 2. **Provenance survives.** B turns records into fluent prose and drops the `basis` labels, so a
    self-reported skill reads like a verified fact. With tools (M5), each answer traces to a record
-   id and basis, which makes citations possible.
+   id and basis.
 3. **Untrusted text stays out of the system prompt.** From M8, sources such as GitHub READMEs are
    untrusted. The system prompt carries the most authority, so it holds only our rules and the
    owner's identity; source data arrives as tool results.
@@ -57,11 +57,11 @@ repositories leave them out and only `getProfileRecord` for one repository retur
 ## 4. Where it lives in the code
 
 - System prompt built from `profile.identity` only:
-  [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
-- Profile lookup tools: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts)
+  [packages/ai/src/chat/system-prompt.ts](../../packages/ai/src/chat/system-prompt.ts)
+- Profile lookup tools: [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts)
 - The decision and its alternatives: [M4 plan, Decisions](../plans/m4-first-ai-integration.md#decisions)
 - Identity and provenance types: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
-- Repository lists without READMEs: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts) (`summarizeRepository`)
+- Repository lists without READMEs: [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts) (`summarizeRepository`)
 
 ## 5. Common pitfalls and misconceptions
 

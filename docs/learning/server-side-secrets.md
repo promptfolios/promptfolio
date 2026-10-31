@@ -28,7 +28,7 @@ flowchart LR
 
 Three layers keep the key on the server:
 
-1. **Where it is read.** Only `src/server/model.ts` reads the provider keys
+1. **Where it is read.** Only `src/server/chat/model.ts` reads the provider keys
    (`GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY`, since M7.1 `OPENROUTER_API_KEY`, and
    since M7.2 `AI_GATEWAY_API_KEY`), inside a request handler. Next.js
    inlines only variables prefixed `NEXT_PUBLIC_` into client code; these are not. The gateway
@@ -59,28 +59,28 @@ GitHub Actions supplies `GITHUB_TOKEN` itself, limited to the permissions the wo
 who has it can start a deployment, so it lives in a repository secret, never in the workflow file.
 The job needs no model key.
 
-M10 adds four secrets, read only in `src/server/contact.ts`, which is also `server-only`:
+M10 adds four secrets, read only in `src/server/contact/contact.ts`, which is also `server-only`:
 `RESEND_API_KEY`, `CONTACT_TOKEN_SECRET`, `UPSTASH_REDIS_REST_TOKEN` (from M10.1), and `CONTACT_TO_EMAIL`.
 The address is not a credential, but it is private ([ADR 0005](../adr/0005-profile-model-and-provenance.md)). The page passes the browser only a
 boolean, `contactEnabled`, and the review shows the owner's name. Provider error messages stay out of
 responses and logs; only the error's name is logged.
 
-M11.1 adds `VISITOR_HASH_SECRET`, read only in `src/server/chat-limit.ts`. The Redis settings moved to
-`src/server/redis.ts`, and the visitor hash to `src/server/visitor.ts`, both `server-only`. The sentinel check was
+M11.1 adds `VISITOR_HASH_SECRET`, read only in `src/server/chat/chat-limit.ts`. The Redis settings moved to
+`src/server/shared/redis.ts`, and the visitor hash to `src/server/shared/visitor.ts`, both `server-only`. The sentinel check was
 rerun with these secrets and found none in `.next`.
 
 ## 4. Where it lives in the code
 
-- Reading the key: [apps/portfolio/src/server/model.ts](../../apps/portfolio/src/server/model.ts),
-  tested in [model.test.ts](../../apps/portfolio/src/server/model.test.ts)
-- Contact configuration: [apps/portfolio/src/server/contact.ts](../../apps/portfolio/src/server/contact.ts),
+- Reading the key: [apps/portfolio/src/server/chat/model.ts](../../apps/portfolio/src/server/chat/model.ts),
+  tested in [model.test.ts](../../apps/portfolio/src/server/chat/model.test.ts)
+- Contact configuration: [apps/portfolio/src/server/contact/contact.ts](../../apps/portfolio/src/server/contact/contact.ts),
   leak tests in [packages/contact/src/handlers.test.ts](../../packages/contact/src/handlers.test.ts)
 - The route: [apps/portfolio/src/app/api/chat/route.ts](../../apps/portfolio/src/app/api/chat/route.ts)
-- Generic error messages: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
-  (`genericErrorMessage`), with leak tests in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
+- Generic error messages: [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
+  (`genericErrorMessage`), with leak tests in [chat-handler.test.ts](../../packages/ai/src/chat/chat-handler.test.ts)
 - Example configuration: [apps/portfolio/.env.example](../../apps/portfolio/.env.example)
 - The GitHub token: [apps/portfolio/scripts/refresh.ts](../../apps/portfolio/scripts/refresh.ts),
-  leak tests in [apps/portfolio/src/server/refresh.test.ts](../../apps/portfolio/src/server/refresh.test.ts) and [packages/source-github/src/fetch.test.ts](../../packages/source-github/src/fetch.test.ts)
+  leak tests in [apps/portfolio/src/server/refresh/refresh.test.ts](../../apps/portfolio/src/server/refresh/refresh.test.ts) and [packages/source-github/src/fetch/fetch.test.ts](../../packages/source-github/src/fetch/fetch.test.ts)
 
 ## 5. Common pitfalls and misconceptions
 

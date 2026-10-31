@@ -42,6 +42,8 @@ Use **assistant-ui** with its shadcn-based styled components, which brings **Tai
   [M6 plan](../plans/m6-browser-conversation-persistence.md)).
 - **Starters:** `Suggestions(...)` from `src/config/starters.ts`, shown on the welcome screen;
   selecting one sends its prompt as the first message.
+  *Update (M12.5):* the starters were removed. *Update (M12.10):* a model now writes them at build time
+  ([ADR 0015](0015-generated-starter-questions.md)).
 
 ### Vendored code policy
 
@@ -51,8 +53,12 @@ Files copied by the shadcn and assistant-ui CLIs are treated as vendored:
 - They are excluded from Biome so they stay close to upstream and future updates produce
   reviewable diffs.
 - Local changes are kept minimal and marked with a `Promptfolio change:` comment. Current changes
-  in `thread.aui.tsx`: show the attachment button only when attachments are configured, and a
-  visible focus ring on the composer.
+  in `thread.aui.tsx`: a visible focus ring on the composer, and, since M12.6, only the UI this app
+  can show. The server sends visitors text and sources alone, so the registry's tool, reasoning,
+  attachment, image, file, voice, suggestion, feedback, resume, and load-earlier UI was removed
+  ([plan](../plans/m12-6-code-cleanup.md)). This is larger than the "minimal" rule above: a registry
+  update to this file needs a manual merge, and turning a feature on means adding its component again.
+  Spacing, corners, and the send button's shape follow assistant-ui's own demo (M12.10). In `thread-list.aui.tsx` (M12.8): an outlined New Thread button. In `markdown-text.tsx` (M12.7): the link check.
 - The CLI placed assistant-ui files directly in `src/components/`; they were moved to the layout
   their own imports expect (`components/assistant-ui/elements` and `.../utils`).
 

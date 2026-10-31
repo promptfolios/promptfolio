@@ -4,7 +4,7 @@
 // Node's own type stripping cannot resolve the packages' extensionless imports, so jiti
 // loads the script. jiti does not apply the `react-server` condition, so `server-only`
 // (which throws outside a React Server Components build) is aliased to its empty module,
-// as `src/server/model.test.ts` does with `vi.mock`.
+// as `src/server/chat/model.test.ts` does with `vi.mock`.
 import { createRequire } from "node:module";
 import path from "node:path";
 import { createJiti } from "jiti";

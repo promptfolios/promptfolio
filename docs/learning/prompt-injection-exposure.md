@@ -41,12 +41,12 @@ model does follow an injection.
 
 ## 4. Where it lives in the code
 
-- Request allowlist: [packages/ai/src/request.ts](../../packages/ai/src/request.ts)
-- Tool set and budget: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts)
-- Stream allowlist: `forVisitor` in [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
-- README cleaning: `readmeExcerpt` in [packages/source-github/src/normalize.ts](../../packages/source-github/src/normalize.ts)
+- Request allowlist: [packages/ai/src/chat/request.ts](../../packages/ai/src/chat/request.ts)
+- Tool set and budget: [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts)
+- Stream allowlist: `forVisitor` in [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
+- README cleaning: `readmeExcerpt` in [packages/source-github/src/snapshot/normalize.ts](../../packages/source-github/src/snapshot/normalize.ts)
 - The whole path, from a hostile README to the prompt and the browser:
-  [apps/portfolio/src/server/injected-source.test.ts](../../apps/portfolio/src/server/injected-source.test.ts)
+  [apps/portfolio/src/server/profile/injected-source.test.ts](../../apps/portfolio/src/server/profile/injected-source.test.ts)
 
 ## 5. Common pitfalls and misconceptions
 
@@ -54,8 +54,9 @@ model does follow an injection.
   nothing.
 - "Removing HTML and images from a README is enough." The injected text can ask the model to write them itself,
   which is why rendering is protected too.
-- A link needs a click, but it can still carry conversation text or point somewhere harmful. M11 does not restrict
-  which links the model may write, so a visitor should read a link before following it.
+- A link needs a click, but it can still carry conversation text or point somewhere harmful. Since M12.7 only exact URLs
+  from the profile become links ([links in answers](links-in-answers.md)). A repository's own homepage is on that list, and
+  can point anywhere its owner likes.
 - A test with a mock model shows what reaches the model, not what a real model does with it.
 - A visitor can forge earlier assistant messages in their own request. It only affects their own answer, and the
   prompt tells the model that earlier messages are not evidence.

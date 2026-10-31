@@ -20,18 +20,28 @@ Status: early development. See [`PROMPTFOLIO_SPEC.md`](PROMPTFOLIO_SPEC.md) for 
 | `apps/minimal-consumer`  | `minimal-consumer`           | A small test-backed consumer with no framework.               |
 | `docs/`                  | —                            | Roadmap, architecture decision records, and background notes. |
 
+Source files are grouped by what they do:
+
+| Path                             | Folders                                                                |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `packages/ai/src`                | `chat`, `grounding` (profile tools), `evaluation`                       |
+| `packages/source-github/src`     | `fetch` (all I/O), `selection`, `snapshot`                             |
+| `packages/core/src`              | `profile`                                                              |
+| `apps/portfolio/src/server`      | `chat`, `contact`, `profile`, `refresh`, `shared`                      |
+| `apps/portfolio/src` (browser)   | `chat/threads`, `chat/sources`, `contact`, `components`                |
+
 Dependency direction: apps depend on packages; packages never depend on apps. Each package has a README with its
 entry points and an example. The packages are not published, so use them from this workspace.
 
 The reference app's chat UI uses [assistant-ui](https://www.assistant-ui.com/) with Tailwind CSS
-and shadcn/ui. Component code copied by their CLIs lives in `apps/portfolio/src/components/ui/`,
+and shadcn/ui, in light and dark modes. Component code copied by their CLIs lives in `apps/portfolio/src/components/ui/`,
 `apps/portfolio/src/components/assistant-ui/`, and `apps/portfolio/src/hooks/`; it is treated as
 vendored and excluded from linting (see
 [ADR 0007](docs/adr/0007-chat-ui-assistant-ui.md)).
 
 Replies come from a model through the app's own `/api/chat` route, using the
 [Vercel AI SDK](https://ai-sdk.dev/). The model knows the owner's name, headline, and summary, and looks everything
-else up with read-only profile tools. Answers cite the records they used, and the server checks those citations.
+else up with read-only profile tools. Answers link to the records they use, and only URLs from the profile become links.
 
 ## Requirements
 

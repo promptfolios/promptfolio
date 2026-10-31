@@ -14,7 +14,7 @@ it only asks.
 
 It is how the assistant gets profile facts without putting the whole profile in the system prompt
 (see [context selection](context-selection.md)). Each fact arrives as a record with an id and a
-basis, so the answer can cite it and say whose claim it is. Because the lookups are deterministic
+basis, so the answer can say whose claim it is. Because the lookups are deterministic
 code over the validated profile, "not in the profile" is a definite result, not a guess.
 
 ## 3. How it works
@@ -79,16 +79,16 @@ skill filter does not apply to this section.
 
 ## 4. Where it lives in the code
 
-- Tools, input schemas, call budget: [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts),
-  tested in [profile-tools.test.ts](../../packages/ai/src/profile-tools.test.ts)
+- Tools, input schemas, call budget: [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts),
+  tested in [profile-tools.test.ts](../../packages/ai/src/grounding/profile-tools.test.ts)
 - Pure lookups without the AI SDK (`findRecordById`, `recordsUsingSkill`):
   [packages/core/src/profile/query.ts](../../packages/core/src/profile/query.ts)
 - The loop (`tools`, `stopWhen`, `prepareStep`), the output allowlist (`forVisitor`), and tool-call
-  logging (`logToolCalls`): [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts);
-  multi-step tests with `MockLanguageModelV4` in [chat-handler.test.ts](../../packages/ai/src/chat-handler.test.ts)
-- Limits (`maxSteps`, `maxToolCalls`): [packages/ai/src/limits.ts](../../packages/ai/src/limits.ts)
+  logging (`logToolCalls`): [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts);
+  multi-step tests with `MockLanguageModelV4` in [chat-handler.test.ts](../../packages/ai/src/chat/chat-handler.test.ts)
+- Limits (`maxSteps`, `maxToolCalls`): [packages/ai/src/chat/limits.ts](../../packages/ai/src/chat/limits.ts)
 - Design and decisions: [M5 plan](../plans/m5-tools-grounded-lookup.md)
-- Repository summaries and lookups (`summarizeRepository`, `ownerNotes`): [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts)
+- Repository summaries and lookups (`summarizeRepository`, `ownerNotes`): [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts)
 
 ## 5. Common pitfalls and misconceptions
 
@@ -105,9 +105,8 @@ skill filter does not apply to this section.
 - Counting a model's per-step limits as per-request limits: `maxOutputTokens` applies to each step,
   and a lookup turn makes two or three model calls, which also counts against provider rate
   limits.
-- A tool result is not proof. A cited id shows which record the model *claims* to have used; the
-  server checks each one against the ids the tools returned in that turn (M11.2, `citations.ts`).
-  The server log counts those that fail.
+- A tool result is not proof. The model can still write something the result does not say, and since M12.7 nothing
+  records which result a sentence relies on. The evaluation can only check which records were returned.
 
 ## 6. Further reading
 

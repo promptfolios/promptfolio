@@ -76,11 +76,11 @@ limit is the last backstop.
 - Limits: [packages/contact/src/limits.ts](../../packages/contact/src/limits.ts)
 - Claiming and failing closed: `handleContactSend` in
   [packages/contact/src/handlers.ts](../../packages/contact/src/handlers.ts)
-- Contact's Redis adapter: [apps/portfolio/src/server/contact.ts](../../apps/portfolio/src/server/contact.ts)
-- Visitor hash: [apps/portfolio/src/server/visitor.ts](../../apps/portfolio/src/server/visitor.ts)
-- Chat's check and failing closed: [packages/ai/src/chat-limit.ts](../../packages/ai/src/chat-limit.ts)
-- Chat's Redis adapter and settings: [apps/portfolio/src/server/chat-limit.ts](../../apps/portfolio/src/server/chat-limit.ts)
-- Hidden field: [apps/portfolio/src/components/contact-dialog.tsx](../../apps/portfolio/src/components/contact-dialog.tsx)
+- Contact's Redis adapter: [apps/portfolio/src/server/contact/contact.ts](../../apps/portfolio/src/server/contact/contact.ts)
+- Visitor hash: [apps/portfolio/src/server/shared/visitor.ts](../../apps/portfolio/src/server/shared/visitor.ts)
+- Chat's check and failing closed: [packages/ai/src/chat/chat-limit.ts](../../packages/ai/src/chat/chat-limit.ts)
+- Chat's Redis adapter and settings: [apps/portfolio/src/server/chat/chat-limit.ts](../../apps/portfolio/src/server/chat/chat-limit.ts)
+- Hidden field: [apps/portfolio/src/components/contact/contact-dialog.tsx](../../apps/portfolio/src/components/contact/contact-dialog.tsx)
 - Host rule (planned): [docs/guides/chat-limit-setup.md](../guides/chat-limit-setup.md)
 
 ## 5. Common pitfalls and misconceptions

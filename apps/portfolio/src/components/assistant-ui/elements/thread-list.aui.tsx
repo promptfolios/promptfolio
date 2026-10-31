@@ -83,7 +83,7 @@ export const ThreadListRoot: FC<
   return (
     <ThreadListPrimitive.Root
       data-slot="aui_thread-list-root"
-      className={cn("flex flex-col gap-0.5", className)}
+      className={cn("flex flex-col gap-1", className)}
       {...props}
     />
   );
@@ -267,10 +267,11 @@ export const ThreadListNew = forwardRef<
     <ThreadListPrimitive.New asChild>
       <Button
         ref={ref}
-        variant="ghost"
+        // Promptfolio change: an outlined button, as in assistant-ui's own demo.
+        variant="outline"
         data-slot="aui_thread-list-new"
         className={cn(
-          "hover:bg-muted data-active:bg-muted h-8 justify-start gap-2 rounded-md px-2.5 text-sm font-normal",
+          "h-8 w-full justify-start gap-2 rounded-md px-2.5 text-sm font-normal",
           className,
         )}
         {...props}

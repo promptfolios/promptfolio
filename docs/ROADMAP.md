@@ -29,12 +29,17 @@ This document describes the suggested milestone sequence and future directions. 
 | M8.1 — GitHub contributions               | Done      | `pnpm --filter portfolio refresh`: commits in other owners' public repositories become contributions; answers cite `github.com/…/commit/…`; [plan](plans/m8-1-github-contributions.md) |
 | M9 — Refresh pipeline and versions         | Done      | `pnpm --filter portfolio refresh`: exit 0, 2, or 1, `profile/<profile>.refresh-status.json`, snapshot unchanged when nothing changed; workflow template in [the guide](guides/scheduled-refresh.md); [plan](plans/m9-refresh-pipeline-and-versions.md) |
 | M11.1 — Protection and failure paths       | Done      | `pnpm test`; [the guide](guides/chat-limit-setup.md): 30 live answers per visitor and 200 for the site per day, then a limit message; [plan](plans/m11-reliability-security-evaluation.md) |
-| M11.2 — Citations and provenance          | Done      | `pnpm dev`: an answer with citations shows a Sources panel below it; [plan](plans/m11-reliability-security-evaluation.md) |
+| M11.2 — Citations and provenance          | Replaced in M12.7 | Was: an answer with citations shows a Sources panel below it; [plan](plans/m11-reliability-security-evaluation.md) |
 | M11.3 — Evaluation and limitations        | Done      | `pnpm --filter portfolio evaluate --label=my-run`; [results](evaluation/README.md); [limitations](KNOWN_LIMITATIONS.md); prepared answers wait for the deployed model (M12); [plan](plans/m11-reliability-security-evaluation.md) |
 | M12.1 — Second consumer and package docs   | Done      | `pnpm --filter minimal-consumer test`; package READMEs; [plan](plans/m12-second-consumer-and-deployment.md) |
 | M12.2 — Answer readiness                   | Done      | `pnpm test`; [results](evaluation/README.md): the chosen model failed its gate, chosen anyway; [limitations](KNOWN_LIMITATIONS.md) |
 | M12.4 — Fixes from the evaluation runs     | Done      | `pnpm test`; [plan](plans/m12-4-reliability-fixes.md) |
-| M12.5 — Remove prepared answers and starters | Done     | `pnpm dev`: a new chat shows only the message box; [plan](plans/m12-5-remove-prepared-answers.md). Replaces M7's starters and answers |
+| M12.5 — Remove prepared answers and starters | Done     | Prepared answers removed; [plan](plans/m12-5-remove-prepared-answers.md). Replaces M7's starters and answers. M12.9 added generated starters |
+| M12.6 — Code cleanup and folder layout     | Done      | `pnpm verify`; [plan](plans/m12-6-code-cleanup.md) |
+| M12.7 — Markdown links                     | Done      | `pnpm dev`: answers link record names, with no sources panel; [plan](plans/m12-7-markdown-links.md) |
+| M12.8 — Chat layout and themes             | Done      | `pnpm dev`: assistant-ui style layout, with a light and dark toggle; [plan](plans/m12-8-chat-layout-and-themes.md) |
+| M12.9 — Generated starter questions        | Done      | Moved to build time in M12.10; [plan](plans/m12-9-generated-starter-questions.md) |
+| M12.10 — Build-time starters and styling   | Done      | `pnpm build`: `/` stays static, with starters in its HTML; [plan](plans/m12-10-build-time-starters-and-styling.md) |
 | M12.3 — Deployment                         | Not started | Optional, and the developer chose to stop before it; [plan](plans/m12-second-consumer-and-deployment.md) |
 
 Update this table when a milestone is approved.
@@ -251,7 +256,7 @@ Plan and decisions: [M11 plan](plans/m11-reliability-security-evaluation.md), sp
 - Review public package exports and dependency direction.
 - Decide whether deployment is useful now; obtain approval before publishing or deploying.
 - With the deployment repository: activate the scheduled refresh from [docs/guides/scheduled-refresh.md](guides/scheduled-refresh.md) and check its first run, whether the host deploys the job's push, and whether `GITHUB_TOKEN` can read pinned repositories (M9 left these unverified).
-- Check how much of the refresh a second consumer has to copy from `apps/portfolio/src/server/refresh.ts` (raised during M9 review, deliberately not moved yet). Candidates for `@promptfolio/source-github`: `mergeGitHubSnapshot` (pure, now in the app's `github-source.ts`) and a `refreshGitHubSnapshot` that combines `fetchGitHubSnapshot` and `carryForward`. The refresh status schema is source-neutral, so it would go to `core`, and only once a second source exists. These stay in the app: the "write only on a new profile version" rule (needs `profileFingerprint` from `@promptfolio/ai`), files, environment, and exit codes. The scheduled workflow stays a deployment template.
+- Check how much of the refresh a second consumer has to copy from `apps/portfolio/src/server/refresh/refresh.ts` (raised during M9 review, deliberately not moved yet). Candidates for `@promptfolio/source-github`: `mergeGitHubSnapshot` (pure, now in the app's `github-source.ts`) and a `refreshGitHubSnapshot` that combines `fetchGitHubSnapshot` and `carryForward`. The refresh status schema is source-neutral, so it would go to `core`, and only once a second source exists. These stay in the app: the "write only on a new profile version" rule (needs `profileFingerprint` from `@promptfolio/ai`), files, environment, and exit codes. The scheduled workflow stays a deployment template.
 
 **Exit criteria:** The second consumer works through documented public APIs and configuration/data changes. Deployment is optional until separately approved.
 

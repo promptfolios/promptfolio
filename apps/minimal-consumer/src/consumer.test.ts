@@ -7,8 +7,6 @@ import { describe, expect, it } from "vitest";
 import { createConsumer, loadProfile, memoryLimiter, refreshSnapshot } from "./consumer";
 import snapshotData from "./data/github-snapshot.json";
 
-const REPOSITORY_ID = "github.com/avery-sample/tide-tables";
-
 type StreamResult = Awaited<ReturnType<MockLanguageModelV4["doStream"]>>;
 type StreamPart = StreamResult["stream"] extends ReadableStream<infer P> ? P : never;
 
@@ -17,7 +15,7 @@ const usage = {
   outputTokens: { total: 4, text: 4, reasoning: 0 },
 };
 
-/** A model that looks up the repositories once, then answers with a citation. */
+/** A model that looks up the repositories once, then answers. */
 function lookupModel() {
   const stream = (chunks: StreamPart[]) => ({ stream: simulateReadableStream({ chunks }) });
   return new MockLanguageModelV4({
@@ -35,7 +33,7 @@ function lookupModel() {
       stream([
         { type: "stream-start", warnings: [] },
         { type: "text-start", id: "t1" },
-        { type: "text-delta", id: "t1", delta: `Avery wrote reports [${REPOSITORY_ID}].` },
+        { type: "text-delta", id: "t1", delta: "Avery wrote reports." },
         { type: "text-end", id: "t1" },
         { type: "finish", finishReason: { unified: "stop", raw: "end_turn" }, usage },
       ]),
@@ -93,7 +91,7 @@ async function chunksOf(response: Response): Promise<Array<Record<string, unknow
 }
 
 describe("a second consumer, through public APIs only", () => {
-  it("answers from its own profile and GitHub data, with server-built sources", async () => {
+  it("answers from its own profile and GitHub data, with tool activity hidden", async () => {
     const { consumer } = setup();
 
     const response = await consumer.chat(chatRequest());
@@ -102,8 +100,6 @@ describe("a second consumer, through public APIs only", () => {
     const chunks = await chunksOf(response);
     const text = chunks.flatMap((chunk) => (chunk.type === "text-delta" ? [chunk.delta] : []));
     expect(text.join("")).toContain("Avery wrote reports");
-    const sources = chunks.find((chunk) => chunk.type === "data-sources");
-    expect(JSON.stringify(sources)).toContain(REPOSITORY_ID);
     expect(chunks.some((chunk) => String(chunk.type).startsWith("tool-"))).toBe(false);
   });
 

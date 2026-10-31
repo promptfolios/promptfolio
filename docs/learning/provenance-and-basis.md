@@ -57,30 +57,23 @@ the previous data together with the time that data was read, so a carried record
 observed on an earlier day instead of looking as current as the rest
 ([refresh status and last known good](refresh-status-and-last-known-good.md)).
 
-From M11.2, provenance reaches the visitor directly. After an answer, the server sends the sources for
-its verified citations, built from these fields on the profile, and the page shows them below the answer.
-The model cannot write that proof, because it never touches it. A repository with owner notes lists both
-its public source and the notes, because naming only the public source would claim it shows more than it
-does. Repositories and commits link to the record itself, so a visitor can check it. A panel shows where a fact comes from, not that the sentence restates it correctly, and a fact
-stated without a citation gets no entry. One citation can also look like more proof than it is: a
-sentence listing seven technologies may cite one repository that shows only one of them.
+From M12.7, provenance reaches the visitor in the answer's words: the prompt asks the model to say whose claim a fact is,
+and to give the source, basis, and observation date when asked. M11.2 to M12.5 also showed a panel of sources built by the
+server. It was removed by the developer's decision, so what a visitor reads is now the model's account of these fields, and
+nothing checks it ([ADR 0014](../adr/0014-markdown-links-instead-of-sources-panel.md)).
 
 ## 4. Where it lives in the code
 
 - `ClaimBasis`, `Provenance`, `SourceRef`: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts)
 - Stamping in `normalize()`: [packages/core/src/profile/load.ts](../../packages/core/src/profile/load.ts)
-- Citations drawn as numbered markers: [apps/portfolio/src/chat/citation-links.ts](../../apps/portfolio/src/chat/citation-links.ts) and
-  [apps/portfolio/src/components/citation-marker.tsx](../../apps/portfolio/src/components/citation-marker.tsx)
-- Source id and observation time chosen by the app: [apps/portfolio/src/server/profile.ts](../../apps/portfolio/src/server/profile.ts)
+- Source id and observation time chosen by the app: [apps/portfolio/src/server/profile/profile.ts](../../apps/portfolio/src/server/profile/profile.ts)
 - Tests ("stamps every record…", "registers the source…"): [packages/core/src/profile/load.test.ts](../../packages/core/src/profile/load.test.ts)
 - Decision: [ADR 0005](../adr/0005-profile-model-and-provenance.md)
-- Provenance in tool results (`evidence`, `sourcesFor`): [packages/ai/src/profile-tools.ts](../../packages/ai/src/profile-tools.ts);
-  attribution rules in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
+- Provenance in tool results (`evidence`, `sourcesFor`): [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts);
+  attribution rules in [packages/ai/src/chat/system-prompt.ts](../../packages/ai/src/chat/system-prompt.ts)
 - `source-observed` records from GitHub (`addObservedRecords`): [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts);
-  the attribution rule in [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
-- The sources an answer shows: [packages/ai/src/citations.ts](../../packages/ai/src/citations.ts) and
-  [apps/portfolio/src/components/sources-panel.tsx](../../apps/portfolio/src/components/sources-panel.tsx)
-- Source and observed basis for GitHub data: [packages/source-github/src/normalize.ts](../../packages/source-github/src/normalize.ts)
+  the attribution rule in [packages/ai/src/chat/system-prompt.ts](../../packages/ai/src/chat/system-prompt.ts)
+- Source and observed basis for GitHub data: [packages/source-github/src/snapshot/normalize.ts](../../packages/source-github/src/snapshot/normalize.ts)
 
 ## 5. Common pitfalls and misconceptions
 

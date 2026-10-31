@@ -6,10 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 const createChatModel = vi.fn();
-vi.mock("@/server/model", () => ({ createChatModel }));
+vi.mock("@/server/chat/model", () => ({ createChatModel }));
 
 const loadAppProfile = vi.fn();
-vi.mock("@/server/profile", () => ({ loadAppProfile }));
+vi.mock("@/server/profile/profile", () => ({ loadAppProfile }));
 
 /** Every key the app asks Redis to count, and how often. */
 const redisCounts = new Map<string, number>();

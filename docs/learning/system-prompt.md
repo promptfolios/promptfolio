@@ -49,14 +49,11 @@ From M5 the rules also cover grounding:
 - look records up before answering about work history, projects, skills, education, or links:
   the section list is enough for most answers, and the full record only for its detail lists
   (each extra lookup costs another model call);
-- cite the record id in square brackets, for example `[service-catalog]`, and `[owner_identity]` for a
-  fact from the identity block (M11.2). Skills and links have no ids, so they get no citation, and the
-  model does not write a sources section, because the page shows one built by the server;
+- (M12.7) link a record's name to the url a tool result gives it, copy each url exactly, and never invent one;
 - (M11.2) a public repository without a license is not open source, and a repository is under an
   account, not by a person;
-- (M11.3) copy ids exactly, cite each record a sentence draws on, put no citation on contact advice, and before saying a
-  skill is not listed, look for it in projects and repositories. The
-  [evaluation](../evaluation/README.md) shows only the last has a measured benefit so far. Use the owner's name or "they", because the profile states no
+- (M11.3) before saying a skill is not listed, look for it in projects and repositories. The
+  [evaluation](../evaluation/README.md) shows this has a measured benefit. Use the owner's name or "they", because the profile states no
   pronouns and a model had assumed "he";
 - attribute `self-reported` facts to the owner ("Jordan's profile lists…");
 - (M7 review) the owner and the "owner-provided" source are the same party: attribute once per
@@ -98,13 +95,13 @@ about the app belong in the prompt as decided text, not as a question for the mo
 
 ## 4. Where it lives in the code
 
-- Prompt construction: [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
-  (`buildSystemPrompt`), tested in [system-prompt.test.ts](../../packages/ai/src/system-prompt.test.ts)
-- Where it is sent: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts)
+- Prompt construction: [packages/ai/src/chat/system-prompt.ts](../../packages/ai/src/chat/system-prompt.ts)
+  (`buildSystemPrompt`), tested in [system-prompt.test.ts](../../packages/ai/src/chat/system-prompt.test.ts)
+- Where it is sent: [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
   (`instructions`); a test checks a client-sent `system` never reaches the model
 - Identity input: [packages/core/src/profile/types.ts](../../packages/core/src/profile/types.ts) (`ProfileIdentity`)
 - Why the client's `system` field must be ignored: [ADR 0007](../adr/0007-chat-ui-assistant-ui.md), consequences
-- The source-observed rule: [packages/ai/src/system-prompt.ts](../../packages/ai/src/system-prompt.ts)
+- The source-observed rule: [packages/ai/src/chat/system-prompt.ts](../../packages/ai/src/chat/system-prompt.ts)
 
 ## 5. Common pitfalls and misconceptions
 

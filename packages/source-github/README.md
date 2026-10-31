@@ -27,6 +27,6 @@ const merged = mergeGitHubSnapshot(owner, config, carried.snapshot);
 ```
 
 Storing the snapshot, recording refresh status, and scheduling stay yours: see the reference app's
-[`refresh.ts`](../../apps/portfolio/src/server/refresh.ts) and the
+[`refresh.ts`](../../apps/portfolio/src/server/refresh/refresh.ts) and the
 [scheduled refresh guide](../../docs/guides/scheduled-refresh.md). Source text is untrusted, and it reaches a model
 only as data.

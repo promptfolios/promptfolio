@@ -16,14 +16,14 @@ flowchart TB
         files["profile/<br/>example.profile.json (committed, fictional)<br/>*.local.json (gitignored, real data)<br/>*.github.json and *.github-snapshot.json (GitHub source)<br/>*.refresh-status.json (last refresh, M9)"]
         page["src/app/page.tsx<br/>server: load profile, then render workspace or issues"]
         route["src/app/api/chat/route.ts<br/>server: POST /api/chat"]
-        serverProfile["src/server/profile.ts<br/>fs + env"]
-        serverGitHub["src/server/github-source.ts<br/>GitHub configuration and snapshot"]
-        fetchScript["scripts/refresh.ts and src/server/refresh.ts<br/>owner-run or scheduled: pnpm --filter portfolio refresh"]
-        serverModel["src/server/model.ts<br/>server-only: PROMPTFOLIO_MODEL = provider:model"]
+        serverProfile["src/server/profile/profile.ts<br/>fs + env"]
+        serverGitHub["src/server/profile/github-source.ts<br/>GitHub configuration and snapshot"]
+        fetchScript["scripts/refresh.ts and src/server/refresh/refresh.ts<br/>owner-run or scheduled: pnpm --filter portfolio refresh"]
+        serverModel["src/server/chat/model.ts<br/>server-only: PROMPTFOLIO_MODEL = provider:model"]
         contactRoutes["src/app/api/contact/prepare and send<br/>server: POST routes"]
-        serverContact["src/server/contact.ts<br/>server-only: contact configuration,<br/>Resend and Redis adapters"]
-        serverChatLimit["src/server/chat-limit.ts<br/>server-only: daily limits on live answers"]
-        serverShared["src/server/redis.ts and visitor.ts<br/>server-only: the store's settings, visitor hash"]
+        serverContact["src/server/contact/contact.ts<br/>server-only: contact configuration,<br/>Resend and Redis adapters"]
+        serverChatLimit["src/server/chat/chat-limit.ts<br/>server-only: daily limits on live answers"]
+        serverShared["src/server/shared/redis.ts and visitor.ts<br/>server-only: the store's settings, visitor hash"]
         route --> serverChatLimit
         env --> serverChatLimit
         serverChatLimit --> serverShared
@@ -32,7 +32,7 @@ flowchart TB
         env --> serverContact
         serverContact --> serverProfile
         page --> serverContact
-        workspace["src/components/chat-workspace.tsx<br/>client, see Chat workspace"]
+        workspace["src/components/chat/chat-workspace.tsx<br/>client, see Chat workspace"]
         page --> serverProfile
         page --> workspace
         route --> serverProfile
@@ -49,12 +49,12 @@ flowchart TB
     subgraph ghpkg["packages/source-github (@promptfolio/source-github)"]
         direction TB
         ghIndex["src/index.ts<br/>the only entry point"]
-        ghFetch["fetch.ts<br/>fetchGitHubSnapshot (the only I/O)"]
-        ghSelect["select.ts<br/>pinned, then recent, capped by tier"]
-        ghSnapshot["snapshot.ts<br/>response and snapshot schemas"]
-        ghNormalize["normalize.ts<br/>normalizeGitHubSnapshot (pure)"]
-        ghCarry["carry-forward.ts<br/>carryForward: per-repository last known good (pure)"]
-        ghContributions["contributions.ts<br/>eligible commits, mirrors, caps (pure)"]
+        ghFetch["fetch/fetch.ts<br/>fetchGitHubSnapshot (the only I/O)"]
+        ghSelect["selection/select.ts<br/>pinned, then recent, capped by tier"]
+        ghSnapshot["snapshot/snapshot.ts<br/>response and snapshot schemas"]
+        ghNormalize["snapshot/normalize.ts<br/>normalizeGitHubSnapshot (pure)"]
+        ghCarry["snapshot/carry-forward.ts<br/>carryForward: per-repository last known good (pure)"]
+        ghContributions["selection/contributions.ts<br/>eligible commits, mirrors, caps (pure)"]
         ghIndex --> ghFetch
         ghIndex --> ghNormalize
         ghIndex --> ghCarry
@@ -67,12 +67,11 @@ flowchart TB
     subgraph aipkg["packages/ai (@promptfolio/ai), server-only"]
         direction TB
         aiIndex["src/index.ts<br/>the only entry point"]
-        handler["chat-handler.ts<br/>handleChatRequest(request, options)"]
-        turn["chat-turn.ts<br/>runChatTurn: tool loop, output allowlist"]
-        request["request.ts<br/>body size cap, allowlist, limits"]
-        prompt["system-prompt.ts<br/>buildSystemPrompt(identity)"]
-        tools["profile-tools.ts<br/>createProfileTools(profile, budget)"]
-        citations["citations.ts<br/>checks cited ids, builds sources from the profile"]
+        handler["chat/chat-handler.ts<br/>handleChatRequest(request, options)"]
+        turn["chat/chat-turn.ts<br/>runChatTurn: tool loop, output allowlist"]
+        request["chat/request.ts<br/>body size cap, allowlist, limits"]
+        prompt["chat/system-prompt.ts<br/>buildSystemPrompt(identity)"]
+        tools["grounding/profile-tools.ts<br/>createProfileTools(profile, budget)"]
         aiIndex --> handler
         handler --> request
         handler --> turn
@@ -157,23 +156,25 @@ sequenceDiagram
         H->>H: validate arguments, run the lookup (at most 8 calls per request)
         H->>P: tool result: record with id, basis, sourceId
     end
-    P-->>H: answer text with cited ids
-    H-->>B: UI message stream: text, step boundaries, and sources for cited ids (output allowlist)
+    P-->>H: answer text, with Markdown links
+    H-->>B: UI message stream: text and step boundaries (output allowlist)
     Note over B,H: Provider errors and timeouts (15 s to first content, 55 s total) become a generic message with a ref id
     B-)H: Stop or disconnect fires request.signal
     H-)P: abortSignal cancels the model request
 ```
 
 Every question is answered live. Prepared answers and fixed starters were removed in M12.5
-([plan](plans/m12-5-remove-prepared-answers.md)).
+([plan](plans/m12-5-remove-prepared-answers.md)). A new chat shows starter questions a model wrote from the profile while the
+site was built, and a click sends one as an ordinary message
+([ADR 0015](adr/0015-generated-starter-questions.md)).
 
 A live answer first takes one count from the daily limits, 30 per visitor and 200 for the site, held in
 Redis. If the limit is reached the visitor gets a 429, and if it cannot be checked a 503; the model is not
 called in either case (M11.1, [ADR 0013](adr/0013-chat-daily-limits.md)).
 
-When an answer finishes, the server checks its cited ids against the records returned in that turn and
-sends the sources as a separate `data-sources` chunk, built from the profile. The page draws them in their
-own panel, saves them with the thread, and leaves them out when it sends the thread back (M11.2).
+Answers link record names to their URLs in Markdown. The page makes a link clickable only if it is an exact URL
+from the profile's structured fields, and shows anything else as plain text
+([ADR 0014](adr/0014-markdown-links-instead-of-sources-panel.md)).
 
 The server owns the instructions and the tools: the client never sends a system prompt or tools,
 and the handler would drop them if it did. Tool calls and results stay on the server; the browser
@@ -187,7 +188,7 @@ receives only the answer. See [tool calling](learning/tool-calling.md),
 flowchart TD
     file["profile JSON file<br/>(owner-written, no provenance)"]
 
-    subgraph appLoader["apps/portfolio/src/server/profile.ts"]
+    subgraph appLoader["apps/portfolio/src/server/profile/profile.ts"]
         direction TB
         choose["1. choose the file from PROMPTFOLIO_PROFILE_FILE<br/>(default: example.profile.json)"]
         guard["2. reject anything but a plain file name"]
@@ -209,7 +210,7 @@ flowchart TD
     issues["{ ok: false, issues }"]
     ok["{ ok: true, profile: Profile, warnings }<br/>rendered by the app"]
 
-    subgraph ghSource["apps/portfolio/src/server/github-source.ts (M8)"]
+    subgraph ghSource["apps/portfolio/src/server/profile/github-source.ts (M8)"]
         direction TB
         config["5. read profile/*.github.json<br/>none: no GitHub source"]
         snapshot["6. read profile/*.github-snapshot.json<br/>none: warning, no repositories"]
@@ -268,7 +269,7 @@ Promptfolio code wires the runtime and supplies adapters and configuration.
 
 ```mermaid
 flowchart TD
-    ws["ChatWorkspace<br/>use client, src/components/chat-workspace.tsx"]
+    ws["ChatWorkspace<br/>use client, src/components/chat/chat-workspace.tsx"]
     list["useRemoteThreadListRuntime"]
     adapter["createBrowserThreadListAdapter (src/chat/)<br/>thread list and per-thread history,<br/>titled from the first message"]
     store["ThreadStore (src/chat/)<br/>validate on read, sanitize and limit on write"]
@@ -353,7 +354,7 @@ Profile
 provenance = { sourceId → sources.id, basis: self-reported | source-observed | derived, observedAt }
 ```
 
-Record ids are the arguments of tool lookups and the targets of citations; `basis` lets the
+Record ids are the arguments of tool lookups; `basis` lets the
 assistant say whose claim a fact is ([ADR 0005](adr/0005-profile-model-and-provenance.md)). Ids
 are slugs for records only the owner writes and source keys for records observed in a source; a
 project with a repository's id is the owner's description of that repository, returned with it as

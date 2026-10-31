@@ -1,5 +1,5 @@
 import { handleContactSend } from "@promptfolio/contact";
-import { withContactOptions } from "@/server/contact";
+import { withContactOptions } from "@/server/contact/contact";
 
 /** Upper bound, in seconds, on serverless hosts. The provider call times out well before it. */
 export const maxDuration = 15;

@@ -1,5 +1,5 @@
 import { scoreEvaluationTurn } from "@promptfolio/ai";
-import { findRecordById } from "@promptfolio/core";
+import { findRecordById, profileLinkUrls } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
 import { EVALUATION_CASES } from "./cases";
 import { loadEvaluationProfile } from "./load-profile";
@@ -13,8 +13,8 @@ const finished = {
   steps: 1,
   toolCalls: [],
   returnedIds: [],
-  verifiedIds: [],
-  unverifiedIds: [],
+  links: [],
+  unknownLinks: [],
 };
 
 describe("the evaluation set", () => {
@@ -54,11 +54,14 @@ describe("the evaluation set", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("only requires citations of records that exist", () => {
+  it("only requires records and links that exist", () => {
+    const links = profileLinkUrls(profile);
     for (const item of EVALUATION_CASES) {
-      for (const id of item.expect.cites ?? []) {
-        if (id === "owner_identity") continue;
-        expect(findRecordById(profile, id), `${item.id} cites ${id}`).toBeDefined();
+      for (const id of item.expect.returns ?? []) {
+        expect(findRecordById(profile, id), `${item.id} returns ${id}`).toBeDefined();
+      }
+      for (const url of item.expect.links ?? []) {
+        expect(links, `${item.id} links ${url}`).toContain(url);
       }
     }
   });
@@ -90,8 +93,8 @@ describe("the report", () => {
     },
     {
       caseId: first.id,
-      turn: { ...finished, unverifiedIds: ["x", "y"], text: "A | B\n\n![leak](u)" },
-      checks: [{ name: "no unverified citations", passed: false, detail: "x, y" }],
+      turn: { ...finished, unknownLinks: ["x", "y"], text: "A | B\n\n![leak](u)" },
+      checks: [{ name: "no links outside the profile", passed: false, detail: "x, y" }],
     },
     { caseId: second.id, turn: { ...finished, failed: true, text: "" }, checks: [] },
   ];
@@ -105,12 +108,11 @@ describe("the report", () => {
     expect(runs.map(runPassed)).toEqual([true, false, false]);
   });
 
-  it("counts lookups and unverified citations over scored runs", () => {
+  it("counts lookups and links outside the profile over scored runs", () => {
     const summary = summarize(cases, runs);
 
     expect(summary.lookedUp).toEqual({ runs: 1, ofRuns: 2 });
-    expect(summary.unverified).toEqual({ runs: 1, citations: 2 });
-    expect(summary.uncitedRuns).toBe(2);
+    expect(summary.unknownLinks).toEqual({ runs: 1, links: 2 });
   });
 
   it("states failures, and quotes answers so they cannot change its structure", () => {
@@ -122,7 +124,7 @@ describe("the report", () => {
 
     expect(report).toContain("| Scored runs that passed every check | 1 of 2 |");
     expect(report).toContain("| Runs the provider failed (not scored) | 1 |");
-    expect(report).toContain("no unverified citations (x, y)");
+    expect(report).toContain("no links outside the profile (x, y)");
     expect(report).toContain("(1 provider failures)");
     expect(report).toContain("> A | B");
     expect(report).toContain("> ![leak](u)");

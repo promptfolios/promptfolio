@@ -15,7 +15,7 @@ import { evaluateQuestion, scoreEvaluationTurn } from "@promptfolio/ai";
 import { EVALUATION_CASES, type EvaluationCase } from "../evaluation/cases";
 import { loadEvaluationProfile } from "../evaluation/load-profile";
 import { type EvaluationRun, formatReport, runPassed, summarize } from "../evaluation/report";
-import { createChatModel } from "../src/server/model";
+import { createChatModel } from "../src/server/chat/model";
 
 /** After a provider failure, usually a quota: wait for the minute to reset, and try again. */
 const RETRY_WAIT_MS = 65_000;

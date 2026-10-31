@@ -51,6 +51,32 @@ export function findRecordById(profile: Profile, id: string): ProfileRecordMatch
 }
 
 /**
+ * Every URL in the profile's structured fields, normalized and without repeats: what an answer may
+ * link to. README text is not read, because a repository's README can link anywhere.
+ */
+export function profileLinkUrls(profile: Profile): string[] {
+  const urls = [
+    ...profile.links.map((link) => link.url),
+    ...profile.projects.flatMap((project) => project.links.map((link) => link.url)),
+    ...profile.repositories.flatMap((repository) => [repository.url, repository.homepage]),
+    ...profile.contributions.flatMap((contribution) => [
+      contribution.url,
+      contribution.repositoryUrl,
+    ]),
+    ...profile.sources.map((source) => source.url),
+  ];
+  const normalized = urls.flatMap((url) => {
+    if (url === undefined) return [];
+    try {
+      return [new URL(url).href];
+    } catch {
+      return [];
+    }
+  });
+  return [...new Set(normalized)];
+}
+
+/**
  * Finds the roles and projects that list a skill, and the repositories whose languages or
  * topics match it, compared with `skillKey` (case and spacing ignored, symbols kept, so `C`
  * and `C++` stay distinct).

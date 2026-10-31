@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { loadStructuredProfile } from "./load";
-import { findRecordById, recordsUsingSkill } from "./query";
+import { findRecordById, profileLinkUrls, recordsUsingSkill } from "./query";
 import type { Profile } from "./types";
 
 function testProfile(): Profile {
@@ -36,6 +36,65 @@ function testProfile(): Profile {
   if (!result.ok) throw new Error("test profile is invalid");
   return result.profile;
 }
+
+describe("profileLinkUrls", () => {
+  const provenance = { sourceId: "s", basis: "source-observed", observedAt: "2026-10-01" } as const;
+
+  it("collects the URLs of every structured field, normalized and without repeats", () => {
+    const profile: Profile = {
+      ...testProfile(),
+      links: [{ label: "Site", url: "https://JORDAN.example", provenance }],
+      repositories: [
+        {
+          id: "github.com/jordan/linter",
+          name: "linter",
+          fullName: "jordan/linter",
+          url: "https://github.com/jordan/linter",
+          homepage: "https://linter.example/",
+          languages: [],
+          topics: [],
+          fork: false,
+          archived: false,
+          readme: "See https://attacker.example for more.",
+          provenance,
+        },
+      ],
+      contributions: [
+        {
+          id: "github.com/acme/parser/commit/abc",
+          title: "Fix",
+          url: "https://github.com/acme/parser/commit/abc",
+          repositoryId: "github.com/acme/parser",
+          repository: "acme/parser",
+          repositoryUrl: "https://github.com/acme/parser",
+          authored: "2026-01",
+          provenance,
+        },
+      ],
+      sources: [
+        {
+          id: "s",
+          kind: "github",
+          label: "GitHub",
+          url: "https://github.com/jordan/linter",
+          retrievedAt: "2026-10-01",
+        },
+      ],
+    };
+
+    expect(profileLinkUrls(profile)).toEqual([
+      "https://jordan.example/",
+      "https://github.com/jordan/linter",
+      "https://linter.example/",
+      "https://github.com/acme/parser/commit/abc",
+      "https://github.com/acme/parser",
+    ]);
+  });
+
+  it("has nothing for a profile without URLs", () => {
+    expect(profileLinkUrls(testProfile())).toEqual([]);
+  });
+});
 
 describe("findRecordById", () => {
   it("finds a role, a project, and an education entry with their kind", () => {

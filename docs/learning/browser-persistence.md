@@ -44,7 +44,7 @@ flowchart LR
   dropped, and so is a message whose parent was not accepted before it. Nothing is thrown.
 - **Versioned keys.** The `promptfolio:v1:` prefix lets a later format ignore or migrate this one.
   Keys of other versions and other apps are never read or removed.
-- **Limits and retention in code** ([storage-limits.ts](../../apps/portfolio/src/chat/storage-limits.ts)):
+- **Limits and retention in code** ([storage-limits.ts](../../apps/portfolio/src/chat/threads/storage-limits.ts)):
   20 threads (the least recently used is removed), 30 days without a new message, 60 messages
   per thread, 16,000 characters per message, and 200,000 characters per thread. A write over a
   limit is skipped with a warning (no content in it); the conversation goes on in memory.
@@ -53,14 +53,14 @@ flowchart LR
 
 ## 4. Where it lives in the code
 
-- Store, schemas, limits, retention: [apps/portfolio/src/chat/thread-store.ts](../../apps/portfolio/src/chat/thread-store.ts),
-  [storage-limits.ts](../../apps/portfolio/src/chat/storage-limits.ts)
-- assistant-ui adapters: [apps/portfolio/src/chat/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.ts)
-- `localStorage` or memory: [apps/portfolio/src/chat/browser-storage.ts](../../apps/portfolio/src/chat/browser-storage.ts)
-- Wiring and the "saved only in this browser" notice: [apps/portfolio/src/components/chat-workspace.tsx](../../apps/portfolio/src/components/chat-workspace.tsx)
-- Tests: [thread-store.test.ts](../../apps/portfolio/src/chat/thread-store.test.ts),
-  [browser-thread-list-adapter.test.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.test.ts),
-  and [restored-thread.test.ts](../../apps/portfolio/src/chat/restored-thread.test.ts) (a restored
+- Store, schemas, limits, retention: [apps/portfolio/src/chat/threads/thread-store.ts](../../apps/portfolio/src/chat/threads/thread-store.ts),
+  [storage-limits.ts](../../apps/portfolio/src/chat/threads/storage-limits.ts)
+- assistant-ui adapters: [apps/portfolio/src/chat/threads/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/threads/browser-thread-list-adapter.ts)
+- `localStorage` or memory: [apps/portfolio/src/chat/threads/browser-storage.ts](../../apps/portfolio/src/chat/threads/browser-storage.ts)
+- Wiring and the "saved only in this browser" notice: [apps/portfolio/src/components/chat/chat-workspace.tsx](../../apps/portfolio/src/components/chat/chat-workspace.tsx)
+- Tests: [thread-store.test.ts](../../apps/portfolio/src/chat/threads/thread-store.test.ts),
+  [browser-thread-list-adapter.test.ts](../../apps/portfolio/src/chat/threads/browser-thread-list-adapter.test.ts),
+  and [restored-thread.test.ts](../../apps/portfolio/src/chat/threads/restored-thread.test.ts) (a restored
   thread passes the server's validation)
 - Plan and decisions: [M6 plan](../plans/m6-browser-conversation-persistence.md)
 

@@ -9,11 +9,7 @@
  *
  * Only what is exported here is part of the public API.
  */
-export {
-  type CarriedRepository,
-  type CarryForwardResult,
-  carryForward,
-} from "./carry-forward";
+
 export {
   type GitHubSourceConfig,
   type ParseGitHubConfigResult,
@@ -26,13 +22,18 @@ export {
   type GitHubFetchError,
   type GitHubFetchErrorKind,
   type MissingRepository,
-} from "./fetch";
-export { mergeGitHubSnapshot } from "./merge";
-export { type NormalizeGitHubResult, normalizeGitHubSnapshot } from "./normalize";
+} from "./fetch/fetch";
+export {
+  type CarriedRepository,
+  type CarryForwardResult,
+  carryForward,
+} from "./snapshot/carry-forward";
+export { mergeGitHubSnapshot } from "./snapshot/merge";
+export { type NormalizeGitHubResult, normalizeGitHubSnapshot } from "./snapshot/normalize";
 export {
   type GitHubSnapshot,
   type ParseGitHubSnapshotResult,
   parseGitHubSnapshot,
   type SnapshotContribution,
   type SnapshotRepository,
-} from "./snapshot";
+} from "./snapshot/snapshot";

@@ -10,6 +10,10 @@ pnpm --filter portfolio evaluate --label=my-run
 It makes real model calls and is not part of `pnpm verify`. A pass means the checks found nothing wrong, not
 that an answer is right, so a person reads the answers too.
 
+The runs below predate M12.7, which replaced citations with Markdown links
+([ADR 0014](../adr/0014-markdown-links-instead-of-sources-panel.md)). Their citation rows measure something the set no
+longer checks, and no run has been made since.
+
 ## Runs
 
 On free tiers, on 2026-10-30 and 2026-10-31 UTC. **The default model, `gemini-3.8-flash`, has not been evaluated.**

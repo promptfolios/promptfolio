@@ -65,16 +65,17 @@ flowchart LR
 ## 4. Where it lives in the code
 
 - Package: [packages/source-github/src/](../../packages/source-github/src/) — `config.ts`,
-  `select.ts`, `fetch.ts` (the only I/O), `snapshot.ts`, `normalize.ts`, `carry-forward.ts`
+  `selection/` (what to keep), `fetch/` (the only I/O), and `snapshot/` (schemas, normalizing, merging,
+  and carrying data forward)
 - Merge and the `Repository` record: [packages/core/src/profile/observed.ts](../../packages/core/src/profile/observed.ts),
   [types.ts](../../packages/core/src/profile/types.ts)
-- Reading the files at request time: [apps/portfolio/src/server/github-source.ts](../../apps/portfolio/src/server/github-source.ts)
+- Reading the files at request time: [apps/portfolio/src/server/profile/github-source.ts](../../apps/portfolio/src/server/profile/github-source.ts)
 - The command: [apps/portfolio/scripts/refresh.ts](../../apps/portfolio/scripts/refresh.ts), which
-  runs [apps/portfolio/src/server/refresh.ts](../../apps/portfolio/src/server/refresh.ts)
+  runs [apps/portfolio/src/server/refresh/refresh.ts](../../apps/portfolio/src/server/refresh/refresh.ts)
 - Tests: `fetch.test.ts`, `normalize.test.ts`, `select.test.ts`, `carry-forward.test.ts` in the
   package, [observed.test.ts](../../packages/core/src/profile/observed.test.ts),
-  [profile.test.ts](../../apps/portfolio/src/server/profile.test.ts),
-  [refresh.test.ts](../../apps/portfolio/src/server/refresh.test.ts)
+  [profile.test.ts](../../apps/portfolio/src/server/profile/profile.test.ts),
+  [refresh.test.ts](../../apps/portfolio/src/server/refresh/refresh.test.ts)
 - Scheduled refresh: a template in [docs/guides/scheduled-refresh.md](../guides/scheduled-refresh.md),
   **planned** to run in the deployment repository (M12.3, not started). Work in other owners' repositories:
   [contributions and evidence](contributions-and-evidence.md) (M8.1)

@@ -12,7 +12,7 @@
  * The snapshot is rewritten only when the profile version changed; the refresh status
  * (`profile/<profile>.refresh-status.json`) is written on every run.
  */
-import { runRefresh } from "../src/server/refresh";
+import { runRefresh } from "../src/server/refresh/refresh";
 
 const result = await runRefresh({ token: process.env.GITHUB_TOKEN?.trim() || undefined });
 process.exitCode = result.exitCode;

@@ -1,6 +1,6 @@
 # @promptfolio/ai
 
-The server side of chat: validates a request, runs a model turn with read-only profile tools, checks citations, and streams the reply. Server-only, because the model you pass carries your provider key.
+The server side of chat: validates a request, runs a model turn with read-only profile tools, and streams the reply. Server-only, because the model you pass carries your provider key.
 
 Not published. Use it from this workspace as `"@promptfolio/ai": "workspace:*"`.
 
@@ -11,7 +11,8 @@ Not published. Use it from this workspace as `"@promptfolio/ai": "workspace:*"`.
 | `handleChatRequest` | Takes a web `Request`, returns a streaming `Response` |
 | `ChatLimit`, `ChatTurnLimiter` | The daily limit you implement. `limit` is required; `null` turns it off on purpose |
 | `evaluateQuestion`, `scoreEvaluationTurn` | Run a question through the live turn and check what code can check |
-| `citedIds`, `CHAT_LIMITS` | Read citations from text; the request and model limits |
+| `generateStarterQuestions`, `STARTER_LIMITS` | Starters written by the model from a profile; generate once per profile, such as at build time |
+| `CHAT_LIMITS` | The request and model limits |
 
 You supply any AI SDK `LanguageModel`, the `Profile`, and the limiter. This package names no provider or store.
 

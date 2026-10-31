@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 const loadAppProfile = vi.fn();
-vi.mock("@/server/profile", () => ({ loadAppProfile }));
+vi.mock("@/server/profile/profile", () => ({ loadAppProfile }));
 
 const prepare = await import("./prepare/route");
 const send = await import("./send/route");

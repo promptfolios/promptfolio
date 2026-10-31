@@ -1,7 +1,8 @@
-import type { ProfileIssue } from "@promptfolio/core";
-import { ChatWorkspace } from "@/components/chat-workspace";
-import { isContactEnabled } from "@/server/contact";
-import { loadAppProfile } from "@/server/profile";
+import { type ProfileIssue, profileLinkUrls } from "@promptfolio/core";
+import { ChatWorkspace } from "@/components/chat/chat-workspace";
+import { loadStarterQuestions } from "@/server/chat/starters";
+import { isContactEnabled } from "@/server/contact/contact";
+import { loadAppProfile } from "@/server/profile/profile";
 
 export default async function HomePage() {
   const { fileName, result } = await loadAppProfile();
@@ -21,6 +22,9 @@ export default async function HomePage() {
       ownerName={identity.name}
       headline={identity.headline}
       contactEnabled={isContactEnabled()}
+      profileLinks={profileLinkUrls(result.profile)}
+      // Generated while the page is prerendered, so no visitor causes a model call.
+      starters={await loadStarterQuestions(result.profile)}
     />
   );
 }

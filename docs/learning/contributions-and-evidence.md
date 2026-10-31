@@ -45,14 +45,14 @@ flowchart LR
 
 ## 4. Where it lives in the code
 
-- Choosing commits (pure): [packages/source-github/src/contributions.ts](../../packages/source-github/src/contributions.ts)
-- The search: [packages/source-github/src/fetch.ts](../../packages/source-github/src/fetch.ts) (`fetchContributions`)
-- Mapping: [normalize.ts](../../packages/source-github/src/normalize.ts); keeping earlier entries:
-  [carry-forward.ts](../../packages/source-github/src/carry-forward.ts)
+- Choosing commits (pure): [packages/source-github/src/selection/contributions.ts](../../packages/source-github/src/selection/contributions.ts)
+- The search: [packages/source-github/src/fetch/fetch-contributions.ts](../../packages/source-github/src/fetch/fetch-contributions.ts) (`fetchContributions`)
+- Mapping: [normalize.ts](../../packages/source-github/src/snapshot/normalize.ts); keeping earlier entries:
+  [carry-forward.ts](../../packages/source-github/src/snapshot/carry-forward.ts)
 - The record and lookup: [types.ts](../../packages/core/src/profile/types.ts),
   [observed.ts](../../packages/core/src/profile/observed.ts), [query.ts](../../packages/core/src/profile/query.ts)
-- The section and the rule: [profile-tools.ts](../../packages/ai/src/profile-tools.ts),
-  [system-prompt.ts](../../packages/ai/src/system-prompt.ts)
+- The section and the rule: [profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts),
+  [system-prompt.ts](../../packages/ai/src/chat/system-prompt.ts)
 
 ## 5. Common pitfalls and misconceptions
 

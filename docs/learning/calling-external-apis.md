@@ -57,10 +57,12 @@ garbage. Every response is untrusted input, exactly like a visitor's message.
 
 ## 4. Where it lives in the code
 
-- [packages/source-github/src/fetch.ts](../../packages/source-github/src/fetch.ts) (`GitHubClient`,
-  `fetchGitHubSnapshot`)
-- Response schemas: [packages/source-github/src/snapshot.ts](../../packages/source-github/src/snapshot.ts)
-- Tests: [packages/source-github/src/fetch.test.ts](../../packages/source-github/src/fetch.test.ts)
+- The client: [packages/source-github/src/fetch/github-client.ts](../../packages/source-github/src/fetch/github-client.ts)
+  (`GitHubClient`)
+- The run: [packages/source-github/src/fetch/fetch.ts](../../packages/source-github/src/fetch/fetch.ts)
+  (`fetchGitHubSnapshot`)
+- Response schemas: [packages/source-github/src/snapshot/snapshot.ts](../../packages/source-github/src/snapshot/snapshot.ts)
+- Tests: [packages/source-github/src/fetch/fetch.test.ts](../../packages/source-github/src/fetch/fetch.test.ts)
 - Token documentation: [apps/portfolio/.env.example](../../apps/portfolio/.env.example)
 
 ## 5. Common pitfalls and misconceptions

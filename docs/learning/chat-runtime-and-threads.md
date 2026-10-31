@@ -34,7 +34,7 @@ flowchart TD
 
 `useChat` (AI SDK) owns one conversation's state and talks to the server; `useAISDKRuntime`
 (assistant-ui) adapts it to the runtime the UI components read. A message has `parts`; the browser
-only ever receives text, `step-start`, and `data-sources` parts (the sources panel, from M11.2, which the transport removes again before sending a thread back), because tool activity stays on the server (M5). On each turn the whole thread is sent, not just the newest message. Stop aborts
+only ever receives text and `step-start` parts, because tool activity stays on the server (M5). On each turn the whole thread is sent, not just the newest message. Stop aborts
 the request, which the server passes on to the provider.
 
 assistant-ui's `useChatRuntime` bundles these two hooks, but it creates its own thread list and
@@ -51,13 +51,13 @@ message once it settles. Both write through one `ThreadStore`; see
 
 ## 4. Where it lives in the code
 
-- Runtime wiring and transport: [apps/portfolio/src/components/chat-workspace.tsx](../../apps/portfolio/src/components/chat-workspace.tsx)
-- Thread list and history adapters: [apps/portfolio/src/chat/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.ts)
-- Titles: [apps/portfolio/src/chat/thread-title.ts](../../apps/portfolio/src/chat/thread-title.ts)
-- Saved threads: [apps/portfolio/src/chat/thread-store.ts](../../apps/portfolio/src/chat/thread-store.ts)
-- Tests: [thread-title.test.ts](../../apps/portfolio/src/chat/thread-title.test.ts),
-  [browser-thread-list-adapter.test.ts](../../apps/portfolio/src/chat/browser-thread-list-adapter.test.ts),
-  [thread-store.test.ts](../../apps/portfolio/src/chat/thread-store.test.ts)
+- Runtime wiring and transport: [apps/portfolio/src/components/chat/chat-workspace.tsx](../../apps/portfolio/src/components/chat/chat-workspace.tsx)
+- Thread list and history adapters: [apps/portfolio/src/chat/threads/browser-thread-list-adapter.ts](../../apps/portfolio/src/chat/threads/browser-thread-list-adapter.ts)
+- Titles: [apps/portfolio/src/chat/threads/thread-title.ts](../../apps/portfolio/src/chat/threads/thread-title.ts)
+- Saved threads: [apps/portfolio/src/chat/threads/thread-store.ts](../../apps/portfolio/src/chat/threads/thread-store.ts)
+- Tests: [thread-title.test.ts](../../apps/portfolio/src/chat/threads/thread-title.test.ts),
+  [browser-thread-list-adapter.test.ts](../../apps/portfolio/src/chat/threads/browser-thread-list-adapter.test.ts),
+  [thread-store.test.ts](../../apps/portfolio/src/chat/threads/thread-store.test.ts)
 - Decisions: [ADR 0007](../adr/0007-chat-ui-assistant-ui.md), [ADR 0003](../adr/0003-ai-sdk-selection.md)
 
 ## 5. Common pitfalls and misconceptions
@@ -70,7 +70,7 @@ message once it settles. Both write through one `ThreadStore`; see
   render reloads the list and drops cached threads.
 - `unstable_useAdapters` and `withFormat` are experimental assistant-ui APIs; check the adapter
   tests and a reload in the browser after upgrading assistant-ui.
-- The welcome screen had fixed starters until M12.5. A new chat now starts from the message box alone.
+- The welcome screen had fixed starters until M12.5. Since M12.10 a model writes them at build time ([generated starter questions](generated-starter-questions.md)), and a click appends an ordinary message.
 
 ## 6. Further reading
 

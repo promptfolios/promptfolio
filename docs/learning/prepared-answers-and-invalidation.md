@@ -92,12 +92,12 @@ slower but never wrong.
 - File schema, fingerprints, selection, the stream, the generator:
   [packages/ai/src/prepared-answers.ts](../../packages/ai/src/prepared-answers.ts), tested in
   [prepared-answers.test.ts](../../packages/ai/src/prepared-answers.test.ts)
-- The shared turn used by both paths: [packages/ai/src/chat-turn.ts](../../packages/ai/src/chat-turn.ts);
-  the hit-or-live decision: [chat-handler.ts](../../packages/ai/src/chat-handler.ts)
+- The shared turn used by both paths: [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts);
+  the hit-or-live decision: [chat-handler.ts](../../packages/ai/src/chat/chat-handler.ts)
 - Reading the file: [apps/portfolio/src/server/prepared-answers.ts](../../apps/portfolio/src/server/prepared-answers.ts);
   the owner's script: [apps/portfolio/scripts/prepare-answers.ts](../../apps/portfolio/scripts/prepare-answers.ts)
 - Design and decisions: [M7 plan](../plans/m7-prepared-starter-answers.md)
-- The version check after a refresh: [apps/portfolio/src/server/refresh.ts](../../apps/portfolio/src/server/refresh.ts)
+- The version check after a refresh: [apps/portfolio/src/server/refresh/refresh.ts](../../apps/portfolio/src/server/refresh/refresh.ts)
   (`profileFingerprint`, exported by `@promptfolio/ai`)
 
 ## 5. Common pitfalls and misconceptions

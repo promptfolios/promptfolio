@@ -18,7 +18,7 @@ export type ParseGitHubConfigResult =
   | { ok: true; config: GitHubSourceConfig }
   | { ok: false; issues: ProfileIssue[] };
 
-export const CONFIG_LIMITS = { maxExcluded: 50 } as const;
+const CONFIG_LIMITS = { maxExcluded: 50 } as const;
 
 /** GitHub usernames: letters, digits, single inner hyphens, at most 39 characters. */
 export const usernameSchema = z
