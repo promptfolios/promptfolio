@@ -9,7 +9,7 @@ The reusable packages are the core product. The portfolio application is the fir
 ### Core principles
 
 - **Library first:** reusable behavior lives in packages, not in the portfolio app.
-- **Real conversation:** seeded prompts start useful conversations, and visitors can ask natural follow-up questions.
+- **Real conversation:** visitors ask their own questions and natural follow-ups.
 - **Evidence over invention:** answers are grounded in available profile data and clearly communicate uncertainty.
 - **Current information:** source ingestion, refresh, versioning, and cache invalidation keep the profile reasonably current.
 - **Composable boundaries:** sources, model providers, and persistence can be replaced where doing so has practical value.
@@ -40,8 +40,6 @@ The MVP should deliver a working end-to-end experience while remaining small eno
 ### 3.1 Conversational workspace
 
 - The main interface is a chat workspace, not a floating chat popup.
-- Provide 4–5 useful seeded conversation starters, such as professional overview, relevant projects, technical skills, open-source work, and work experience.
-- A seeded starter should launch a real conversation and allow ordinary follow-up messages.
 - Visitors can start a fresh conversation and continue the current one.
 - Include clear loading, streaming, empty, error, and retry states as supported by the selected stack.
 - Make the layout responsive and accessible; keyboard navigation and readable focus states matter.
@@ -129,6 +127,8 @@ Tool inputs must be validated. Tool execution and permissions are controlled by 
 Do not start with a vector database or advanced RAG. Structured profile lookup is the default for the MVP. Add semantic retrieval only when concrete evaluation examples show that deterministic lookup is insufficient.
 
 ### 3.7 Seeded conversations and caching
+
+*Removed by the developer's decision (2026-11-01): the workspace has no fixed starters and no prepared answers. The rules below apply if either returns. See [the M12.5 plan](docs/plans/m12-5-remove-prepared-answers.md).*
 
 Seeded conversation starters should be useful, not merely decorative buttons. A starter may display a prepared answer or initiate a stored/constructed conversation, but its behavior must be consistent with the current profile data.
 
@@ -281,7 +281,7 @@ The MVP is acceptable when the approved implementation satisfies these outcomes:
 
 1. The project has a working PNPM TypeScript monorepo with clear app/package boundaries.
 2. The portfolio app consumes reusable packages through public interfaces.
-3. A visitor can use the chat workspace, start from a seeded prompt, and ask follow-up questions.
+3. A visitor can use the chat workspace, ask a question, and ask follow-up questions.
 4. The assistant answers supported questions using canonical profile data and/or approved source results.
 5. The assistant communicates when evidence is missing and does not knowingly invent profile facts.
 6. Structured profile data and public GitHub data can be normalized into the common model, with provenance retained.

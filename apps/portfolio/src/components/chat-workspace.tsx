@@ -2,12 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useAISDKRuntime } from "@assistant-ui/ai-sdk";
-import {
-  AssistantRuntimeProvider,
-  AuiConfig,
-  Suggestions,
-  useRemoteThreadListRuntime,
-} from "@assistant-ui/react";
+import { AssistantRuntimeProvider, useRemoteThreadListRuntime } from "@assistant-ui/react";
 import { DefaultChatTransport } from "ai";
 import { MenuIcon, XIcon } from "lucide-react";
 import { type FC, useEffect, useMemo, useState } from "react";
@@ -19,7 +14,6 @@ import { Thread } from "@/components/assistant-ui/elements/thread.aui";
 import { ThreadList } from "@/components/assistant-ui/elements/thread-list.aui";
 import { ContactDialog } from "@/components/contact-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { STARTERS } from "@/config/starters";
 
 /**
  * Posts `{ id, messages, messageId }` to our server route. Unlike assistant-ui's
@@ -32,7 +26,6 @@ const transport = new DefaultChatTransport({
     body: { id, messages: withoutSources(messages), messageId },
   }),
 });
-const config = AuiConfig({ suggestions: Suggestions(STARTERS) });
 
 /**
  * Runtime for a single thread, called by the thread-list runtime once per thread:
@@ -94,7 +87,7 @@ export function ChatWorkspace({ ownerName, headline, contactEnabled }: ChatWorks
   );
 
   return (
-    <AssistantRuntimeProvider runtime={runtime} config={config}>
+    <AssistantRuntimeProvider runtime={runtime}>
       <TooltipProvider>
         <div className="flex h-dvh">
           {sidebarOpen && (
