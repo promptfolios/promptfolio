@@ -67,6 +67,11 @@ garbage. Every response is untrusted input, exactly like a visitor's message.
 
 ## 5. Common pitfalls and misconceptions
 
+- A library naming an application's environment variable in its errors. The token is an option, so only the application
+  knows where it came from (M13.2).
+- Treating fixture tests as proof the live API still behaves. They show this code handles those responses, so a live refresh
+  is on the release checklist.
+
 - "The rate limit is per token, so unauthenticated calls from CI are fine." Unauthenticated limits
   are per IP address, and CI runners share addresses.
 - Treating a 404 as always fatal: a missing README is normal, a missing user is not.

@@ -185,7 +185,7 @@ export class GitHubClient {
       return {
         kind: "unauthorized",
         target,
-        message: "GitHub rejected the token; check GITHUB_TOKEN",
+        message: "GitHub rejected the token; check that it is valid and has not expired",
       };
     }
     if (status === 403 || status === 429) {

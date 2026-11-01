@@ -42,7 +42,8 @@ This document describes the suggested milestone sequence and future directions. 
 | M12.10 — Build-time starters and styling   | Done      | `pnpm build`: `/` stays static, with starters in its HTML; [plan](plans/m12-10-build-time-starters-and-styling.md) |
 | M12.3 — Deployment                         | Not started | Optional, and the developer chose to stop before it; [plan](plans/m12-second-consumer-and-deployment.md) |
 | M13.1 — `ai` API                           | Done      | `pnpm verify`; `handleChatRequest` takes `additionalInstructions`, `limits`, and `visitorMessages`; [plan](plans/m13-library-readiness.md) |
-| M13.2 to M13.5 — Library readiness         | Not started | [plan](plans/m13-library-readiness.md) |
+| M13.2 — Small package fixes                | Done      | `pnpm verify`; `core` exports no type built from zod, and token errors name no variable; [plan](plans/m13-library-readiness.md) |
+| M13.3 to M13.5 — Library readiness         | Not started | [plan](plans/m13-library-readiness.md) |
 
 Update this table when a milestone is approved.
 

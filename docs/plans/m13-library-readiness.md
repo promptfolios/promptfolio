@@ -1,6 +1,6 @@
 # M13 plan: library readiness
 
-- **Status:** Plan approved (2026-11-02). M13.1 is done and approved (2026-11-02). M13.2 is in progress.
+- **Status:** Plan approved (2026-11-02). M13.1 is done and approved (2026-11-02). M13.2 is done and approved (2026-11-02). M13.3 is in progress.
 - **Date:** 2026-11-02
 - **Roadmap:** [M13](../ROADMAP.md#m13--library-readiness).
 
@@ -70,6 +70,13 @@ Plain `tsc`, with `.ts` on relative imports and `rewriteRelativeImportExtensions
 The workspace keeps exporting `src`, and `publishConfig.exports` points published installs at `dist`. A scratch prototype
 on `core` loaded in Node, packed only `dist` and `package.json`, and resolved types under NodeNext and Bundler. Next.js with
 `.ts` import paths is untested, so it is the first check, and `.js` import paths are the fallback.
+
+## Release checklist
+
+For the publishing milestone. Package tests use saved GitHub responses, so they cannot notice GitHub changing, and live calls
+in CI would be flaky and hit rate limits. So before each release:
+
+- Run `pnpm --filter portfolio refresh` by hand, with a token, against real GitHub.
 
 ## Dependencies
 

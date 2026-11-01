@@ -529,14 +529,18 @@ describe("fetchGitHubSnapshot failures", () => {
     const routes = tokenRoutes();
     routes["users/jordan-example"] = { status: 401, text: BODY_MARKER };
     const { result } = await run(routes, { token: TOKEN });
-    expectError(result, "unauthorized");
+    const [error] = expectError(result, "unauthorized");
+    // The token is an option here: only the application knows where it came from.
+    expect(error?.message).toContain("token");
+    expect(error?.message).not.toContain("GITHUB_TOKEN");
   });
 
   it("stops when the pinned query returns GraphQL errors", async () => {
     const routes = tokenRoutes();
     routes.graphql = { json: { errors: [{ message: BODY_MARKER }] } };
     const { result, calls } = await run(routes, { token: TOKEN });
-    expectError(result, "unauthorized");
+    const [error] = expectError(result, "unauthorized");
+    expect(error?.message).not.toContain("GITHUB_TOKEN");
     expect(calls).toHaveLength(2);
   });
 

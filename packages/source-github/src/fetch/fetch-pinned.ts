@@ -31,7 +31,7 @@ export async function fetchPinned(
     fail({
       kind: "unauthorized",
       target: "graphql",
-      message: "GitHub rejected the pinned repositories query; check GITHUB_TOKEN",
+      message: "GitHub rejected the pinned repositories query; check the token",
     });
     return { own: [], others: [] };
   }
