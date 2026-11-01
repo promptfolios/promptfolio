@@ -47,6 +47,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M13.4 — CI and versioning                  | Done      | `pnpm test:tarballs`; `pnpm changeset`; [the workflow](../.github/workflows/ci.yml); [plan](plans/m13-library-readiness.md) |
 | M13.5 — Docs and evaluation                | Done      | [results](evaluation/README.md): `gpt-4o-mini` failed its gate; [limitations](KNOWN_LIMITATIONS.md); [plan](plans/m13-library-readiness.md) |
 | M14 — Provider failover                    | Done      | `PROMPTFOLIO_MODEL` takes a list, and a failed model moves to the next before an answer starts; [plan](plans/m14-provider-failover.md) |
+| M15 — Prompt fixes                         | In progress | `pnpm test`; then a new evaluation report; [plan](plans/m15-prompt-fixes.md) |
 
 Update this table when a milestone is approved.
 
@@ -283,6 +284,14 @@ Plan and decisions: [M13 plan](plans/m13-library-readiness.md).
 **Exit criteria:** A real request with a bad first key is answered by the next model, and failures after an answer starts behave as before.
 
 Plan and decisions: [M14 plan](plans/m14-provider-failover.md), [ADR 0017](adr/0017-provider-failover-before-first-content.md).
+
+### M15 — Prompt fixes
+
+**Objective:** Fix the answer problems the last evaluation found, and measure the result.
+
+**Exit criteria:** A real evaluation report with its gate result, and whatever still fails recorded in the known limitations.
+
+Plan: [M15 plan](plans/m15-prompt-fixes.md).
 
 ## Deferred product phases
 
