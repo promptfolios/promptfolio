@@ -18,7 +18,7 @@ Bumping by hand across three manifests and three changelogs is easy to get wrong
 flowchart LR
     change["A change consumers notice"] --> add["pnpm changeset<br/>writes .changeset/name.md"]
     add --> version["pnpm changeset version<br/>bumps versions, writes CHANGELOG.md"]
-    version --> publish["pnpm publish, core first"]
+    version --> publish["pnpm changeset publish"]
 ```
 
 - **One version.** `fixed` in the configuration moves `core`, `ai`, and `source-github` together. A patch to `core` alone took

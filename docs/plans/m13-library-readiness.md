@@ -77,7 +77,11 @@ For the publishing milestone. Package tests use saved GitHub responses, so they 
 in CI would be flaky and hit rate limits. So before each release:
 
 - Run `pnpm --filter portfolio refresh` by hand, with a token, against real GitHub.
-- At the first release, remove `private: true` and the "Not on npm yet" lines in the READMEs, and publish with `pnpm publish`.
+- Log in with `pnpm login` and check `pnpm whoami`. An `npm login` alone was not enough, and the registry answered an unauthenticated
+  publish with a 404 that looked like a missing scope.
+- Build the packages, then run `pnpm changeset publish`, which uses pnpm, publishes in dependency order, and tags each package.
+- Run `git push --follow-tags`.
+- Install from npm in a separate project. New packages took up to a few minutes to appear after `0.0.1`, returning 404 until then.
 
 ## Dependencies
 

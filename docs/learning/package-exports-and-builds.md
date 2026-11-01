@@ -40,7 +40,7 @@ flowchart LR
   the packed tarballs in a separate project (M13.4).
 - **A stale `dist` can hide a missing file,** which is why the build deletes it first.
 - **`types` comes first in each `exports` entry,** because conditions are read in order and the first match wins.
-- **Publishing is `pnpm publish`, not `npm publish`.** Only pnpm rewrites `workspace:*`, `catalog:`, and `publishConfig.exports`.
+- **Publish through pnpm (`pnpm changeset publish`), not `npm publish`.** Only pnpm rewrites `workspace:*`, `catalog:`, and `publishConfig.exports`.
 
 ## 6. Further reading
 
