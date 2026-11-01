@@ -1,5 +1,3 @@
-import { CHAT_LIMITS } from "./limits";
-
 /** Whether a live answer may run, and if not, whose allowance is used up. */
 export type ChatTurnDecision = "allowed" | "visitor-limit" | "site-limit";
 
@@ -33,21 +31,25 @@ export type ChatLimitCheck = ChatTurnDecision | "unavailable";
  * long, or the visitor cannot be identified, the answer is `unavailable`. The error itself is
  * dropped, because it could repeat a store credential.
  */
-export async function checkChatLimit(limit: ChatLimit, request: Request): Promise<ChatLimitCheck> {
+export async function checkChatLimit(
+  limit: ChatLimit,
+  request: Request,
+  timeoutMs: number,
+): Promise<ChatLimitCheck> {
   try {
-    const visitor = await withinLimiterTimeout(limit.identifyVisitor(request));
+    const visitor = await withinLimiterTimeout(limit.identifyVisitor(request), timeoutMs);
     if (visitor === undefined) return "unavailable";
-    return await withinLimiterTimeout(limit.limiter.take(visitor));
+    return await withinLimiterTimeout(limit.limiter.take(visitor), timeoutMs);
   } catch {
     return "unavailable";
   }
 }
 
 /** Rejects if `work` takes too long. The work may still finish, which is why callers fail closed. */
-async function withinLimiterTimeout<T>(work: Promise<T>): Promise<T> {
+async function withinLimiterTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => reject(new Error("limiter timeout")), CHAT_LIMITS.limiterTimeoutMs);
+    timer = setTimeout(() => reject(new Error("limiter timeout")), timeoutMs);
   });
   try {
     return await Promise.race([work, timeout]);

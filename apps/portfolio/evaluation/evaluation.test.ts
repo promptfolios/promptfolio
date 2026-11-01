@@ -1,4 +1,4 @@
-import { scoreEvaluationTurn } from "@promptfolio/ai";
+import { scoreEvaluationTurn } from "@promptfolio/ai/evaluation";
 import { findRecordById, profileLinkUrls } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
 import { EVALUATION_CASES } from "./cases";

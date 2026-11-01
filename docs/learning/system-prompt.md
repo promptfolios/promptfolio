@@ -89,8 +89,18 @@ them know".
 
 The rule first said to point to the Contact button "if the page shows one". A real answer named the button
 while the page had none: the model cannot see the page, so a condition it cannot check is not a condition.
-Now the app passes `contactFormAvailable`, and the prompt mentions the button only when it is `true`. Facts
-about the app belong in the prompt as decided text, not as a question for the model.
+So the app told the prompt whether the button exists. Facts about the app belong in the prompt as decided text, not as a
+question for the model.
+
+**Additional instructions (M13.1).** A boolean named after one button tied the package to one app, so it became
+`additionalInstructions`: text from the application, added after the base rules and before the identity block, under a line
+saying the rules above take priority. The reference app sends its Contact button sentence only when the button exists
+([instructions.ts](../../apps/portfolio/src/server/chat/instructions.ts)).
+
+- **It appends and cannot replace.** The base rules hold the grounding and injection guidance, which every consumer needs.
+- **It comes from server code,** never a request. A test checks that a request sending this field changes nothing.
+- **It is guidance only,** like every prompt rule. The tools, limits, and link check stay in code, so a consumer's text
+  cannot widen what the assistant can do. It can make answers worse, which is why each consumer evaluates its own.
 
 
 ## 4. Where it lives in the code
@@ -108,7 +118,8 @@ about the app belong in the prompt as decided text, not as a question for the mo
 - "The prompt says don't do X, so X can't happen." Models can ignore instructions, and visitor
   messages can try to override them (prompt injection). Limits, tool permissions, and confirmations
   live in code.
-- Accepting a system prompt from the browser lets any visitor rewrite the assistant's rules.
+- Accepting a system prompt from the browser lets any visitor rewrite the assistant's rules. That includes passing a
+  request field through to `additionalInstructions`.
 - Putting secrets or private configuration in the prompt: assume anything in it can be repeated
   back to a visitor.
 - Dumping the whole profile into the prompt is cheap for a small profile, but loses provenance

@@ -88,7 +88,7 @@ export function createConsumer({ model, profile, limiter, contact }: ConsumerOpt
       handleChatRequest(request, {
         model,
         profile,
-        contactFormAvailable: true,
+        additionalInstructions: "This page has a Contact button at the top.",
         limit: { limiter, identifyVisitor },
       }),
     prepareContact: (request: Request) => handleContactPrepare(request, contactOptions),

@@ -1,16 +1,19 @@
 import "server-only";
-import { CHAT_LIMITS, type ChatLimit, type ChatTurnLimiter } from "@promptfolio/ai";
+import type { ChatLimit, ChatTurnLimiter } from "@promptfolio/ai";
 import type { Redis } from "@upstash/redis";
 import type { AppEnv } from "../shared/env";
 import { createRedisClient, loadRedisConfig, type RedisConfig } from "../shared/redis";
 import { createVisitorIdentifier, MIN_SECRET_CHARS } from "../shared/visitor";
 
-const WINDOW_SECONDS = CHAT_LIMITS.liveTurnWindowMs / 1000;
+const WINDOW_SECONDS = 24 * 60 * 60;
 
 export interface ChatTurnAllowance {
   perVisitor: number;
   forSite: number;
 }
+
+/** Live answers per window, for one visitor and, whatever the visitor's address, for the whole site. */
+const DEFAULT_ALLOWANCE: ChatTurnAllowance = { perVisitor: 30, forSite: 200 };
 
 /** The part of the Redis client this adapter uses, so tests can pass a fake. */
 export type ChatLimitRedis = Pick<Redis, "multi">;
@@ -23,10 +26,7 @@ export type ChatLimitRedis = Pick<Redis, "multi">;
  */
 export function createRedisChatLimiter(
   redis: ChatLimitRedis,
-  allowance: ChatTurnAllowance = {
-    perVisitor: CHAT_LIMITS.maxLiveTurnsPerVisitor,
-    forSite: CHAT_LIMITS.maxLiveTurnsForSite,
-  },
+  allowance: ChatTurnAllowance = DEFAULT_ALLOWANCE,
 ): ChatTurnLimiter {
   const count = async (key: string): Promise<number> => {
     const results = await redis.multi().incr(key).expire(key, WINDOW_SECONDS, "NX").exec();

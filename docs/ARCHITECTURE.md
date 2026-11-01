@@ -145,7 +145,7 @@ sequenceDiagram
     opt key missing or profile invalid
         R-->>B: 500 generic message (details in the server log)
     end
-    R->>H: handleChatRequest(request, { model, profile, providerOptions, limit })
+    R->>H: handleChatRequest(request, { model, profile, providerOptions, additionalInstructions, limit })
     H->>H: cap body at 100 KB, parse allowlist, check limits
     opt invalid input
         H-->>B: 4xx with a safe message (model is not called)

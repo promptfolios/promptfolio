@@ -42,7 +42,8 @@ a cause.
 
 ## 4. Where it lives in the code
 
-- `evaluateQuestion`, `scoreEvaluationTurn`: [packages/ai/src/evaluation/evaluation.ts](../../packages/ai/src/evaluation/evaluation.ts)
+- `evaluateQuestion`, `scoreEvaluationTurn`: [packages/ai/src/evaluation/evaluation.ts](../../packages/ai/src/evaluation/evaluation.ts),
+  imported from `@promptfolio/ai/evaluation`
 - Cases, fictional profile, and report: [apps/portfolio/evaluation/](../../apps/portfolio/evaluation/)
 - The runner: [apps/portfolio/scripts/evaluate.ts](../../apps/portfolio/scripts/evaluate.ts)
 - Results: [docs/evaluation/](../evaluation/README.md)

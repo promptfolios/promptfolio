@@ -76,8 +76,8 @@ rerun with these secrets and found none in `.next`.
 - Contact configuration: [apps/portfolio/src/server/contact/contact.ts](../../apps/portfolio/src/server/contact/contact.ts),
   leak tests in [packages/contact/src/handlers.test.ts](../../packages/contact/src/handlers.test.ts)
 - The route: [apps/portfolio/src/app/api/chat/route.ts](../../apps/portfolio/src/app/api/chat/route.ts)
-- Generic error messages: [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
-  (`genericErrorMessage`), with leak tests in [chat-handler.test.ts](../../packages/ai/src/chat/chat-handler.test.ts)
+- Generic error messages: [packages/ai/src/chat/messages.ts](../../packages/ai/src/chat/messages.ts)
+  (`CHAT_MESSAGES.unavailable`), with leak tests in [chat-handler.test.ts](../../packages/ai/src/chat/chat-handler.test.ts)
 - Example configuration: [apps/portfolio/.env.example](../../apps/portfolio/.env.example)
 - The GitHub token: [apps/portfolio/scripts/refresh.ts](../../apps/portfolio/scripts/refresh.ts),
   leak tests in [apps/portfolio/src/server/refresh/refresh.test.ts](../../apps/portfolio/src/server/refresh/refresh.test.ts) and [packages/source-github/src/fetch/fetch.test.ts](../../packages/source-github/src/fetch/fetch.test.ts)

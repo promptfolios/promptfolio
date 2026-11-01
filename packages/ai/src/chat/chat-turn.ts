@@ -10,8 +10,9 @@ import {
   type UIMessage,
   type UIMessageChunk,
 } from "ai";
-import { createProfileTools } from "../grounding/profile-tools";
-import { CHAT_LIMITS } from "./limits";
+import { createProfileTools, type ProfileTools } from "../grounding/profile-tools";
+import type { ChatLimitOverrides, ChatLimits } from "./limits";
+import { type ChatMessages, unavailableMessage } from "./messages";
 import { withoutRawToolCalls } from "./raw-tool-calls";
 import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";
 
@@ -19,13 +20,6 @@ type StreamTextOptions = Parameters<typeof streamText>[0];
 
 /** Provider-specific settings, passed through unchanged (for example `{ anthropic: { effort: "low" } }`). */
 export type ChatProviderOptions = NonNullable<StreamTextOptions["providerOptions"]>;
-
-/** Provider timeouts in milliseconds. Defaults to `CHAT_LIMITS.timeouts`. */
-export interface ChatTimeouts {
-  firstChunkMs: number;
-  chunkMs: number;
-  totalMs: number;
-}
 
 /** Where the handler reports errors and usage. Defaults to `console`. */
 export type ChatLogger = Pick<Console, "info" | "error">;
@@ -36,45 +30,58 @@ export interface ChatTurnOptions extends SystemPromptOptions {
   model: LanguageModel;
   profile: Profile;
   providerOptions?: ChatProviderOptions;
-  /** Defaults to `CHAT_LIMITS.maxOutputTokens`. */
-  maxOutputTokens?: number;
-  timeouts?: ChatTimeouts;
+  /** Changes to `CHAT_LIMITS`. Anything left out keeps its default. */
+  limits?: ChatLimitOverrides;
+  /** Changes to `CHAT_MESSAGES`. Anything left out keeps its default. */
+  visitorMessages?: Partial<ChatMessages>;
   logger?: ChatLogger;
 }
 
-/** Shown to visitors for any failure that is not their input's fault. */
-export function genericErrorMessage(requestId: string): string {
-  return `The assistant could not answer right now. Please try again later. (ref ${requestId})`;
+/** What one turn produced. */
+export interface ChatTurn {
+  /** The AI SDK result, for server-side details such as tool results. */
+  result: ReturnType<typeof streamText<ProfileTools>>;
+  /** The stream exactly as a visitor receives it. */
+  stream: ReadableStream<UIMessageChunk>;
+  /** Whether the stream stopped a raw tool call, which is known once it has been read. */
+  wasRawToolCallBlocked: () => boolean;
+}
+
+/** One request's identity and its options with the defaults applied. */
+export interface ChatTurnContext {
+  requestId: string;
+  signal: AbortSignal;
+  limits: ChatLimits;
+  text: ChatMessages;
 }
 
 /**
  * Runs one model turn over already validated messages: the server-owned system prompt, the
- * profile lookup tools, and the step and call budgets. Returns the AI SDK result (for
- * server-side details such as tool results), the stream exactly as a visitor receives it, and
- * whether that stream stopped a raw tool call, which is known once the stream has been read.
+ * profile lookup tools, and the step and call budgets.
  */
 export async function runChatTurn(
   messages: UIMessage[],
   options: ChatTurnOptions,
-  { requestId, signal }: { requestId: string; signal: AbortSignal },
-) {
-  const { model, profile, providerOptions, contactFormAvailable, logger = console } = options;
+  { requestId, signal, limits, text }: ChatTurnContext,
+): Promise<ChatTurn> {
+  const { model, profile, providerOptions, additionalInstructions, logger = console } = options;
+  const errorText = unavailableMessage(text, requestId);
 
   const result = streamText({
     model,
-    instructions: buildSystemPrompt(profile.identity, { contactFormAvailable }),
+    instructions: buildSystemPrompt(profile.identity, { additionalInstructions }),
     messages: await convertToModelMessages(messages),
     // Only the server's tools exist; the client cannot add any (see parseChatRequest).
-    tools: createProfileTools(profile, { maxCalls: CHAT_LIMITS.maxToolCalls }),
-    stopWhen: isStepCount(CHAT_LIMITS.maxSteps),
+    tools: createProfileTools(profile, { maxCalls: limits.maxToolCalls }),
+    stopWhen: isStepCount(limits.maxSteps),
     // The last allowed step must answer in text instead of ending on another tool call.
     prepareStep: ({ stepNumber }) =>
-      stepNumber === CHAT_LIMITS.maxSteps - 1 ? { toolChoice: "none" } : undefined,
+      stepNumber === limits.maxSteps - 1 ? { toolChoice: "none" } : undefined,
     // Per step: a turn with lookups makes several model calls.
-    maxOutputTokens: options.maxOutputTokens ?? CHAT_LIMITS.maxOutputTokens,
+    maxOutputTokens: limits.maxOutputTokens,
     providerOptions,
-    timeout: options.timeouts ?? CHAT_LIMITS.timeouts,
-    maxRetries: CHAT_LIMITS.maxRetries,
+    timeout: limits.timeouts,
+    maxRetries: limits.maxRetries,
     abortSignal: signal,
     onError: ({ error }) => {
       // Visitors only see the generic message, and the log only a summary (see below).
@@ -99,19 +106,19 @@ export async function runChatTurn(
   const stream = toUIMessageStream({
     stream: result.stream,
     sendReasoning: false,
-    onError: () => genericErrorMessage(requestId),
+    onError: () => errorText,
   })
     .pipeThrough(logToolCalls(requestId, logger))
     .pipeThrough(
       withoutRawToolCalls({
-        errorText: genericErrorMessage(requestId),
+        errorText,
         onBlocked: () => {
           rawToolCallBlocked = true;
           logger.error(`[chat ${requestId}] raw tool call blocked`);
         },
       }),
     )
-    .pipeThrough(forVisitor(signal, requestId));
+    .pipeThrough(forVisitor(signal, errorText));
   return { result, stream, wasRawToolCallBlocked: () => rawToolCallBlocked };
 }
 
@@ -170,13 +177,13 @@ const VISITOR_CHUNK_TYPES: ReadonlySet<UIMessageChunk["type"]> = new Set([
  */
 export function forVisitor(
   clientSignal: AbortSignal,
-  requestId: string,
+  errorText: string,
 ): TransformStream<UIMessageChunk, UIMessageChunk> {
   return new TransformStream({
     transform(chunk, controller) {
       if (!VISITOR_CHUNK_TYPES.has(chunk.type)) return;
       if (chunk.type === "abort" && !clientSignal.aborted) {
-        controller.enqueue({ type: "error", errorText: genericErrorMessage(requestId) });
+        controller.enqueue({ type: "error", errorText });
         return;
       }
       controller.enqueue(withoutProviderMetadata(chunk));

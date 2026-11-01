@@ -205,9 +205,6 @@ importers:
       '@promptfolio/core':
         specifier: workspace:*
         version: link:../core
-      ai:
-        specifier: 'catalog:'
-        version: 7.0.154(zod@4.6.7)
       zod:
         specifier: 'catalog:'
         version: 4.6.7
@@ -215,6 +212,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      ai:
+        specifier: 'catalog:'
+        version: 7.0.154(zod@4.6.7)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

@@ -24,13 +24,17 @@ flowchart LR
     index --> internals["Package internals"]
 ```
 
-- `exports` in each `package.json` lists only `.`, so importing an internal file fails.
+- `exports` in each `package.json` lists only the public entry points, so importing an internal file fails. That is `.`,
+  plus `./evaluation` in `@promptfolio/ai`, because only test tooling needs it (M13.1).
 - A test in `core` and in `source-github` lists the runtime exports, so adding one is a visible decision.
 - The consumer supplies what the packages deliberately leave open: a model, a limiter, an email sender, and a way to
   identify a visitor. Each is an interface or a callback, so no package names a provider or store.
 - **What M12.1 changed.** `mergeGitHubSnapshot` moved to `source-github`, because every consumer needs it. Its refresh
   in the consumer takes about 10 lines. Files, status, and reporting stay in each app. Exports nothing outside a
   package used were removed. Types that appear in a public signature stay.
+- **What M13.1 changed.** The prompt no longer knows about a Contact button: an application passes
+  `additionalInstructions`. Limits and visitor text are options with defaults, and the daily allowances moved to the
+  application, whose limiter applies them.
 
 ## 4. Where it lives in the code
 

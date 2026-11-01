@@ -11,10 +11,11 @@
  */
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { evaluateQuestion, scoreEvaluationTurn } from "@promptfolio/ai";
+import { evaluateQuestion, scoreEvaluationTurn } from "@promptfolio/ai/evaluation";
 import { EVALUATION_CASES, type EvaluationCase } from "../evaluation/cases";
 import { loadEvaluationProfile } from "../evaluation/load-profile";
 import { type EvaluationRun, formatReport, runPassed, summarize } from "../evaluation/report";
+import { chatInstructions } from "../src/server/chat/instructions";
 import { createChatModel } from "../src/server/chat/model";
 
 /** After a provider failure, usually a quota: wait for the minute to reset, and try again. */
@@ -53,7 +54,7 @@ async function main(): Promise<number> {
       model: chatModel.model,
       providerOptions: chatModel.providerOptions,
       profile,
-      contactFormAvailable: true,
+      additionalInstructions: chatInstructions(true),
       // Errors are summaries (type and status), which say why a run failed. The rest is noise here.
       logger: { info: () => {}, error: (...details) => console.error("   ", ...details) },
       ...(item.history && { history: item.history }),

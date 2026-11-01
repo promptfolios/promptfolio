@@ -41,6 +41,8 @@ This document describes the suggested milestone sequence and future directions. 
 | M12.9 — Generated starter questions        | Done      | Moved to build time in M12.10; [plan](plans/m12-9-generated-starter-questions.md) |
 | M12.10 — Build-time starters and styling   | Done      | `pnpm build`: `/` stays static, with starters in its HTML; [plan](plans/m12-10-build-time-starters-and-styling.md) |
 | M12.3 — Deployment                         | Not started | Optional, and the developer chose to stop before it; [plan](plans/m12-second-consumer-and-deployment.md) |
+| M13.1 — `ai` API                           | Done      | `pnpm verify`; `handleChatRequest` takes `additionalInstructions`, `limits`, and `visitorMessages`; [plan](plans/m13-library-readiness.md) |
+| M13.2 to M13.5 — Library readiness         | Not started | [plan](plans/m13-library-readiness.md) |
 
 Update this table when a milestone is approved.
 
@@ -261,6 +263,14 @@ Plan and decisions: [M11 plan](plans/m11-reliability-security-evaluation.md), sp
 **Exit criteria:** The second consumer works through documented public APIs and configuration/data changes. Deployment is optional until separately approved.
 
 Plan and results: [M12 plan](plans/m12-second-consumer-and-deployment.md). The exit criteria are met. The developer chose not to deploy for now (2026-10-31), so the firewall rule, the real 429 and IP header checks, the scheduled refresh, and a deployment path for a real profile remain in M12.3, which stays optional.
+
+### M13 — Library readiness
+
+**Objective:** Get the reusable packages ready to publish, without publishing them.
+
+**Exit criteria:** A packed tarball installs and works in a separate project, and each package's API is free of reference-app assumptions. Publishing is a separate milestone with its own approval.
+
+Plan and decisions: [M13 plan](plans/m13-library-readiness.md).
 
 ## Deferred product phases
 

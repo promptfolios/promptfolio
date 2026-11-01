@@ -11,7 +11,7 @@ import {
   type Role,
   recordsUsingSkill,
 } from "@promptfolio/core";
-import { tool } from "ai";
+import { type Tool, tool } from "ai";
 import { z } from "zod";
 
 /**
@@ -70,13 +70,13 @@ export const getInputSchema = z.strictObject({
  * The full provenance every returned record carries, flattened onto the record, so an answer
  * can say whose claim it is and when it was observed without another lookup.
  */
-interface RecordEvidence {
+export interface RecordEvidence {
   basis: ClaimBasis;
   sourceId: string;
   observedAt: string;
 }
 
-interface SourceSummary {
+export interface SourceSummary {
   id: string;
   kind: string;
   label: string;
@@ -93,11 +93,25 @@ export interface ProfileToolsOptions {
   maxCalls: number;
 }
 
+export type ProfileTools = {
+  listProfileRecords: Tool<
+    z.input<typeof listInputSchema>,
+    ReturnType<typeof listRecords> | typeof LIMIT_REACHED
+  >;
+  getProfileRecord: Tool<
+    z.input<typeof getInputSchema>,
+    ReturnType<typeof getRecord> | typeof LIMIT_REACHED
+  >;
+};
+
 /**
  * Creates the tool set for one chat request. The call budget lives in this closure, so it
  * is counted per request and cannot be reset by the model or the client.
  */
-export function createProfileTools(profile: Profile, { maxCalls }: ProfileToolsOptions) {
+export function createProfileTools(
+  profile: Profile,
+  { maxCalls }: ProfileToolsOptions,
+): ProfileTools {
   let calls = 0;
   const withinBudget = () => {
     calls += 1;

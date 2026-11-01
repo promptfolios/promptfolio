@@ -1,6 +1,7 @@
 import type { UIMessage } from "ai";
 import { z } from "zod";
-import { CHAT_LIMITS } from "./limits";
+import type { ChatLimits } from "./limits";
+import type { ChatMessages } from "./messages";
 
 /**
  * The only message parts accepted from the browser. `step-start` is a content-free
@@ -23,9 +24,11 @@ const messageSchema = z.object({
  * The accepted request body. Only `messages` is read; every other field the client sends (such as
  * `system`, `tools`, or `messageId`) is stripped by zod.
  */
-const bodySchema = z.object({
-  messages: z.array(messageSchema).min(1).max(CHAT_LIMITS.maxMessages),
-});
+function bodySchema(maxMessages: number) {
+  return z.object({
+    messages: z.array(messageSchema).min(1).max(maxMessages),
+  });
+}
 
 export type ParseChatRequestResult =
   | { ok: true; messages: UIMessage[] }
@@ -40,27 +43,37 @@ export type ParseChatRequestResult =
  * cannot use a visitor's browser to spend the visitor's or the site's live answers. A script
  * outside a browser can omit the header, so this protects visitors and does not stop scripts.
  */
-export async function parseChatRequest(request: Request): Promise<ParseChatRequestResult> {
+export async function parseChatRequest(
+  request: Request,
+  limits: ChatLimits,
+  text: ChatMessages,
+): Promise<ParseChatRequestResult> {
   if (request.headers.get("sec-fetch-site") === "cross-site") {
-    return reject(403, "This request is not allowed.");
+    return reject(403, text.crossSite);
   }
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().startsWith("application/json")) {
-    return reject(415, "The request must be JSON.");
+    return reject(415, text.notJson);
   }
 
-  const body = await readBodyWithLimit(request, CHAT_LIMITS.maxBodyBytes);
-  if (body === undefined) return reject(413, "The request is too large.");
+  let body: string | undefined;
+  try {
+    body = await readBodyWithLimit(request, limits.maxBodyBytes);
+  } catch {
+    // Usually a visitor who went away mid-request, so not a server error.
+    return reject(400, text.unreadable);
+  }
+  if (body === undefined) return reject(413, text.tooLarge);
 
   let data: unknown;
   try {
     data = JSON.parse(body);
   } catch {
-    return reject(400, "The request body is not valid JSON.");
+    return reject(400, text.invalidJson);
   }
 
-  const parsed = bodySchema.safeParse(data);
-  if (!parsed.success) return reject(400, "The request does not contain a valid conversation.");
+  const parsed = bodySchema(limits.maxMessages).safeParse(data);
+  if (!parsed.success) return reject(400, text.invalidConversation);
 
   let totalChars = 0;
   let lastText = "";
@@ -69,21 +82,22 @@ export async function parseChatRequest(request: Request): Promise<ParseChatReque
     const textParts = message.parts.flatMap((part) =>
       part.type === "text" ? [{ type: "text" as const, text: part.text }] : [],
     );
-    const text = textParts.map((part) => part.text).join("");
-    if (message.role === "user" && text.length > CHAT_LIMITS.maxMessageChars) {
-      return reject(413, `A message is longer than ${CHAT_LIMITS.maxMessageChars} characters.`);
+    const messageText = textParts.map((part) => part.text).join("");
+    if (message.role === "user" && messageText.length > limits.maxMessageChars) {
+      const maxChars = String(limits.maxMessageChars);
+      return reject(413, text.messageTooLong.replaceAll("{maxChars}", maxChars));
     }
-    totalChars += text.length;
-    lastText = text;
+    totalChars += messageText.length;
+    lastText = messageText;
     messages.push({ id: message.id, role: message.role, parts: textParts });
   }
 
-  if (totalChars > CHAT_LIMITS.maxTotalChars) {
-    return reject(413, "The conversation is too long. Please start a new chat.");
+  if (totalChars > limits.maxTotalChars) {
+    return reject(413, text.conversationTooLong);
   }
 
   if (messages.at(-1)?.role !== "user" || lastText.trim() === "") {
-    return reject(400, "The conversation must end with a question.");
+    return reject(400, text.noQuestion);
   }
 
   return { ok: true, messages };

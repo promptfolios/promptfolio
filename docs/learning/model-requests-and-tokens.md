@@ -33,13 +33,17 @@ Where size is bounded:
 | Raw request body                       | 100 KB, before JSON parsing    | `CHAT_LIMITS`, `request.ts` |
 | Messages per request                   | 50                             | `CHAT_LIMITS`, `request.ts` |
 | Characters per visitor message / in total | 4,000 / 20,000              | `CHAT_LIMITS`, `request.ts` |
-| Live answers per day: per visitor / for the site | 30 / 200             | `CHAT_LIMITS`, `chat-limit.ts` |
-| Output tokens per model call (incl. thinking) | 2,000 (1,000 before M7.1) | `maxOutputTokens`   |
+| Live answers per day: per visitor / for the site | 30 / 200             | The app's `chat-limit.ts` |
+| Output tokens per model call (incl. thinking) | 2,000 (1,000 before M7.1) | `CHAT_LIMITS.maxOutputTokens` |
 | Wait for the first content / between chunks / whole reply | 15 s / 10 s / 55 s | `CHAT_LIMITS.timeouts`, AI SDK `timeout` |
 | Retries after a failed provider call   | 1                              | `CHAT_LIMITS.maxRetries`  |
 | Time per reply on serverless hosts     | 60 s                           | `maxDuration` in `route.ts` |
 
 Characters stand in for tokens because they are cheap to count before calling the provider.
+
+These `CHAT_LIMITS` are defaults (M13.1). A consumer changes them with the `limits` option, and an invalid value is logged by
+name and refused, because a limit that silently did nothing could cost money. Daily allowances moved to the application,
+because its limiter is what applies them.
 
 Providers can be slow or overloaded. During M4 review, Gemini answered HTTP 503 ("high demand")
 after up to 30 seconds, and the AI SDK's two default retries stretched one visitor's wait past a
@@ -101,8 +105,9 @@ Each finished reply logs its token usage on the server, for example
 ## 4. Where it lives in the code
 
 - Profile size limits: [packages/core/src/profile/schema.ts](../../packages/core/src/profile/schema.ts) (`LIMITS`)
-- Chat limits: [packages/ai/src/chat/limits.ts](../../packages/ai/src/chat/limits.ts) (`CHAT_LIMITS`), enforced in
-  [packages/ai/src/chat/request.ts](../../packages/ai/src/chat/request.ts)
+- Chat limits: [packages/ai/src/chat/limits.ts](../../packages/ai/src/chat/limits.ts) (`CHAT_LIMITS`, `resolveChatLimits`),
+  enforced in [packages/ai/src/chat/request.ts](../../packages/ai/src/chat/request.ts)
+- Daily allowances: [apps/portfolio/src/server/chat/chat-limit.ts](../../apps/portfolio/src/server/chat/chat-limit.ts)
 - Provider call and usage logging: [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
 - Provider selection, model ids, and thinking settings:
   [apps/portfolio/src/server/chat/model.ts](../../apps/portfolio/src/server/chat/model.ts)

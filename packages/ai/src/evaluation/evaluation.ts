@@ -1,8 +1,13 @@
 import { profileLinkUrls } from "@promptfolio/core";
 import type { UIMessage, UIMessageChunk } from "ai";
 import { type ChatTurnOptions, runChatTurn } from "../chat/chat-turn";
+import { resolveChatLimits } from "../chat/limits";
+import { resolveChatMessages } from "../chat/messages";
 
 /**
+ * Public entry point of `@promptfolio/ai/evaluation`, separate from the main one because only a
+ * consumer's test tooling needs it.
+ *
  * Evaluation: run a question through the same turn a visitor gets, and check what can be checked
  * without judgement: which tools ran, which records they returned, which links the answer holds, and
  * which phrases appear. A fluent answer proves nothing, and these checks do not prove an answer is
@@ -39,6 +44,8 @@ export interface EvaluateQuestionOptions extends ChatTurnOptions {
 /**
  * Runs one question through the live turn: the same prompt, tools, and budgets as a visitor's. A
  * provider failure comes back as `failed`, not as an exception, so one failure does not end a run.
+ *
+ * @throws {TypeError} If `limits` or `visitorMessages` is invalid, which no retry could fix.
  */
 export async function evaluateQuestion(
   question: string,
@@ -51,6 +58,8 @@ export async function evaluateQuestion(
   const { result, stream, wasRawToolCallBlocked } = await runChatTurn(messages, options, {
     requestId: `eval-${crypto.randomUUID().slice(0, 8)}`,
     signal: new AbortController().signal,
+    limits: resolveChatLimits(options.limits),
+    text: resolveChatMessages(options.visitorMessages),
   });
   const { text, failed } = await readVisitorText(stream);
   const rawToolCall = wasRawToolCallBlocked();

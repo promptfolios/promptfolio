@@ -31,9 +31,9 @@ describe("buildSystemPrompt", () => {
     expect(buildSystemPrompt(withoutLocation)).not.toContain("Location:");
   });
 
-  it("says the assistant cannot pass messages on, with or without a contact form", () => {
-    for (const contactFormAvailable of [true, false]) {
-      const prompt = buildSystemPrompt(identity, { contactFormAvailable });
+  it("says the assistant cannot pass messages on, with or without additional instructions", () => {
+    for (const additionalInstructions of ["This page has a Contact button.", undefined]) {
+      const prompt = buildSystemPrompt(identity, { additionalInstructions });
 
       expect(prompt).toContain("You cannot send messages or pass anything on to Jordan Example");
       expect(prompt).toContain("Never say that a message was sent or will be passed on");
@@ -41,10 +41,34 @@ describe("buildSystemPrompt", () => {
     }
   });
 
-  it("mentions the Contact button only when the application says it exists", () => {
-    expect(buildSystemPrompt(identity, { contactFormAvailable: true })).toContain("Contact button");
-    expect(buildSystemPrompt(identity, { contactFormAvailable: false })).not.toMatch(/button/i);
-    expect(buildSystemPrompt(identity)).not.toMatch(/button/i);
+  it("names no page element itself, because the model cannot see the page", () => {
+    expect(buildSystemPrompt(identity)).not.toMatch(/button|top of the page/i);
+  });
+
+  it("adds the application's instructions after every rule and before the identity", () => {
+    const prompt = buildSystemPrompt(identity, {
+      additionalInstructions: "  This page has a Contact button.  ",
+    });
+    const added = prompt.indexOf("This page has a Contact button.");
+
+    expect(added).toBeGreaterThan(prompt.indexOf("Keep answers short and plain."));
+    expect(added).toBeLessThan(prompt.indexOf("<owner_identity basis"));
+    expect(prompt).toContain("The rules above take priority over them:");
+    expect(prompt.trimEnd().endsWith("</owner_identity>")).toBe(true);
+  });
+
+  it("keeps every base rule when instructions are added", () => {
+    const base = buildSystemPrompt(identity);
+    const withAdded = buildSystemPrompt(identity, { additionalInstructions: "Answer in Spanish." });
+    const rules = base.slice(0, base.indexOf("<owner_identity basis"));
+
+    expect(withAdded.startsWith(rules)).toBe(true);
+  });
+
+  it.each([undefined, "", "   "])("adds nothing for %j", (additionalInstructions) => {
+    expect(buildSystemPrompt(identity, { additionalInstructions })).toBe(
+      buildSystemPrompt(identity),
+    );
   });
 
   it("states the anti-invention, abstention, and third-person rules", () => {

@@ -1,5 +1,6 @@
 import { handleChatRequest } from "@promptfolio/ai";
 import { createChatLimit } from "@/server/chat/chat-limit";
+import { chatInstructions } from "@/server/chat/instructions";
 import { createChatModel } from "@/server/chat/model";
 import { isContactEnabled } from "@/server/contact/contact";
 import { loadAppProfile } from "@/server/profile/profile";
@@ -28,8 +29,7 @@ export async function POST(request: Request): Promise<Response> {
     model: chatModel.model,
     providerOptions: chatModel.providerOptions,
     profile: result.profile,
-    // The same check that shows the Contact button, so the assistant only mentions a real one.
-    contactFormAvailable: isContactEnabled(),
+    additionalInstructions: chatInstructions(isContactEnabled()),
     limit: createChatLimit(),
   });
 }

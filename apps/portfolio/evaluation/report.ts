@@ -1,4 +1,4 @@
-import type { EvaluationCheck, EvaluationTurn } from "@promptfolio/ai";
+import type { EvaluationCheck, EvaluationTurn } from "@promptfolio/ai/evaluation";
 import type { EvaluationCase } from "./cases";
 
 /** One run of one case. A turn that failed says nothing about the answer, so it is not scored. */

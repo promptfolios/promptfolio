@@ -1,4 +1,4 @@
-import type { EvaluationExpectation } from "@promptfolio/ai";
+import type { EvaluationExpectation } from "@promptfolio/ai/evaluation";
 import type { UIMessage } from "ai";
 
 /**

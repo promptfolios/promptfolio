@@ -2,17 +2,24 @@
 
 The server side of chat: validates a request, runs a model turn with read-only profile tools, and streams the reply. Server-only, because the model you pass carries your provider key.
 
-Not published. Use it from this workspace as `"@promptfolio/ai": "workspace:*"`.
+Not published. Use it from this workspace as `"@promptfolio/ai": "workspace:*"`. Your project must also depend on the [AI SDK](https://ai-sdk.dev), `ai`, which is a peer dependency: you create the model with it and read its stream.
 
-## Entry point
+## Entry points
+
+`@promptfolio/ai`:
 
 | Export | Purpose |
 | ------ | ------- |
 | `handleChatRequest` | Takes a web `Request`, returns a streaming `Response` |
 | `ChatLimit`, `ChatTurnLimiter` | The daily limit you implement. `limit` is required; `null` turns it off on purpose |
-| `evaluateQuestion`, `scoreEvaluationTurn` | Run a question through the live turn and check what code can check |
 | `generateStarterQuestions`, `STARTER_LIMITS` | Starters written by the model from a profile; generate once per profile, such as at build time |
-| `CHAT_LIMITS` | The request and model limits |
+| `CHAT_LIMITS`, `CHAT_MESSAGES` | The default limits and visitor text |
+
+`@promptfolio/ai/evaluation`, for your test tooling:
+
+| Export | Purpose |
+| ------ | ------- |
+| `evaluateQuestion`, `scoreEvaluationTurn` | Run a question through the live turn and check what code can check |
 
 You supply any AI SDK `LanguageModel`, the `Profile`, and the limiter. This package names no provider or store.
 
@@ -24,10 +31,34 @@ From [the minimal consumer](../../apps/minimal-consumer/src/consumer.ts):
 handleChatRequest(request, {
   model,
   profile,
-  contactFormAvailable: true,
+  additionalInstructions: "This page has a Contact button at the top.",
   limit: { limiter, identifyVisitor },
 });
 ```
 
-The system prompt is built here, not passed in, so a request cannot change it. Limits on messages, tools, and
-output are enforced here too.
+## Options
+
+- **`additionalInstructions`:** text added after the base rules, for what only your site knows, such as a Contact button or the language to answer in. The model cannot see your page, so name a page element only when it exists. Write it in your server code and never take it from a request. It cannot replace the base rules, and a change to it calls for a new evaluation.
+- **`limits`:** changes to `CHAT_LIMITS`, such as `{ maxMessages: 30, timeouts: { totalMs: 25_000 } }`. On a serverless host, keep `timeouts.totalMs` plus `limiterTimeoutMs` under the function's time limit. Daily allowances are not here: your limiter applies its own.
+- **`visitorMessages`:** changes to `CHAT_MESSAGES`, the text a visitor sees when a request is refused or fails. `{ref}` and `{maxChars}` are filled in.
+
+An invalid limit or message is logged by name, and the visitor gets the generic error.
+
+## Errors
+
+`handleChatRequest` answers failures before the stream starts with a `Response`, so a route needs no error handling of its own. Later failures arrive as an `error` chunk in the stream. A logger you pass runs outside this guarantee, so it should not throw.
+
+## Security
+
+The system prompt is built here, not taken from a request. Limits on messages, tools, and output are enforced here too.
+
+**Links in answers are yours to check.** The stream holds whatever the model wrote, and text in a public source could get it to write a link that sends the conversation elsewhere. Make only the profile's own URLs clickable:
+
+```ts
+const allowed = new Set(profileLinkUrls(profile)); // from @promptfolio/core
+const isSafe = (href: string) => URL.canParse(href) && allowed.has(new URL(href).href);
+```
+
+Check links as they are rendered, so this covers every way Markdown can write one. The reference app does this in [`profile-link.tsx`](../../apps/portfolio/src/components/chat/profile-link.tsx).
+
+No model is endorsed. Answer quality depends on the model and the prompt together, so evaluate the one you deploy.
