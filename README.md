@@ -103,10 +103,14 @@ The app supports four providers. Configure them in `apps/portfolio/.env.local` (
 
 | Provider          | `PROMPTFOLIO_MODEL` value                             | Key variable                   |
 | ----------------- | ----------------------------------------------------- | ------------------------------ |
-| Google Gemini     | `google:gemini-3.8-flash` (default)                   | `GOOGLE_GENERATIVE_AI_API_KEY` |
+| Google Gemini     | `google:gemini-3.5-flash-lite` (default)              | `GOOGLE_GENERATIVE_AI_API_KEY` |
 | Anthropic Claude  | `anthropic:claude-haiku-5-5` (default)                | `ANTHROPIC_API_KEY`            |
 | OpenRouter        | `openrouter:google/gemma-4-31b-it:free` (default)     | `OPENROUTER_API_KEY`           |
 | Vercel AI Gateway | `gateway:nvidia/nemotron-3.5-lightning-free` (default) | `AI_GATEWAY_API_KEY`           |
+
+To move to another model when one fails before its answer starts, list them in order:
+`PROMPTFOLIO_MODEL=gateway:openai/gpt-4o-mini,google:gemini-3.5-flash-lite`. A fallback receives the visitor's conversation, so list only
+providers whose terms you accept. See [provider failover](docs/learning/provider-failover.md).
 
 `PROMPTFOLIO_MODEL` is `provider:model`; `provider` alone uses its default model. Keep both keys in
 the file and switch providers by changing that one line. If it is unset, the first provider in the

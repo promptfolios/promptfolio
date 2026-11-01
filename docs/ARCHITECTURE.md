@@ -158,7 +158,7 @@ sequenceDiagram
     end
     P-->>H: answer text, with Markdown links
     H-->>B: UI message stream: text and step boundaries (output allowlist)
-    Note over B,H: Provider errors and timeouts (15 s to first content, 55 s total) become a generic message with a ref id
+    Note over B,H: Provider errors and timeouts (10 s between chunks, 55 s total; a model that never responds is stopped only by the total, or by a list's own timers) become a generic message with a ref id
     B-)H: Stop or disconnect fires request.signal
     H-)P: abortSignal cancels the model request
 ```

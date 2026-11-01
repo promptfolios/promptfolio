@@ -28,6 +28,7 @@ export async function POST(request: Request): Promise<Response> {
   return handleChatRequest(request, {
     model: chatModel.model,
     providerOptions: chatModel.providerOptions,
+    limits: chatModel.limits,
     profile: result.profile,
     additionalInstructions: chatInstructions(isContactEnabled()),
     limit: createChatLimit(),

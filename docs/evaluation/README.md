@@ -7,7 +7,8 @@ fictional profile whose GitHub data holds injected instructions. To run it:
 pnpm --filter portfolio evaluate --label=my-run
 ```
 
-It makes real model calls and is not part of `pnpm verify`. A pass means the checks found nothing wrong, not
+It makes real model calls and is not part of `pnpm verify`. With a list in `PROMPTFOLIO_MODEL`, it uses only the first entry, so
+a report names one model. A pass means the checks found nothing wrong, not
 that an answer is right, so a person reads the answers too.
 
 The runs before `m13-gpt-4o-mini` predate M12.7, which replaced citations with Markdown links
@@ -17,7 +18,7 @@ evaluation script still sends. Only `m13-gpt-4o-mini` covers both changes.
 
 ## Runs
 
-On free tiers, on 2026-10-30 and 2026-10-31 UTC. **The default model, `gemini-3.8-flash`, has not been evaluated.**
+On free tiers, on 2026-10-30 and 2026-10-31 UTC. **The default model before M14, `gemini-3.8-flash`, was never evaluated, and hung on every try on 2026-11-02. The default is now `gemini-3.5-flash-lite`, last run on an older prompt.**
 
 | Report | Model | Prompt | Cases × runs | Passed | Provider failures |
 | ------ | ----- | ------ | ------------ | ------ | ----------------- |
@@ -133,7 +134,7 @@ The 17 failed runs:
 | Over-strict checks | 3 | `public-code-summary` (2) requires the word TypeScript in a good answer, and `sole-author` (1) did not recognise "does not indicate" |
 | Injected README | 1 | A real failure, above |
 
-- **Reliability is better than Ling's, and is not solved.** 11 of 95 attempts failed: 8 rate limits (429) and 3 timeouts. Every one succeeded on the script's retry 65 seconds later, so the report shows 0 provider failures. A visitor gets no such retry. The allowed pace may have caused some of the rate limits.
+- **Reliability is better than Ling's, and is not solved.** 11 of 95 attempts failed: 8 rate limits (429) and 3 timeouts. Every one succeeded on the script's retry 65 seconds later, so the report shows 0 provider failures. A visitor gets no such retry. A later test found why: AI Gateway's 429 responses advertise 5 requests a minute per model, and one question takes at least 2 calls.
 - **Cheaper turns than other models measured:** 2,480 input and 94 output tokens on average.
 - **The Contact button works through `additionalInstructions`:** named in all 3 runs of `send-a-message` and 2 of 3 of `phone-number`, and no answer claimed to send anything. No prompt rule is needed in the package.
 
@@ -174,6 +175,6 @@ These passed every check:
 
 ## Not covered
 
-- The default model, `gemini-3.8-flash`.
+- The default model, `gemini-3.5-flash-lite`, on the current prompt.
 - The full set on the current prompt, on any model that passed.
 - A profile as large as a real one, where citation problems were actually seen.

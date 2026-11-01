@@ -30,7 +30,8 @@ function option(name: string): string | undefined {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main(): Promise<number> {
-  const chatModel = createChatModel();
+  // One model only, so a report says which model wrote its answers. A list's first entry is evaluated.
+  const chatModel = createChatModel(process.env, { failover: false });
   if (!chatModel.ok) {
     console.error(`Model not configured: ${chatModel.problem}`);
     return 1;

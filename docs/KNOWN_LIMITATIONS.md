@@ -44,6 +44,27 @@ What Promptfolio does not do or guarantee, as of M13. Each item says what happen
   the evaluation here says nothing about a consumer's own text or model.
 - **Everything in the prompt is English.** A consumer can ask for answers in another language, which no run has tried.
 
+- **A model that never responds holds a visitor for up to 55 seconds, with a single model.** The AI SDK's first-chunk limit did not fire
+  for a connection that gave no response, so the limit on the whole reply ends it. Only a list has a shorter timer.
+
+## Provider failover
+
+Only with a list in `PROMPTFOLIO_MODEL`.
+
+- **A failure after an answer starts is not rescued.** The visitor keeps the partial text and sees the error.
+- **Reaching the output limit is not a failure,** once text has started, so that answer stops short. Raise `limits.maxOutputTokens`.
+- **A fallback receives the visitor's conversation,** under that provider's terms.
+- **A turn can cost several model calls** and still counts once against the daily limits.
+- **Nothing remembers a dead provider.** Each request tries the first model again, so a silent one costs each visitor 8 seconds.
+- **A silent last model costs a visitor up to 15 seconds,** after the earlier attempts, before the generic error.
+- **Rate limits can use up a list quickly.** On 2026-11-02, AI Gateway's 429 responses advertised 5 requests a minute per model,
+  though 9 went through in one fresh window, and a question takes at least 2 calls. Five questions at once, shortly after earlier
+  ones, used up two gateway models within seconds. So a few simultaneous visitors can reach the end of a list.
+- **Moving partway through a turn was only tried between `gpt-4o-mini` and Ling.** Gemini was timing out on its own that day, so
+  its tool history is untested, and a refusal would end that turn in the generic error.
+- **A provider that needs its own earlier thinking in a tool turn could refuse** a request after a move, because thinking is removed.
+- **Starter generation has no per-attempt timer,** so a silent first model there uses up the whole limit.
+
 ## Packages
 
 - **Not on npm yet.** They are `private: true` until the publishing milestone.

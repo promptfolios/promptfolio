@@ -46,6 +46,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M13.3 — Packaging                          | Done      | `pnpm -r build`, then `pnpm pack` in a package: a tarball with `dist`, `README`, and `LICENSE`; [plan](plans/m13-library-readiness.md) |
 | M13.4 — CI and versioning                  | Done      | `pnpm test:tarballs`; `pnpm changeset`; [the workflow](../.github/workflows/ci.yml); [plan](plans/m13-library-readiness.md) |
 | M13.5 — Docs and evaluation                | Done      | [results](evaluation/README.md): `gpt-4o-mini` failed its gate; [limitations](KNOWN_LIMITATIONS.md); [plan](plans/m13-library-readiness.md) |
+| M14 — Provider failover                    | Done      | `PROMPTFOLIO_MODEL` takes a list, and a failed model moves to the next before an answer starts; [plan](plans/m14-provider-failover.md) |
 
 Update this table when a milestone is approved.
 
@@ -274,6 +275,14 @@ Plan and results: [M12 plan](plans/m12-second-consumer-and-deployment.md). The e
 **Exit criteria:** A packed tarball installs and works in a separate project, and each package's API is free of reference-app assumptions. Publishing is a separate milestone with its own approval.
 
 Plan and decisions: [M13 plan](plans/m13-library-readiness.md).
+
+### M14 — Provider failover
+
+**Objective:** Configure several models, and move to the next when one fails before an answer has started.
+
+**Exit criteria:** A real request with a bad first key is answered by the next model, and failures after an answer starts behave as before.
+
+Plan and decisions: [M14 plan](plans/m14-provider-failover.md), [ADR 0017](adr/0017-provider-failover-before-first-content.md).
 
 ## Deferred product phases
 

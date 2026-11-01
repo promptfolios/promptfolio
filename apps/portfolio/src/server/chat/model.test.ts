@@ -36,7 +36,7 @@ describe("createChatModel with PROMPTFOLIO_MODEL", () => {
     const google = createChatModel({ ...bothKeys, PROMPTFOLIO_MODEL: "google" });
     const anthropic = createChatModel({ ...bothKeys, PROMPTFOLIO_MODEL: "anthropic:" });
 
-    expect(google.ok && google.modelId).toBe("gemini-3.8-flash");
+    expect(google.ok && google.modelId).toBe("gemini-3.5-flash-lite");
     expect(anthropic.ok && anthropic.modelId).toBe("claude-haiku-5-5");
   });
 
@@ -73,6 +73,112 @@ describe("createChatModel with PROMPTFOLIO_MODEL", () => {
   );
 });
 
+describe("createChatModel with a list of models", () => {
+  const list = "google:gemini-3.8-flash, gateway:openai/gpt-4o-mini";
+  const keys = { GOOGLE_GENERATIVE_AI_API_KEY: "g", ...gatewayKey };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("makes a failover model that names every entry, and sets what moving on needs", () => {
+    const result = createChatModel({ ...keys, PROMPTFOLIO_MODEL: list });
+
+    if (!result.ok) throw new Error(result.problem);
+    expect(result.provider).toBe("google");
+    expect(result.modelId).toBe("google:gemini-3.8-flash,gateway:openai/gpt-4o-mini");
+    expect(result.model.modelId).toBe(result.modelId);
+    expect(result.limits?.maxRetries).toBe(0);
+    expect(result.limits?.timeouts?.firstChunkMs).toBe(23_000);
+  });
+
+  it("keeps each provider's options together", () => {
+    const result = createChatModel({
+      ...keys,
+      ...openRouterKey,
+      PROMPTFOLIO_MODEL: "openrouter,google",
+    });
+
+    expect(result.ok && result.providerOptions).toEqual({
+      openrouter: { reasoning: { effort: "low" } },
+      google: { thinkingConfig: { thinkingLevel: "low" } },
+    });
+  });
+
+  it("keeps a :free suffix when splitting", () => {
+    const result = createChatModel({
+      ...keys,
+      ...openRouterKey,
+      PROMPTFOLIO_MODEL: "openrouter:google/gemma-4-31b-it:free,google",
+    });
+
+    expect(result.ok && result.modelId).toBe(
+      "openrouter:google/gemma-4-31b-it:free,google:gemini-3.5-flash-lite",
+    );
+  });
+
+  it("skips an entry without a key, and says so naming only the variable", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const result = createChatModel({ ...keys, PROMPTFOLIO_MODEL: `anthropic,${list}` });
+
+    expect(result.ok && result.provider).toBe("google");
+    expect(warn).toHaveBeenCalledWith(
+      "[chat] skipping a model: PROMPTFOLIO_MODEL selects anthropic, but ANTHROPIC_API_KEY is not set",
+    );
+  });
+
+  it("skips an unknown provider, so a typo is reported and does not stop the others", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const result = createChatModel({ ...keys, PROMPTFOLIO_MODEL: `opnai:x,${list}` });
+
+    expect(result.ok).toBe(true);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('got "opnai:x"'));
+  });
+
+  it("uses a single remaining model without a wrapper or changed limits", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const result = createChatModel({
+      GOOGLE_GENERATIVE_AI_API_KEY: "g",
+      PROMPTFOLIO_MODEL: list,
+    });
+
+    expect(result.ok && result.modelId).toBe("gemini-3.8-flash");
+    expect(result.ok && result.limits).toBeUndefined();
+  });
+
+  it("reports every problem when no entry can be used", () => {
+    const result = createChatModel({ PROMPTFOLIO_MODEL: list });
+
+    expect(result).toEqual({
+      ok: false,
+      problem:
+        "PROMPTFOLIO_MODEL selects google, but GOOGLE_GENERATIVE_AI_API_KEY is not set; PROMPTFOLIO_MODEL selects gateway, but AI_GATEWAY_API_KEY is not set",
+    });
+  });
+
+  it("uses only the first entry, with no skipping, when failover is off", () => {
+    const first = createChatModel({ ...keys, PROMPTFOLIO_MODEL: list }, { failover: false });
+    const missing = createChatModel(gatewayKey, { failover: false });
+    const missingFirst = createChatModel(
+      { ...gatewayKey, PROMPTFOLIO_MODEL: list },
+      { failover: false },
+    );
+
+    expect(first.ok && first.modelId).toBe("gemini-3.8-flash");
+    expect(first.ok && first.limits).toBeUndefined();
+    expect(missing.ok).toBe(true);
+    expect(missingFirst.ok).toBe(false);
+  });
+
+  it("treats a stray comma as no entry", () => {
+    const single = createChatModel({ ...keys, PROMPTFOLIO_MODEL: " google , " });
+    const blank = createChatModel({ ...keys, PROMPTFOLIO_MODEL: " , " });
+
+    expect(single.ok && single.limits).toBeUndefined();
+    expect(blank.ok && blank.provider).toBe("google");
+  });
+});
+
 describe("createChatModel without PROMPTFOLIO_MODEL", () => {
   it("reports a missing API key instead of throwing", () => {
     expect(createChatModel({})).toEqual({
@@ -87,7 +193,7 @@ describe("createChatModel without PROMPTFOLIO_MODEL", () => {
     const both = createChatModel(bothKeys);
     const anthropicOnly = createChatModel({ ANTHROPIC_API_KEY: "anthropic-key" });
 
-    expect(both.ok && [both.provider, both.modelId]).toEqual(["google", "gemini-3.8-flash"]);
+    expect(both.ok && [both.provider, both.modelId]).toEqual(["google", "gemini-3.5-flash-lite"]);
     expect(anthropicOnly.ok && [anthropicOnly.provider, anthropicOnly.modelId]).toEqual([
       "anthropic",
       "claude-haiku-5-5",

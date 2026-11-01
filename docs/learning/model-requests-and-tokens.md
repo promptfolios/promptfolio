@@ -35,7 +35,7 @@ Where size is bounded:
 | Characters per visitor message / in total | 4,000 / 20,000              | `CHAT_LIMITS`, `request.ts` |
 | Live answers per day: per visitor / for the site | 30 / 200             | The app's `chat-limit.ts` |
 | Output tokens per model call (incl. thinking) | 2,000 (1,000 before M7.1) | `CHAT_LIMITS.maxOutputTokens` |
-| Wait for the first content / between chunks / whole reply | 15 s / 10 s / 55 s | `CHAT_LIMITS.timeouts`, AI SDK `timeout` |
+| Wait for the first content / between chunks / whole reply | 15 s / 10 s / 55 s. A connection that never responds was stopped only by the 55 s, unless a list of models sets its own timers | `CHAT_LIMITS.timeouts`, AI SDK `timeout` |
 | Retries after a failed provider call   | 1                              | `CHAT_LIMITS.maxRetries`  |
 | Time per reply on serverless hosts     | 60 s                           | `maxDuration` in `route.ts` |
 
@@ -43,7 +43,8 @@ Characters stand in for tokens because they are cheap to count before calling th
 
 These `CHAT_LIMITS` are defaults (M13.1). A consumer changes them with the `limits` option, and an invalid value is logged by
 name and refused, because a limit that silently did nothing could cost money. Daily allowances moved to the application,
-because its limiter is what applies them.
+because its limiter is what applies them. With a list of models, each one but the last also has a shorter limit of its own; see
+[provider failover](provider-failover.md).
 
 Providers can be slow or overloaded. During M4 review, Gemini answered HTTP 503 ("high demand")
 after up to 30 seconds, and the AI SDK's two default retries stretched one visitor's wait past a
@@ -52,7 +53,7 @@ limit, so the visitor sees the generic error before a serverless host stops the 
 reply's limit was 25 seconds until M12.4, when a free model was cut off mid-sentence while still
 writing. Text streams as it arrives, so waiting longer for a long answer is not a silent wait.
 
-`PROMPTFOLIO_MODEL=provider:model` picks the model, for example `google:gemini-3.8-flash` or
+`PROMPTFOLIO_MODEL=provider:model` picks the model, for example `google:gemini-3.5-flash-lite` or
 `anthropic:claude-haiku-5-5`. Both think before answering by default, and thinking tokens count against
 `maxOutputTokens`, so both run with low thinking: `thinkingConfig.thinkingLevel: "low"` for
 Gemini, `effort: "low"` for Claude. These settings are provider-specific, so the app passes them
