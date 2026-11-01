@@ -6,6 +6,7 @@ packages:
 catalog:
   # Pinned exactly: formatter output can change between Biome releases.
   "@biomejs/biome": 2.5.15
+  "@changesets/cli": ^3.0.3
   "@tailwindcss/postcss": ^4.3.3
   "@types/node": ^24.0.0
   "@types/react": ^19.3.0

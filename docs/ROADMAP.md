@@ -44,7 +44,8 @@ This document describes the suggested milestone sequence and future directions. 
 | M13.1 — `ai` API                           | Done      | `pnpm verify`; `handleChatRequest` takes `additionalInstructions`, `limits`, and `visitorMessages`; [plan](plans/m13-library-readiness.md) |
 | M13.2 — Small package fixes                | Done      | `pnpm verify`; `core` exports no type built from zod, and token errors name no variable; [plan](plans/m13-library-readiness.md) |
 | M13.3 — Packaging                          | Done      | `pnpm -r build`, then `pnpm pack` in a package: a tarball with `dist`, `README`, and `LICENSE`; [plan](plans/m13-library-readiness.md) |
-| M13.4 and M13.5 — Library readiness        | Not started | [plan](plans/m13-library-readiness.md) |
+| M13.4 — CI and versioning                  | Done      | `pnpm test:tarballs`; `pnpm changeset`; [the workflow](../.github/workflows/ci.yml); [plan](plans/m13-library-readiness.md) |
+| M13.5 — Docs and evaluation                | Not started | [plan](plans/m13-library-readiness.md) |
 
 Update this table when a milestone is approved.
 

@@ -31,5 +31,6 @@ its no-build convenience, because apps and tests see a source change immediately
 
 - `dist/` declarations keep `.ts` import paths. TypeScript resolves those to the `.d.ts` files beside them, checked under NodeNext
   and Bundler. A consumer must use a TypeScript version with this behaviour, so the packed-tarball test covers it.
-- The workspace never runs the published entry points, so only a test of the packed tarball can show they work.
+- The workspace never runs the published entry points, so only a test of the packed tarball can show they work:
+  `pnpm test:tarballs`, in CI on each supported Node version.
 - `packages/contact` keeps extensionless imports, because it is not being packaged.

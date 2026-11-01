@@ -36,8 +36,8 @@ flowchart LR
 
 ## 5. Common pitfalls and misconceptions
 
-- **Passing workspace tests say nothing about the tarball.** The workspace never loads `dist`. Check what a consumer gets by
-  installing the packed tarball in a separate project.
+- **Passing workspace tests say nothing about the tarball.** The workspace never loads `dist`, so `pnpm test:tarballs` installs
+  the packed tarballs in a separate project (M13.4).
 - **A stale `dist` can hide a missing file,** which is why the build deletes it first.
 - **`types` comes first in each `exports` entry,** because conditions are read in order and the first match wins.
 - **Publishing is `pnpm publish`, not `npm publish`.** Only pnpm rewrites `workspace:*`, `catalog:`, and `publishConfig.exports`.

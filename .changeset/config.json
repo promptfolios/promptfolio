@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [["@promptfolio/core", "@promptfolio/ai", "@promptfolio/source-github"]],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@promptfolio/contact", "minimal-consumer", "portfolio"],
+  "privatePackages": { "version": true, "tag": false }
+}

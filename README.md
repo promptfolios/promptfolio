@@ -67,6 +67,10 @@ Run from the repository root:
 | `pnpm lint`      | Check linting, formatting, and import order (read-only). |
 | `pnpm lint:fix`  | Apply safe lint fixes and formatting.                    |
 | `pnpm verify`    | Run lint, typecheck, test, and build in order.           |
+| `pnpm test:tarballs` | Install the packed packages in a separate project, and check they work. Needs network access. |
+| `pnpm changeset` | Record a change consumers would notice, for the next release. |
+
+[CI](.github/workflows/ci.yml) runs `pnpm verify`, and `pnpm test:tarballs` on Node 22 and 24, for every push to `main` and every pull request.
 
 Linting and formatting use [Biome](https://biomejs.dev/) (`biome.json`). Biome does not depend on
 the TypeScript compiler, so it works with TypeScript 7, which typescript-eslint does not support yet.

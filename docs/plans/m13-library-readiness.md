@@ -1,6 +1,6 @@
 # M13 plan: library readiness
 
-- **Status:** Plan approved (2026-11-02). M13.1 is done and approved (2026-11-02). M13.2 is done and approved (2026-11-02). M13.3 is done and approved (2026-11-02). M13.4 is in progress.
+- **Status:** Plan approved (2026-11-02). M13.1 is done and approved (2026-11-02). M13.2 is done and approved (2026-11-02). M13.3 is done and approved (2026-11-02). M13.4 is done and approved (2026-11-02). M13.5 is in progress.
 - **Date:** 2026-11-02
 - **Roadmap:** [M13](../ROADMAP.md#m13--library-readiness).
 

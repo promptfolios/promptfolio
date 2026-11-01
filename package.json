@@ -13,9 +13,12 @@
     "test": "pnpm -r test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "test:tarballs": "node scripts/test-tarballs.mjs",
+    "changeset": "changeset"
   },
   "devDependencies": {
-    "@biomejs/biome": "catalog:"
+    "@biomejs/biome": "catalog:",
+    "@changesets/cli": "catalog:"
   }
 }
