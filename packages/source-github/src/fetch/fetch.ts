@@ -1,5 +1,5 @@
-import type { GitHubSourceConfig } from "../config";
-import { selectRepositories } from "../selection/select";
+import type { GitHubSourceConfig } from "../config.ts";
+import { selectRepositories } from "../selection/select.ts";
 import {
   type GitHubSnapshot,
   type ListedRepository,
@@ -8,18 +8,18 @@ import {
   repositoryListSchema,
   type SnapshotRepository,
   userResponseSchema,
-} from "../snapshot/snapshot";
-import { fetchContributions } from "./fetch-contributions";
-import { fetchPinned } from "./fetch-pinned";
+} from "../snapshot/snapshot.ts";
+import { fetchContributions } from "./fetch-contributions.ts";
+import { fetchPinned } from "./fetch-pinned.ts";
 import {
   encodePath,
   GitHubClient,
   type GitHubClientOptions,
   type GitHubFetchError,
   type GitHubFetchErrorKind,
-} from "./github-client";
+} from "./github-client.ts";
 
-export type { GitHubFetchError, GitHubFetchErrorKind } from "./github-client";
+export type { GitHubFetchError, GitHubFetchErrorKind } from "./github-client.ts";
 
 export interface FetchGitHubOptions extends GitHubClientOptions {
   /** Injected for tests; defaults to the current time. */

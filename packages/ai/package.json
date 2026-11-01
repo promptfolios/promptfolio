@@ -1,14 +1,51 @@
 {
   "name": "@promptfolio/ai",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Server-only chat handler for Promptfolio: validates requests and streams model replies.",
+  "keywords": [
+    "promptfolio",
+    "portfolio",
+    "ai",
+    "ai-sdk",
+    "chat"
+  ],
+  "homepage": "https://github.com/promptfolios/promptfolio/tree/main/packages/ai#readme",
+  "bugs": "https://github.com/promptfolios/promptfolio/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/promptfolios/promptfolio.git",
+    "directory": "packages/ai"
+  },
+  "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
     "./evaluation": "./src/evaluation/evaluation.ts"
   },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./evaluation": {
+        "types": "./dist/evaluation/evaluation.d.ts",
+        "default": "./dist/evaluation/evaluation.js"
+      }
+    }
+  },
   "scripts": {
+    "build": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "prepack": "pnpm run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

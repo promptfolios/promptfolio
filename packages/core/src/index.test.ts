@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import * as core from "./index";
+import * as core from "./index.ts";
 
 describe("public API", () => {
   it("exposes only the intended runtime exports", () => {

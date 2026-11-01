@@ -1,0 +1,11 @@
+{
+  // What a publishable package's build adds to its own tsconfig.json. Published files run in Node
+  // without a bundler, so they are checked by Node's rules, and `.ts` in relative imports becomes `.js`.
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rewriteRelativeImportExtensions": true
+  }
+}

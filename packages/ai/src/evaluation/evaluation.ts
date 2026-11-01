@@ -1,8 +1,8 @@
 import { profileLinkUrls } from "@promptfolio/core";
 import type { UIMessage, UIMessageChunk } from "ai";
-import { type ChatTurnOptions, runChatTurn } from "../chat/chat-turn";
-import { resolveChatLimits } from "../chat/limits";
-import { resolveChatMessages } from "../chat/messages";
+import { type ChatTurnOptions, runChatTurn } from "../chat/chat-turn.ts";
+import { resolveChatLimits } from "../chat/limits.ts";
+import { resolveChatMessages } from "../chat/messages.ts";
 
 /**
  * Public entry point of `@promptfolio/ai/evaluation`, separate from the main one because only a

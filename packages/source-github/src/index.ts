@@ -14,7 +14,7 @@ export {
   type GitHubSourceConfig,
   type ParseGitHubConfigResult,
   parseGitHubConfig,
-} from "./config";
+} from "./config.ts";
 export {
   type FetchGitHubOptions,
   type FetchGitHubResult,
@@ -22,18 +22,18 @@ export {
   type GitHubFetchError,
   type GitHubFetchErrorKind,
   type MissingRepository,
-} from "./fetch/fetch";
+} from "./fetch/fetch.ts";
 export {
   type CarriedRepository,
   type CarryForwardResult,
   carryForward,
-} from "./snapshot/carry-forward";
-export { mergeGitHubSnapshot } from "./snapshot/merge";
-export { type NormalizeGitHubResult, normalizeGitHubSnapshot } from "./snapshot/normalize";
+} from "./snapshot/carry-forward.ts";
+export { mergeGitHubSnapshot } from "./snapshot/merge.ts";
+export { type NormalizeGitHubResult, normalizeGitHubSnapshot } from "./snapshot/normalize.ts";
 export {
   type GitHubSnapshot,
   type ParseGitHubSnapshotResult,
   parseGitHubSnapshot,
   type SnapshotContribution,
   type SnapshotRepository,
-} from "./snapshot/snapshot";
+} from "./snapshot/snapshot.ts";

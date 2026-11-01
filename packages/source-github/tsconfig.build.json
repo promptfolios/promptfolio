@@ -1,0 +1,12 @@
+{
+  "extends": ["./tsconfig.json", "../../tsconfig.build.json"],
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    // In the workspace this package resolves to TypeScript source, which is outside `rootDir`.
+    "paths": {
+      "@promptfolio/core": ["../core/dist/index.d.ts"]
+    }
+  },
+  "exclude": ["src/**/*.test.ts"]
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { FetchGitHubResult, GitHubFetchError } from "../fetch/fetch";
-import { carryForward } from "./carry-forward";
-import type { GitHubSnapshot, SnapshotContribution, SnapshotRepository } from "./snapshot";
+import type { FetchGitHubResult, GitHubFetchError } from "../fetch/fetch.ts";
+import { carryForward } from "./carry-forward.ts";
+import type { GitHubSnapshot, SnapshotContribution, SnapshotRepository } from "./snapshot.ts";
 
 const OLD = "2026-10-20T06:00:00.000Z";
 const NOW = "2026-10-30T06:00:00.000Z";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { loadStructuredProfile } from "./load";
-import { findRecordById, profileLinkUrls, recordsUsingSkill } from "./query";
-import type { Profile } from "./types";
+import { loadStructuredProfile } from "./load.ts";
+import { findRecordById, profileLinkUrls, recordsUsingSkill } from "./query.ts";
+import type { Profile } from "./types.ts";
 
 function testProfile(): Profile {
   const result = loadStructuredProfile(

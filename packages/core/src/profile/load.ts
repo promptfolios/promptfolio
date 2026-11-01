@@ -1,6 +1,6 @@
 import type { z } from "zod";
-import { type ParsedProfileInput, profileInputSchema } from "./schema";
-import type { Profile, Provenance, SourceRef } from "./types";
+import { type ParsedProfileInput, profileInputSchema } from "./schema.ts";
+import type { Profile, Provenance, SourceRef } from "./types.ts";
 
 /** A problem found while loading a profile, located by a path such as `experience[0].end`. */
 export interface ProfileIssue {

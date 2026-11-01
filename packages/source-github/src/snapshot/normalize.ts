@@ -7,8 +7,8 @@ import type {
   ProfileIssue,
   RepositoryInput,
 } from "@promptfolio/core";
-import { type GitHubSourceConfig, isContributionExcluded, isExcluded } from "../config";
-import type { GitHubSnapshot, SnapshotContribution, SnapshotRepository } from "./snapshot";
+import { type GitHubSourceConfig, isContributionExcluded, isExcluded } from "../config.ts";
+import type { GitHubSnapshot, SnapshotContribution, SnapshotRepository } from "./snapshot.ts";
 
 const NORMALIZE_LIMITS = {
   descriptionChars: 500,

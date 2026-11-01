@@ -1,5 +1,5 @@
-import type { FetchGitHubResult, GitHubFetchError } from "../fetch/fetch";
-import type { GitHubSnapshot, SnapshotRepository } from "./snapshot";
+import type { FetchGitHubResult, GitHubFetchError } from "../fetch/fetch.ts";
+import type { GitHubSnapshot, SnapshotRepository } from "./snapshot.ts";
 
 /** A repository whose data comes from the previous snapshot, read at `retrievedAt`. */
 export interface CarriedRepository {

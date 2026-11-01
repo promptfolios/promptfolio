@@ -1,4 +1,4 @@
-import type { Profile } from "./types";
+import type { Profile } from "./types.ts";
 
 /**
  * Fields that record *when* something was observed, not *what* was observed. They change

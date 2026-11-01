@@ -1,6 +1,6 @@
-import { SELECTION_LIMITS } from "../selection/select";
-import { pinnedResponseSchema } from "../snapshot/snapshot";
-import type { GitHubClient, OnFetchError } from "./github-client";
+import { SELECTION_LIMITS } from "../selection/select.ts";
+import { pinnedResponseSchema } from "../snapshot/snapshot.ts";
+import type { GitHubClient, OnFetchError } from "./github-client.ts";
 
 /**
  * Full names of pinned public repositories, in pin order (GraphQL, token only): the user's own,

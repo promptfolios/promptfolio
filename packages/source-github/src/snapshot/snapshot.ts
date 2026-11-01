@@ -1,7 +1,7 @@
 import type { ProfileIssue } from "@promptfolio/core";
 import { z } from "zod";
-import { repositoryNameSchema, usernameSchema } from "../config";
-import { issuesFrom } from "../issues";
+import { repositoryNameSchema, usernameSchema } from "../config.ts";
+import { issuesFrom } from "../issues.ts";
 
 /*
  * Two kinds of schemas live here:

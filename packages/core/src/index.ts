@@ -3,28 +3,28 @@
  *
  * Only what is exported here is part of the public API.
  */
-export { canonicalProfileContent, profileFingerprint } from "./profile/canonical";
+export { canonicalProfileContent, profileFingerprint } from "./profile/canonical.ts";
 export {
   loadStructuredProfile,
   type ProfileIssue,
   type ProfileLoadResult,
   type StructuredProfileSource,
-} from "./profile/load";
+} from "./profile/load.ts";
 export {
   addObservedRecords,
   type ContributionInput,
   type ObservedRecords,
   type ObservedSource,
   type RepositoryInput,
-} from "./profile/observed";
+} from "./profile/observed.ts";
 export {
   findRecordById,
   type ProfileRecordMatch,
   profileLinkUrls,
   recordsUsingSkill,
   type SkillUsage,
-} from "./profile/query";
-export { isRecordId } from "./profile/schema";
+} from "./profile/query.ts";
+export { isRecordId } from "./profile/schema.ts";
 export type {
   ClaimBasis,
   Contribution,
@@ -41,4 +41,4 @@ export type {
   Role,
   Skill,
   SourceRef,
-} from "./profile/types";
+} from "./profile/types.ts";

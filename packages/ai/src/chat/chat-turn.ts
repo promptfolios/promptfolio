@@ -10,11 +10,11 @@ import {
   type UIMessage,
   type UIMessageChunk,
 } from "ai";
-import { createProfileTools, type ProfileTools } from "../grounding/profile-tools";
-import type { ChatLimitOverrides, ChatLimits } from "./limits";
-import { type ChatMessages, unavailableMessage } from "./messages";
-import { withoutRawToolCalls } from "./raw-tool-calls";
-import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt";
+import { createProfileTools, type ProfileTools } from "../grounding/profile-tools.ts";
+import type { ChatLimitOverrides, ChatLimits } from "./limits.ts";
+import { type ChatMessages, unavailableMessage } from "./messages.ts";
+import { withoutRawToolCalls } from "./raw-tool-calls.ts";
+import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt.ts";
 
 type StreamTextOptions = Parameters<typeof streamText>[0];
 

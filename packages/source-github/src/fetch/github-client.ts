@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { SNAPSHOT_LIMITS } from "../snapshot/snapshot";
+import { SNAPSHOT_LIMITS } from "../snapshot/snapshot.ts";
 
 const FETCH_DEFAULTS = {
   apiBaseUrl: "https://api.github.com",

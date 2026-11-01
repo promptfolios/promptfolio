@@ -1,5 +1,5 @@
-import { skillKey } from "./load";
-import type { Contribution, Education, Profile, Project, Repository, Role } from "./types";
+import { skillKey } from "./load.ts";
+import type { Contribution, Education, Profile, Project, Repository, Role } from "./types.ts";
 
 /** A record found by id, tagged with the section it belongs to. */
 export type ProfileRecordMatch =

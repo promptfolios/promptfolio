@@ -2,7 +2,15 @@
 
 The server side of chat: validates a request, runs a model turn with read-only profile tools, and streams the reply. Server-only, because the model you pass carries your provider key.
 
-Not published. Use it from this workspace as `"@promptfolio/ai": "workspace:*"`. Your project must also depend on the [AI SDK](https://ai-sdk.dev), `ai`, which is a peer dependency: you create the model with it and read its stream.
+**Not on npm yet.** Until it is, use it from the [Promptfolio repository](https://github.com/promptfolios/promptfolio).
+
+## Install
+
+```sh
+npm install @promptfolio/ai @promptfolio/core ai
+```
+
+The [AI SDK](https://ai-sdk.dev), `ai`, is a peer dependency, version 7: you create the model with it and read its stream. Requires Node.js 22 or later. ES modules only. The AI SDK's types use browser names such as `HeadersInit`, so a TypeScript project needs `"DOM"` in `lib`.
 
 ## Entry points
 
@@ -25,9 +33,11 @@ You supply any AI SDK `LanguageModel`, the `Profile`, and the limiter. This pack
 
 ## Example
 
-From [the minimal consumer](../../apps/minimal-consumer/src/consumer.ts):
+From [the minimal consumer](https://github.com/promptfolios/promptfolio/blob/main/apps/minimal-consumer/src/consumer.ts):
 
 ```ts
+import { handleChatRequest } from "@promptfolio/ai";
+
 handleChatRequest(request, {
   model,
   profile,
@@ -59,6 +69,10 @@ const allowed = new Set(profileLinkUrls(profile)); // from @promptfolio/core
 const isSafe = (href: string) => URL.canParse(href) && allowed.has(new URL(href).href);
 ```
 
-Check links as they are rendered, so this covers every way Markdown can write one. The reference app does this in [`profile-link.tsx`](../../apps/portfolio/src/components/chat/profile-link.tsx).
+Check links as they are rendered, so this covers every way Markdown can write one. The reference app does this in [`profile-link.tsx`](https://github.com/promptfolios/promptfolio/blob/main/apps/portfolio/src/components/chat/profile-link.tsx).
 
 No model is endorsed. Answer quality depends on the model and the prompt together, so evaluate the one you deploy.
+
+## License
+
+MIT

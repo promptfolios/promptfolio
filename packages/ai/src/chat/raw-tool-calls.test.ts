@@ -1,6 +1,6 @@
 import type { UIMessageChunk } from "ai";
 import { describe, expect, it, vi } from "vitest";
-import { withoutRawToolCalls } from "./raw-tool-calls";
+import { withoutRawToolCalls } from "./raw-tool-calls.ts";
 
 const ERROR = "could not answer";
 

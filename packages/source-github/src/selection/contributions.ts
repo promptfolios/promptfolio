@@ -1,5 +1,5 @@
-import { type GitHubSourceConfig, isContributionExcluded } from "../config";
-import type { CommitSearchItem } from "../snapshot/snapshot";
+import { type GitHubSourceConfig, isContributionExcluded } from "../config.ts";
+import type { CommitSearchItem } from "../snapshot/snapshot.ts";
 
 /** How much of the commit search is read and kept. */
 export const CONTRIBUTION_LIMITS = {

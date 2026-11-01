@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { canonicalProfileContent } from "./canonical";
-import { loadStructuredProfile } from "./load";
+import { canonicalProfileContent } from "./canonical.ts";
+import { loadStructuredProfile } from "./load.ts";
 import {
   addObservedRecords,
   type ContributionInput,
   type ObservedRecords,
   type RepositoryInput,
-} from "./observed";
-import { findRecordById, recordsUsingSkill } from "./query";
-import { isRecordId } from "./schema";
-import type { Profile } from "./types";
+} from "./observed.ts";
+import { findRecordById, recordsUsingSkill } from "./query.ts";
+import { isRecordId } from "./schema.ts";
+import type { Profile } from "./types.ts";
 
 const REPO_ID = "github.com/jordan-example/markdown-linter";
 

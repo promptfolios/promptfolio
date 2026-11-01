@@ -2,7 +2,7 @@ import { loadStructuredProfile } from "@promptfolio/core";
 import { simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vitest";
-import { type EvaluationTurn, evaluateQuestion, scoreEvaluationTurn } from "./evaluation";
+import { type EvaluationTurn, evaluateQuestion, scoreEvaluationTurn } from "./evaluation.ts";
 
 type StreamResult = Awaited<ReturnType<MockLanguageModelV4["doStream"]>>;
 type StreamPart = StreamResult["stream"] extends ReadableStream<infer P> ? P : never;

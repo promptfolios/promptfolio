@@ -1,6 +1,6 @@
 import type { ProfileIssue } from "@promptfolio/core";
 import { z } from "zod";
-import { issuesFrom } from "./issues";
+import { issuesFrom } from "./issues.ts";
 
 /**
  * The owner's GitHub configuration: the username, once, and optionally repositories to hide.

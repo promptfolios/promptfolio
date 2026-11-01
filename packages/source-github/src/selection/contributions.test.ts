@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { CommitSearchItem } from "../snapshot/snapshot";
+import type { CommitSearchItem } from "../snapshot/snapshot.ts";
 import {
   CONTRIBUTION_LIMITS,
   eligibleCommits,
   firstLine,
   repositoriesWithSharedCommits,
   selectContributions,
-} from "./contributions";
+} from "./contributions.ts";
 
 const CONFIG = {
   user: "Jordan",

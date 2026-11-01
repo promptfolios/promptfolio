@@ -1,5 +1,5 @@
-import { type ProfileIssue, type ProfileLoadResult, toProfileIssue } from "./load";
-import { isSourceKey, observedRecordsSchema } from "./schema";
+import { type ProfileIssue, type ProfileLoadResult, toProfileIssue } from "./load.ts";
+import { isSourceKey, observedRecordsSchema } from "./schema.ts";
 import type {
   Contribution,
   ExternalLink,
@@ -8,7 +8,7 @@ import type {
   Provenance,
   Repository,
   SourceRef,
-} from "./types";
+} from "./types.ts";
 
 /** Describes an external source whose records are added to a profile. */
 export interface ObservedSource {

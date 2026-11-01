@@ -1,13 +1,44 @@
 {
   "name": "@promptfolio/source-github",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "GitHub source adapter for Promptfolio: fetches public repositories and normalizes them into profile records.",
+  "keywords": [
+    "promptfolio",
+    "portfolio",
+    "github"
+  ],
+  "homepage": "https://github.com/promptfolios/promptfolio/tree/main/packages/source-github#readme",
+  "bugs": "https://github.com/promptfolios/promptfolio/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/promptfolios/promptfolio.git",
+    "directory": "packages/source-github"
+  },
+  "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
   "scripts": {
+    "build": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "prepack": "pnpm run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

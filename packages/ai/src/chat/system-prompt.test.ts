@@ -1,6 +1,6 @@
 import type { ProfileIdentity } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
-import { buildSystemPrompt } from "./system-prompt";
+import { buildSystemPrompt } from "./system-prompt.ts";
 
 const identity: ProfileIdentity = {
   name: "Jordan Example",

@@ -8,20 +8,20 @@ export {
   type ChatLogger,
   type ChatProviderOptions,
   handleChatRequest,
-} from "./chat/chat-handler";
-export type { ChatLimit, ChatTurnDecision, ChatTurnLimiter } from "./chat/chat-limit";
+} from "./chat/chat-handler.ts";
+export type { ChatLimit, ChatTurnDecision, ChatTurnLimiter } from "./chat/chat-limit.ts";
 export {
   CHAT_LIMITS,
   type ChatLimitOverrides,
   type ChatLimits,
   type ChatTimeouts,
-} from "./chat/limits";
-export { CHAT_MESSAGES, type ChatMessages } from "./chat/messages";
-export type { SystemPromptOptions } from "./chat/system-prompt";
+} from "./chat/limits.ts";
+export { CHAT_MESSAGES, type ChatMessages } from "./chat/messages.ts";
+export type { SystemPromptOptions } from "./chat/system-prompt.ts";
 export {
   type GenerateStarterQuestionsOptions,
   generateStarterQuestions,
   STARTER_LIMITS,
   type StarterLimits,
   type StarterQuestion,
-} from "./starters/starters";
+} from "./starters/starters.ts";

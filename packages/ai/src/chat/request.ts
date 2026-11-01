@@ -1,7 +1,7 @@
 import type { UIMessage } from "ai";
 import { z } from "zod";
-import type { ChatLimits } from "./limits";
-import type { ChatMessages } from "./messages";
+import type { ChatLimits } from "./limits.ts";
+import type { ChatMessages } from "./messages.ts";
 
 /**
  * The only message parts accepted from the browser. `step-start` is a content-free

@@ -5,7 +5,7 @@ import oldButPinned from "../fixtures/old-but-pinned.json";
 import pinned from "../fixtures/pinned.json";
 import repos from "../fixtures/repos.json";
 import user from "../fixtures/user.json";
-import { type FetchGitHubOptions, type FetchGitHubResult, fetchGitHubSnapshot } from "./fetch";
+import { type FetchGitHubOptions, type FetchGitHubResult, fetchGitHubSnapshot } from "./fetch.ts";
 
 const README = readFileSync(new URL("../fixtures/readme.md", import.meta.url), "utf8");
 const CONFIG = { user: "jordan-example", exclude: [], excludeContributionsTo: [] };

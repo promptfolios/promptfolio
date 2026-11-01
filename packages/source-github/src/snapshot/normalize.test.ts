@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { addObservedRecords, loadStructuredProfile, type RepositoryInput } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
-import type { GitHubSourceConfig } from "../config";
-import { normalizeGitHubSnapshot, readmeExcerpt, repositoryKey } from "./normalize";
-import type { GitHubSnapshot, SnapshotContribution, SnapshotRepository } from "./snapshot";
+import type { GitHubSourceConfig } from "../config.ts";
+import { normalizeGitHubSnapshot, readmeExcerpt, repositoryKey } from "./normalize.ts";
+import type { GitHubSnapshot, SnapshotContribution, SnapshotRepository } from "./snapshot.ts";
 
 const README = readFileSync(new URL("../fixtures/readme.md", import.meta.url), "utf8");
 const CONFIG: GitHubSourceConfig = {

@@ -31,7 +31,7 @@ Source files are grouped by what they do:
 | `apps/portfolio/src` (browser)   | `chat/threads`, `chat/sources`, `contact`, `components`                |
 
 Dependency direction: apps depend on packages; packages never depend on apps. Each package has a README with its
-entry points and an example. The packages are not published, so use them from this workspace.
+entry points and an example. The packages are not on npm yet, so use them from this workspace.
 
 The reference app's chat UI uses [assistant-ui](https://www.assistant-ui.com/) with Tailwind CSS
 and shadcn/ui, in light and dark modes. Component code copied by their CLIs lives in `apps/portfolio/src/components/ui/`,
@@ -124,8 +124,9 @@ daily quota. See [the results](docs/evaluation/README.md) and [known limitations
 
 - Packages expose their public API only through the `exports` field in `package.json`; importing
   package internals (for example, `@promptfolio/core/src/...`) is not supported.
-- Packages are currently consumed from TypeScript source without a build step. A compiled build
-  will be added before any package is published.
+- In this workspace, packages are consumed from TypeScript source without a build step. `core`, `ai`, and
+  `source-github` also build to `dist/`, which is what a packed tarball exposes; see
+  [ADR 0016](docs/adr/0016-package-builds-with-tsc.md).
 - Shared dependency versions are defined once in the `catalog` section of `pnpm-workspace.yaml`
   and referenced as `"catalog:"`.
 - Commits follow Conventional Commits; see `CLAUDE.md`.
@@ -133,3 +134,7 @@ daily quota. See [the results](docs/evaluation/README.md) and [known limitations
   even on Windows, where the default would be CRLF; Biome's formatter rejects CRLF. If an older
   checkout still has CRLF files, delete and re-check them out (`git checkout -- <file>`) or run
   `pnpm lint:fix`.
+
+## License
+
+[MIT](LICENSE)

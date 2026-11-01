@@ -1,7 +1,7 @@
 import { loadStructuredProfile, type Profile } from "@promptfolio/core";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
-import { generateStarterQuestions, parseStarterQuestions, starterFacts } from "./starters";
+import { generateStarterQuestions, parseStarterQuestions, starterFacts } from "./starters.ts";
 
 const GOOD = [
   { label: "Projects", question: "What did Jordan build?" },

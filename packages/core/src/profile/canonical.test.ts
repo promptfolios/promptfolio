@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { canonicalProfileContent, profileFingerprint } from "./canonical";
-import { loadStructuredProfile } from "./load";
-import type { Profile } from "./types";
+import { canonicalProfileContent, profileFingerprint } from "./canonical.ts";
+import { loadStructuredProfile } from "./load.ts";
+import type { Profile } from "./types.ts";
 
 function testProfile(observedAt = new Date("2026-10-01"), label = "Test profile"): Profile {
   const result = loadStructuredProfile(

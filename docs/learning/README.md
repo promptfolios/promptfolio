@@ -39,6 +39,7 @@ that builds it; code links are marked "planned").
 | AI evaluation                   | [ai-evaluation.md](ai-evaluation.md)                         | M11.3 | in use |
 | Public API and a second consumer | [public-api-and-second-consumer.md](public-api-and-second-consumer.md) | M12.1 | in use |
 | Peer dependencies | [peer-dependencies.md](peer-dependencies.md) | M13.1 | in use |
+| Package exports and builds | [package-exports-and-builds.md](package-exports-and-builds.md) | M13.3 | in use |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").

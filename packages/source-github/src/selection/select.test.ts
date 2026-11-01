@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ListedRepository } from "../snapshot/snapshot";
-import { SELECTION_LIMITS, selectRepositories } from "./select";
+import type { ListedRepository } from "../snapshot/snapshot.ts";
+import { SELECTION_LIMITS, selectRepositories } from "./select.ts";
 
 function listed(name: string, overrides: Partial<ListedRepository> = {}): ListedRepository {
   return {

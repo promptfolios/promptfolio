@@ -1,6 +1,6 @@
 import { loadStructuredProfile, type Profile } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
-import { mergeGitHubSnapshot } from "./merge";
+import { mergeGitHubSnapshot } from "./merge.ts";
 
 const CONFIG = { user: "jordan-example", exclude: [], excludeContributionsTo: [] };
 const REPOSITORY_ID = "github.com/jordan-example/markdown-linter";

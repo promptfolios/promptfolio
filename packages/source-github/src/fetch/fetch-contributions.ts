@@ -1,19 +1,19 @@
-import type { GitHubSourceConfig } from "../config";
+import type { GitHubSourceConfig } from "../config.ts";
 import {
   CONTRIBUTION_LIMITS,
   eligibleCommits,
   firstLine,
   repositoriesWithSharedCommits,
   selectContributions,
-} from "../selection/contributions";
+} from "../selection/contributions.ts";
 import {
   type CommitSearchItem,
   commitSearchResponseSchema,
   repositoryStarsSchema,
   SNAPSHOT_LIMITS,
   type SnapshotContribution,
-} from "../snapshot/snapshot";
-import { encodePath, type GitHubClient, type GitHubFetchError } from "./github-client";
+} from "../snapshot/snapshot.ts";
+import { encodePath, type GitHubClient, type GitHubFetchError } from "./github-client.ts";
 
 /**
  * Commits GitHub attributes to the user in other owners' public repositories. Succeeds or fails

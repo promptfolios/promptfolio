@@ -45,8 +45,8 @@ flowchart LR
 
 ## 5. Common pitfalls and misconceptions
 
-- **A consumer in the same workspace is not an outside consumer.** The packages are private and export TypeScript
-  source, so they cannot be installed elsewhere until they get a compiled build and are published.
+- **A consumer in the same workspace is not an outside consumer.** It runs TypeScript source, so it says nothing about
+  the published files. See [package exports and builds](package-exports-and-builds.md).
 - **Passing here does not mean a good experience for everyone.** The second profile loads and renders, but no real model
   has answered about it.
 - **The UI is not covered.** The chat components, thread store, and link check live in the reference app. A

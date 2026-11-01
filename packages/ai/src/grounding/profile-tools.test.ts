@@ -1,6 +1,6 @@
 import { addObservedRecords, loadStructuredProfile, type Profile } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
-import { createProfileTools, getInputSchema, listInputSchema } from "./profile-tools";
+import { createProfileTools, getInputSchema, listInputSchema } from "./profile-tools.ts";
 
 function testProfile(): Profile {
   const result = loadStructuredProfile(

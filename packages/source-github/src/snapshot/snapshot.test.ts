@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseGitHubSnapshot } from "./snapshot";
+import { parseGitHubSnapshot } from "./snapshot.ts";
 
 function validSnapshot() {
   return {

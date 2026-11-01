@@ -1,5 +1,5 @@
-import { type GitHubSourceConfig, isExcluded } from "../config";
-import type { ListedRepository } from "../snapshot/snapshot";
+import { type GitHubSourceConfig, isExcluded } from "../config.ts";
+import type { ListedRepository } from "../snapshot/snapshot.ts";
 
 /** How many repositories a fetch includes: more with a token, because the budget is larger. */
 export const SELECTION_LIMITS = {

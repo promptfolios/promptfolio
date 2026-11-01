@@ -1,9 +1,9 @@
 import type { Profile } from "@promptfolio/core";
 import { generateText, type LanguageModel } from "ai";
 import { z } from "zod";
-import type { ChatLogger, ChatProviderOptions } from "../chat/chat-turn";
-import { CHAT_LIMITS } from "../chat/limits";
-import type { SystemPromptOptions } from "../chat/system-prompt";
+import type { ChatLogger, ChatProviderOptions } from "../chat/chat-turn.ts";
+import { CHAT_LIMITS } from "../chat/limits.ts";
+import type { SystemPromptOptions } from "../chat/system-prompt.ts";
 
 export interface StarterLimits {
   minStarters: number;

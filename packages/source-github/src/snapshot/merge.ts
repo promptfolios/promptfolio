@@ -4,9 +4,9 @@ import {
   type ProfileIssue,
   type ProfileLoadResult,
 } from "@promptfolio/core";
-import type { GitHubSourceConfig } from "../config";
-import { normalizeGitHubSnapshot } from "./normalize";
-import { parseGitHubSnapshot } from "./snapshot";
+import type { GitHubSourceConfig } from "../config.ts";
+import { normalizeGitHubSnapshot } from "./normalize.ts";
+import { parseGitHubSnapshot } from "./snapshot.ts";
 
 /**
  * Adds a GitHub snapshot's records to an owner profile: validate the snapshot, normalize it with

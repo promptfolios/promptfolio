@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseGitHubConfig } from "./config";
+import { parseGitHubConfig } from "./config.ts";
 
 describe("parseGitHubConfig", () => {
   it("accepts a username alone and defaults the exclusions", () => {

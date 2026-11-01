@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { loadStructuredProfile, type StructuredProfileSource, skillKey } from "./load";
-import { LIMITS } from "./schema";
+import { loadStructuredProfile, type StructuredProfileSource, skillKey } from "./load.ts";
+import { LIMITS } from "./schema.ts";
 
 const source: StructuredProfileSource = {
   sourceId: "owner-profile",

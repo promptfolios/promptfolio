@@ -1,6 +1,6 @@
 # M13 plan: library readiness
 
-- **Status:** Plan approved (2026-11-02). M13.1 is done and approved (2026-11-02). M13.2 is done and approved (2026-11-02). M13.3 is in progress.
+- **Status:** Plan approved (2026-11-02). M13.1 is done and approved (2026-11-02). M13.2 is done and approved (2026-11-02). M13.3 is done and approved (2026-11-02). M13.4 is in progress.
 - **Date:** 2026-11-02
 - **Roadmap:** [M13](../ROADMAP.md#m13--library-readiness).
 
@@ -14,7 +14,7 @@ otherwise have to be released twice.
 
 - **Version:** the first release is `0.0.1`, for all three. `^0.0.1` matches only that version, so consumers upgrade by
   hand. Move to `0.1.0` when the first outside project adopts them.
-- **License:** MIT. The copyright line uses the developer's git author name unless they choose another.
+- **License:** MIT. The developer chose the name on the copyright line.
 - **npm scope:** the developer controls `@promptfolio`.
 - **Peer dependencies:** a heavy dependency that a consumer certainly depends on directly is a peer. So `ai` is a peer.
   `zod` stays a regular dependency, because a consumer of `core` or `source-github` never touches it and `ai` accepts
@@ -77,6 +77,7 @@ For the publishing milestone. Package tests use saved GitHub responses, so they 
 in CI would be flaky and hit rate limits. So before each release:
 
 - Run `pnpm --filter portfolio refresh` by hand, with a token, against real GitHub.
+- At the first release, remove `private: true` and the "Not on npm yet" lines in the READMEs, and publish with `pnpm publish`.
 
 ## Dependencies
 

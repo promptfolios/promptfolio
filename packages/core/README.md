@@ -3,7 +3,15 @@
 The canonical profile model: validates profile data, keeps where each fact came from, and looks records up. It has no
 framework, model, or network code.
 
-Not published. Use it from this workspace as `"@promptfolio/core": "workspace:*"`.
+**Not on npm yet.** Until it is, use it from the [Promptfolio repository](https://github.com/promptfolios/promptfolio).
+
+## Install
+
+```sh
+npm install @promptfolio/core
+```
+
+Requires Node.js 22 or later. ES modules only.
 
 ## Entry point
 
@@ -19,9 +27,11 @@ Not published. Use it from this workspace as `"@promptfolio/core": "workspace:*"
 
 ## Example
 
-From [the minimal consumer](../../apps/minimal-consumer/src/consumer.ts):
+From [the minimal consumer](https://github.com/promptfolios/promptfolio/blob/main/apps/minimal-consumer/src/consumer.ts):
 
 ```ts
+import { loadStructuredProfile } from "@promptfolio/core";
+
 const owner = loadStructuredProfile(ownerProfile, {
   sourceId: "owner-profile",
   label: "Owner-provided profile",
@@ -31,3 +41,7 @@ if (!owner.ok) throw new Error(`invalid profile: ${JSON.stringify(owner.issues)}
 ```
 
 The data comes from you, as parsed JSON, and everything in it is treated as public.
+
+## License
+
+MIT

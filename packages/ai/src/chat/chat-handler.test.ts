@@ -3,11 +3,11 @@ import { loadStructuredProfile, type Profile } from "@promptfolio/core";
 import { APICallError, createGateway, simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
-import { type ChatLogger, handleChatRequest } from "./chat-handler";
-import type { ChatLimit, ChatTurnLimiter } from "./chat-limit";
-import { CHAT_LIMITS, type ChatLimitOverrides } from "./limits";
-import { CHAT_MESSAGES, unavailableMessage } from "./messages";
-import { buildSystemPrompt } from "./system-prompt";
+import { type ChatLogger, handleChatRequest } from "./chat-handler.ts";
+import type { ChatLimit, ChatTurnLimiter } from "./chat-limit.ts";
+import { CHAT_LIMITS, type ChatLimitOverrides } from "./limits.ts";
+import { CHAT_MESSAGES, unavailableMessage } from "./messages.ts";
+import { buildSystemPrompt } from "./system-prompt.ts";
 
 type StreamResult = Awaited<ReturnType<MockLanguageModelV4["doStream"]>>;
 type StreamPart = StreamResult["stream"] extends ReadableStream<infer P> ? P : never;

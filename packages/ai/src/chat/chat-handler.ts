@@ -1,11 +1,11 @@
 import { createUIMessageStreamResponse } from "ai";
-import { type ChatLimit, checkChatLimit } from "./chat-limit";
-import { type ChatTurnContext, type ChatTurnOptions, runChatTurn } from "./chat-turn";
-import { resolveChatLimits } from "./limits";
-import { CHAT_MESSAGES, resolveChatMessages, unavailableMessage } from "./messages";
-import { parseChatRequest } from "./request";
+import { type ChatLimit, checkChatLimit } from "./chat-limit.ts";
+import { type ChatTurnContext, type ChatTurnOptions, runChatTurn } from "./chat-turn.ts";
+import { resolveChatLimits } from "./limits.ts";
+import { CHAT_MESSAGES, resolveChatMessages, unavailableMessage } from "./messages.ts";
+import { parseChatRequest } from "./request.ts";
 
-export type { ChatLogger, ChatProviderOptions } from "./chat-turn";
+export type { ChatLogger, ChatProviderOptions } from "./chat-turn.ts";
 
 export interface ChatHandlerOptions extends ChatTurnOptions {
   /**
