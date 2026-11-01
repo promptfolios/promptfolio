@@ -45,7 +45,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M13.2 — Small package fixes                | Done      | `pnpm verify`; `core` exports no type built from zod, and token errors name no variable; [plan](plans/m13-library-readiness.md) |
 | M13.3 — Packaging                          | Done      | `pnpm -r build`, then `pnpm pack` in a package: a tarball with `dist`, `README`, and `LICENSE`; [plan](plans/m13-library-readiness.md) |
 | M13.4 — CI and versioning                  | Done      | `pnpm test:tarballs`; `pnpm changeset`; [the workflow](../.github/workflows/ci.yml); [plan](plans/m13-library-readiness.md) |
-| M13.5 — Docs and evaluation                | Not started | [plan](plans/m13-library-readiness.md) |
+| M13.5 — Docs and evaluation                | Done      | [results](evaluation/README.md): `gpt-4o-mini` failed its gate; [limitations](KNOWN_LIMITATIONS.md); [plan](plans/m13-library-readiness.md) |
 
 Update this table when a milestone is approved.
 
@@ -351,6 +351,18 @@ Potential requirements:
 - Operational monitoring and deployment architecture.
 
 This is a substantial product direction, not a small extension of the MVP. Do not add multi-tenancy, billing, or account-management systems to the initial portfolio.
+
+### Supporting other AI SDKs
+
+The packages support the Vercel AI SDK only, for simplicity, and `ai` is a peer dependency. Consumers of another SDK, such as TanStack AI (`@tanstack/ai`), could reuse them if `@promptfolio/ai` were SDK-agnostic. It is possible, and nothing is built for it.
+
+- **Already SDK-free:** `core` and `source-github`.
+- **Could be shared:** the system prompt, limits and visitor text, the daily limit check, the record lookups behind the tools, and evaluation scoring.
+- **Specific to the Vercel AI SDK:** `chat-turn.ts` (`streamText`, the step loop), the stream filters (`forVisitor`, `raw-tool-calls.ts`, which read `UIMessageChunk`), the browser's message format in `request.ts`, `tool()` in `profile-tools.ts`, and `generateText` in `starters.ts`.
+- **Likely shape:** a neutral package plus one adapter package per SDK.
+- **The real cost:** the stream filters are security boundaries (tool activity and provider metadata must not reach the browser), so each adapter needs its own filters and its own leak tests, and the evaluation has to run on each.
+
+Promote this only when a real consumer needs another SDK. See [ADR 0003](adr/0003-ai-sdk-selection.md).
 
 ### Other exploratory ideas
 

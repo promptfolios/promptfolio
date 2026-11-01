@@ -54,7 +54,8 @@ The prompt asks for links too, but that only makes good answers more likely. The
   the answer catches that.
 - **The profile's own URLs are trusted as links.** A repository's homepage is set on GitHub, so it can point anywhere its
   owner likes.
-- **The check is in the reference app.** A consumer with its own UI has to apply it too.
+- **The check is in the reference app.** The stream holds whatever the model wrote, so a consumer with its own UI has to apply
+  it too. The `@promptfolio/ai` README gives the rule and a snippet.
 
 ## 6. Further reading
 

@@ -1,6 +1,6 @@
 # Known limitations
 
-What Promptfolio does not do or guarantee, as of M12.2. Each item says what happens and what limits the damage.
+What Promptfolio does not do or guarantee, as of M13. Each item says what happens and what limits the damage.
 
 ## Answers
 
@@ -9,10 +9,15 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
 - **A model can write a tool call as text.** On `nemotron-3.5-lightning`, 2 of 17 answers were literal `<tool_call>`
   text. The server now stops `<tool_call` and `<function=` and shows the generic error, so the visitor gets no answer on
   a turn that still counts. Other models may use other forms, which would still get through.
-- **The chosen model failed its evaluation.** The developer chose `ling-3.1-flash-1019` on 2026-10-31 knowing this. About 1 in
-  3 recorded attempts timed out or hit a rate limit, so visitors can get "could not answer" often. One of 6 injection runs
-  quoted injected text while refusing it, and answers can narrate, mention injected text unprompted, and add their own
-  sources. Its provider is not marked as no-training, and the free model may not stay available.
+- **The chosen model failed its evaluation.** The developer moved to `gateway:openai/gpt-4o-mini` by 2026-11-02, because
+  `ling-3.1-flash-1019` timed out more often in use and kept reaching the 2,000-token limit on the open-source contributions
+  question. Mini is a priced model, so its calls draw on AI Gateway credit. In its run, all 3 forged-history answers repeated
+  the forged award as fact. A visitor can only forge their own conversation, so this misleads that visitor or a screenshot,
+  not others. One of 6 injection runs printed the injected README, though not as a link. 11 of 95 attempts hit a rate limit
+  or timeout, and a visitor gets no script retry. Answers also called internal and unlicensed work open source.
+  See [the evaluation](evaluation/README.md#the-run-on-gpt-4o-mini-failed-the-gate).
+- **Ling failed its evaluation.** About 1 in 3 recorded attempts timed out or hit a rate limit. One of 6 injection runs quoted
+  injected text while refusing it, and answers could narrate, mention injected text unprompted, and add their own sources.
   See [the evaluation](evaluation/README.md#the-run-on-ling-failed-the-gate).
 - **A link is not proof that a sentence is right.** It shows the record exists. It cannot show that the record supports the
   sentence, and the model can attach a real profile URL to the wrong name.
@@ -35,6 +40,20 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
 - **Prompt rules guide the model and enforce nothing.** Anything that must hold is enforced in code; wording rules,
   such as what counts as open source, can still be broken.
 
+- **A consumer's `additionalInstructions` can make answers worse.** They guide the model and widen nothing it can do, but
+  the evaluation here says nothing about a consumer's own text or model.
+- **Everything in the prompt is English.** A consumer can ask for answers in another language, which no run has tried.
+
+## Packages
+
+- **Not on npm yet.** They are `private: true` until the publishing milestone.
+- **One AI SDK.** `@promptfolio/ai` works with the Vercel AI SDK only; see
+  [the future idea](ROADMAP.md#supporting-other-ai-sdks).
+- **Only the newest matching `ai` is tested** in the tarball test, and 7.0.154 in the workspace. Versions in between are not.
+- **A logger that throws can still reject `handleChatRequest`.** Every other failure before the stream starts returns a `Response`.
+- **Package tests use saved GitHub responses,** so they cannot notice GitHub changing. A live refresh is on the release
+  checklist.
+
 ## Abuse and cost
 
 - **A visitor is an IP address.** People sharing one share 30 live answers a day, and someone who changes address gets
@@ -49,8 +68,10 @@ What Promptfolio does not do or guarantee, as of M12.2. Each item says what happ
 
 ## Prompt injection
 
-- **Links in answers are not restricted.** Injected text could get the model to write a link. Images cannot load by
-  themselves, but a visitor could click a link that carries conversation text.
+- **The package does not check links; the page does.** Injected text could get the model to write a link that carries
+  conversation text. The reference app makes only exact profile URLs clickable, and shows anything else as plain text. A
+  consumer with its own UI must do the same, as the `@promptfolio/ai` README says, because the stream holds whatever the
+  model wrote. A repository's homepage is on the allowed list, and its owner can point it anywhere.
 - **A model can still be misled by source text.** The evaluation found no injected text in answers on the model tested,
   which is evidence about that model and those attempts, not a guarantee.
 - **No script Content-Security-Policy.** The policy covers images and framing. Limiting scripts would need a nonce on

@@ -101,3 +101,12 @@ OpenRouter's free models ran out too (most likely the daily cap), so a fourth pr
 
 - Expect a major upgrade roughly every six months, with deprecations to follow.
 - Revisit TanStack AI if it stabilizes and the AI SDK becomes a poor fit.
+
+## Update at M13.1
+
+`ai` became a peer dependency of `@promptfolio/ai`, because a consumer creates the model with it and reads its stream. So AI SDK
+types do cross the package boundary (`LanguageModel`, the UI message stream), which the lock-in mitigation above understated.
+The record lookups live in `core` and are SDK-free, but the tool definitions wrapping them are in `@promptfolio/ai`.
+
+Supporting one SDK is deliberate, for simplicity. Supporting others is possible and is recorded as a
+[future idea](../ROADMAP.md#supporting-other-ai-sdks).
