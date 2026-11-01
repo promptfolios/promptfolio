@@ -22,6 +22,7 @@ The [AI SDK](https://ai-sdk.dev), `ai`, is a peer dependency, version 7: you cre
 | `ChatLimit`, `ChatTurnLimiter` | The daily limit you implement. `limit` is required; `null` turns it off on purpose |
 | `generateStarterQuestions`, `STARTER_LIMITS` | Starters written by the model from a profile; generate once per profile, such as at build time |
 | `CHAT_LIMITS`, `CHAT_MESSAGES` | The default limits and visitor text |
+| `createFailoverModel` | A model that moves to the next one when a model fails before its answer starts |
 
 `@promptfolio/ai/evaluation`, for your test tooling:
 
@@ -53,6 +54,29 @@ handleChatRequest(request, {
 - **`visitorMessages`:** changes to `CHAT_MESSAGES`, the text a visitor sees when a request is refused or fails. `{ref}` and `{maxChars}` are filled in.
 
 An invalid limit or message is logged by name, and the visitor gets the generic error.
+
+## Failover
+
+```ts
+import { createFailoverModel, handleChatRequest } from "@promptfolio/ai";
+
+// One per request: it stays on the model that worked for one turn.
+const model = createFailoverModel({
+  models: [
+    { label: "first", model: firstModel },
+    { label: "next", model: nextModel },
+  ],
+  attemptFirstChunkMs: 8_000,
+});
+handleChatRequest(request, {
+  model,
+  profile,
+  limit,
+  limits: { maxRetries: 0, timeouts: { firstChunkMs: 23_000 } },
+});
+```
+
+It moves on for an error, silence, or a reply with nothing in it, before the first content. The last model has its own limit, `lastAttemptFirstChunkMs`, 15 seconds by default. Once a visitor has seen text, a failure is reported as usual. Keep `timeouts.firstChunkMs` above the sum of the attempts, because that limit cancels the whole call, and use `maxRetries: 0`, or a retry runs the whole list again. A fallback receives the conversation, so list only providers whose terms you accept.
 
 ## Errors
 

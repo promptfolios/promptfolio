@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { CHAT_LIMITS, handleChatRequest } from "@promptfolio/ai";
+import { CHAT_LIMITS, createFailoverModel, handleChatRequest } from "@promptfolio/ai";
 import { evaluateQuestion, scoreEvaluationTurn } from "@promptfolio/ai/evaluation";
 import { loadStructuredProfile, type Profile, profileFingerprint } from "@promptfolio/core";
 import { mergeGitHubSnapshot, parseGitHubConfig } from "@promptfolio/source-github";
@@ -59,6 +59,36 @@ const response = await handleChatRequest(
 );
 assert.equal(response.status, 200);
 assert.match(await response.text(), /Hello from the tarball/);
+
+const failing = new MockLanguageModelV4({
+  doStream: async () => {
+    throw new Error("overloaded");
+  },
+});
+const movedOn = await handleChatRequest(
+  new Request("http://localhost/chat", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      messages: [{ id: "u", role: "user", parts: [{ type: "text", text: "Hi" }] }],
+    }),
+  }),
+  {
+    model: createFailoverModel({
+      models: [
+        { label: "failing", model: failing },
+        { label: "working", model: model() },
+      ],
+      attemptFirstChunkMs: 1_000,
+      logger: silent,
+    }),
+    profile,
+    limit: null,
+    limits: { maxRetries: 0 },
+    logger: silent,
+  },
+);
+assert.match(await movedOn.text(), /Hello from the tarball/);
 
 const turn = await evaluateQuestion("Hi", { model: model(), profile, logger: silent });
 assert.ok(scoreEvaluationTurn(turn, {}).every((check) => check.passed));

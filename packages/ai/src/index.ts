@@ -11,6 +11,11 @@ export {
 } from "./chat/chat-handler.ts";
 export type { ChatLimit, ChatTurnDecision, ChatTurnLimiter } from "./chat/chat-limit.ts";
 export {
+  createFailoverModel,
+  type FailoverEntry,
+  type FailoverModelOptions,
+} from "./chat/failover.ts";
+export {
   CHAT_LIMITS,
   type ChatLimitOverrides,
   type ChatLimits,

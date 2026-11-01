@@ -127,7 +127,7 @@ export async function runChatTurn(
  * error itself stays out, because an `APICallError` carries the whole request (the visitor's
  * conversation) and the provider's response, and other errors can repeat them in their message.
  */
-function modelErrorSummary(error: unknown) {
+export function modelErrorSummary(error: unknown) {
   // After its retries, the AI SDK wraps the provider's error.
   const cause = RetryError.isInstance(error) ? error.lastError : error;
   // Read by shape: AI Gateway's errors carry a status too, and `ai` does not export their class.
