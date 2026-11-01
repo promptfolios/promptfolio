@@ -123,9 +123,10 @@ describe("buildSystemPrompt", () => {
     expect(prompt).not.toMatch(/square brackets|\[owner_identity\]/);
   });
 
-  it("gives no address to copy, because a model wrote the old example's into answers", () => {
+  it("shows the link format with no address to copy", () => {
     const prompt = buildSystemPrompt(identity);
 
+    expect(prompt).toContain("[record name](the url from the tool result)");
     expect(prompt).not.toMatch(/https?:\/\/|example\.com/);
     expect(prompt).toContain("neither does a company, school, or role");
     expect(prompt).toContain("Never write a placeholder address");
