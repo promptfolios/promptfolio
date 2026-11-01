@@ -24,7 +24,7 @@ export {
   recordsUsingSkill,
   type SkillUsage,
 } from "./profile/query";
-export { isRecordId, type ProfileInput } from "./profile/schema";
+export { isRecordId } from "./profile/schema";
 export type {
   ClaimBasis,
   Contribution,

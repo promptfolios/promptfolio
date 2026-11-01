@@ -14,4 +14,10 @@ describe("public API", () => {
       "recordsUsingSkill",
     ]);
   });
+
+  it("exposes no type built from zod, so a zod upgrade cannot change this API", () => {
+    // @ts-expect-error `pnpm typecheck` fails if this type comes back.
+    const input: core.ProfileInput | undefined = undefined;
+    expect(input).toBeUndefined();
+  });
 });

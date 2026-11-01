@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Validation schema for the structured profile authoring format (`ProfileInput`).
+ * Validation schema for the structured profile authoring format.
  *
  * Internal to the package: the public API exposes `loadStructuredProfile` and plain
  * TypeScript types, so zod stays an implementation detail.
@@ -196,8 +196,5 @@ export const observedRecordsSchema = z.strictObject({
   contributions: list(contributionInputSchema),
 });
 
-/** The structured profile authoring format, as written by the profile owner. */
-export type ProfileInput = z.input<typeof profileInputSchema>;
-
-/** `ProfileInput` after validation, with defaults applied and strings trimmed. */
+/** The authoring format after validation, with defaults applied and strings trimmed. */
 export type ParsedProfileInput = z.output<typeof profileInputSchema>;
