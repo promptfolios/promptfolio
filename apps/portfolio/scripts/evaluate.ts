@@ -44,6 +44,12 @@ async function main(): Promise<number> {
   const repeats = Number(option("repeats") ?? 3);
   const callGapMs = Number(option("call-gap-ms") ?? 4_500);
   const wanted = option("cases")?.split(",");
+  const unknown = wanted?.filter((id) => !EVALUATION_CASES.some((item) => item.id === id)) ?? [];
+  if (unknown.length > 0) {
+    // In PowerShell, quote the option, or its commas become spaces.
+    console.error(`No such case: ${unknown.join(", ")}`);
+    return 1;
+  }
   const cases = wanted
     ? EVALUATION_CASES.filter((item) => wanted.includes(item.id))
     : EVALUATION_CASES;
