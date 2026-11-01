@@ -3,8 +3,6 @@
 Public GitHub data for a profile. Fetching, the only part with network access, is separate from validating and
 merging, so a request never touches GitHub.
 
-**Not on npm yet.** Until it is, use it from the [Promptfolio repository](https://github.com/promptfolios/promptfolio).
-
 ## Install
 
 ```sh

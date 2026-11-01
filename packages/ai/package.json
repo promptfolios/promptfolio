@@ -1,7 +1,6 @@
 {
   "name": "@promptfolio/ai",
   "version": "0.0.1",
-  "private": true,
   "description": "Server-only chat handler for Promptfolio: validates requests and streams model replies.",
   "keywords": [
     "promptfolio",

@@ -2,8 +2,6 @@
 
 The server side of chat: validates a request, runs a model turn with read-only profile tools, and streams the reply. Server-only, because the model you pass carries your provider key.
 
-**Not on npm yet.** Until it is, use it from the [Promptfolio repository](https://github.com/promptfolios/promptfolio).
-
 ## Install
 
 ```sh
@@ -95,7 +93,7 @@ const isSafe = (href: string) => URL.canParse(href) && allowed.has(new URL(href)
 
 Check links as they are rendered, so this covers every way Markdown can write one. The reference app does this in [`profile-link.tsx`](https://github.com/promptfolios/promptfolio/blob/main/apps/portfolio/src/components/chat/profile-link.tsx).
 
-No model is endorsed. Answer quality depends on the model and the prompt together, so evaluate the one you deploy.
+No model is endorsed. Answer quality depends on the model and the prompt together, so evaluate the one you deploy. The latest evaluation failed its gate: read the [known limitations](https://github.com/promptfolios/promptfolio/blob/main/docs/KNOWN_LIMITATIONS.md) and [results](https://github.com/promptfolios/promptfolio/blob/main/docs/evaluation/README.md) before relying on an answer.
 
 ## License
 

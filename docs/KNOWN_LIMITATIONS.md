@@ -72,7 +72,7 @@ Only with a list in `PROMPTFOLIO_MODEL`.
 
 ## Packages
 
-- **Not on npm yet.** They are `private: true` until the publishing milestone.
+- **Early releases.** At `0.0.x`, any release can break things, and `^0.0.1` matches only that version, so consumers upgrade by hand. Only this repository's apps and the tarball test have used them so far. `contact` is not published.
 - **One AI SDK.** `@promptfolio/ai` works with the Vercel AI SDK only; see
   [the future idea](ROADMAP.md#supporting-other-ai-sdks).
 - **Only the newest matching `ai` is tested** in the tarball test, and 7.0.154 in the workspace. Versions in between are not.

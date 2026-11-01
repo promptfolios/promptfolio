@@ -1,7 +1,6 @@
 {
   "name": "@promptfolio/core",
   "version": "0.0.1",
-  "private": true,
   "description": "Canonical profile model and framework-agnostic core logic for Promptfolio.",
   "keywords": [
     "promptfolio",

@@ -31,7 +31,7 @@ Source files are grouped by what they do:
 | `apps/portfolio/src` (browser)   | `chat/threads`, `chat/sources`, `contact`, `components`                |
 
 Dependency direction: apps depend on packages; packages never depend on apps. Each package has a README with its
-entry points and an example. The packages are not on npm yet, so use them from this workspace.
+entry points and an example. `core`, `ai`, and `source-github` are published to npm. `contact` is used only from this workspace.
 
 The reference app's chat UI uses [assistant-ui](https://www.assistant-ui.com/) with Tailwind CSS
 and shadcn/ui, in light and dark modes. Component code copied by their CLIs lives in `apps/portfolio/src/components/ui/`,

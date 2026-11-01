@@ -25,7 +25,7 @@ flowchart LR
   are excluded.
 - **`pnpm -r build` follows dependencies,** so `core` builds before the packages that use its declarations.
 - **`files: ["dist"]` is an allowlist.** npm always adds `package.json`, `README`, and `LICENSE` from the package's folder.
-- **`private: true` stays until the publishing milestone,** so nobody can publish by accident. `pnpm pack` still works.
+- **Before the first release, `private: true` stopped anyone publishing by accident.** `contact` and the apps keep it.
 
 ## 4. Where it lives in the code
 

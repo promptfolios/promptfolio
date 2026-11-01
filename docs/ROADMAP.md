@@ -48,6 +48,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M13.5 — Docs and evaluation                | Done      | [results](evaluation/README.md): `gpt-4o-mini` failed its gate; [limitations](KNOWN_LIMITATIONS.md); [plan](plans/m13-library-readiness.md) |
 | M14 — Provider failover                    | Done      | `PROMPTFOLIO_MODEL` takes a list, and a failed model moves to the next before an answer starts; [plan](plans/m14-provider-failover.md) |
 | M15 — Prompt fixes                         | Done      | [results](evaluation/README.md#the-m15-prompt-rules-on-gpt-4o-mini-failed-the-gate): failed the gate, with some rules helping; [limitations](KNOWN_LIMITATIONS.md); [plan](plans/m15-prompt-fixes.md) |
+| M16 — First release                        | In review | `npm view @promptfolio/core version` after publishing `0.0.1`; [the checklist](plans/m13-library-readiness.md#release-checklist) |
 
 Update this table when a milestone is approved.
 

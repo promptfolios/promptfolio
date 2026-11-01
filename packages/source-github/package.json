@@ -1,7 +1,6 @@
 {
   "name": "@promptfolio/source-github",
   "version": "0.0.1",
-  "private": true,
   "description": "GitHub source adapter for Promptfolio: fetches public repositories and normalizes them into profile records.",
   "keywords": [
     "promptfolio",

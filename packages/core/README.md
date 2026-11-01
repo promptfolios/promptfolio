@@ -3,8 +3,6 @@
 The canonical profile model: validates profile data, keeps where each fact came from, and looks records up. It has no
 framework, model, or network code.
 
-**Not on npm yet.** Until it is, use it from the [Promptfolio repository](https://github.com/promptfolios/promptfolio).
-
 ## Install
 
 ```sh

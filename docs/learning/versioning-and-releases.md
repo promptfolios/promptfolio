@@ -1,6 +1,6 @@
 # Versioning and releases
 
-First appears in: **M13.4**. Status: **in use**. Publishing itself is **planned**.
+First appears in: **M13.4**. Status: **in use**.
 
 ## 1. What it is
 
@@ -18,13 +18,13 @@ Bumping by hand across three manifests and three changelogs is easy to get wrong
 flowchart LR
     change["A change consumers notice"] --> add["pnpm changeset<br/>writes .changeset/name.md"]
     add --> version["pnpm changeset version<br/>bumps versions, writes CHANGELOG.md"]
-    version --> publish["Publish (planned)"]
+    version --> publish["pnpm publish, core first"]
 ```
 
 - **One version.** `fixed` in the configuration moves `core`, `ai`, and `source-github` together. A patch to `core` alone took
   all three from `0.0.1` to `0.0.2` in a test.
 - **What is left out.** The apps and `@promptfolio/contact` are in `ignore`, so they do not change version.
-- **`privatePackages.version` is on,** because the three packages stay `private: true` until the publishing milestone, and
+- **`privatePackages.version` is on,** because the three packages were `private: true` when this was set up, and
   Changesets otherwise skips private packages without saying so.
 - **Below 1.0, the range does not protect anyone.** `^0.0.1` matches only `0.0.1`, so consumers upgrade by hand. Any release can
   break things until the first outside project adopts the packages, when they move to `0.1.0`.
