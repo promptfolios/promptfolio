@@ -47,7 +47,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M13.4 — CI and versioning                  | Done      | `pnpm test:tarballs`; `pnpm changeset`; [the workflow](../.github/workflows/ci.yml); [plan](plans/m13-library-readiness.md) |
 | M13.5 — Docs and evaluation                | Done      | [results](evaluation/README.md): `gpt-4o-mini` failed its gate; [limitations](KNOWN_LIMITATIONS.md); [plan](plans/m13-library-readiness.md) |
 | M14 — Provider failover                    | Done      | `PROMPTFOLIO_MODEL` takes a list, and a failed model moves to the next before an answer starts; [plan](plans/m14-provider-failover.md) |
-| M15 — Prompt fixes                         | In progress | `pnpm test`; then a new evaluation report; [plan](plans/m15-prompt-fixes.md) |
+| M15 — Prompt fixes                         | Done      | [results](evaluation/README.md#the-m15-prompt-rules-on-gpt-4o-mini-failed-the-gate): failed the gate, with some rules helping; [limitations](KNOWN_LIMITATIONS.md); [plan](plans/m15-prompt-fixes.md) |
 
 Update this table when a milestone is approved.
 

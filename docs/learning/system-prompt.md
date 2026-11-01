@@ -95,9 +95,10 @@ question for the model.
 **Rules from reading real answers (M15).** The evaluation of `gpt-4o-mini` led to five changes, each in response to what answers
 actually did. An earlier message stating a fact must be looked up, after all three runs repeated a forged award. A README is described
 in the model's own words, after one run printed an injected one. Companies and schools get no link unless their record has a url, and
-the rule's example lost its address: the model had been writing `https://example.com` into answers, which may be where it came from.
-Something is open source only if a license shows it. An unlisted skill says nothing about the person. Whether these worked is for the
-[evaluation](../evaluation/README.md) to say.
+the rule's example lost its address. Something is open source only if a license shows it. An unlisted skill says nothing about the
+person. [The evaluation](../evaluation/README.md#the-m15-prompt-rules-on-gpt-4o-mini-failed-the-gate) shows why a rule is a hypothesis:
+the README and skill rules helped, the forged-history and open-source rules did not hold, and removing the link example made
+links worse. An example was doing work that its rule alone did not, so the rule got a format back with no address in it, which no run has measured.
 
 **Additional instructions (M13.1).** A boolean named after one button tied the package to one app, so it became
 `additionalInstructions`: text from the application, added after the base rules and before the identity block, under a line

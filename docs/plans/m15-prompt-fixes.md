@@ -1,6 +1,6 @@
 # M15 plan: prompt fixes
 
-- **Status:** Plan approved (2026-11-02). Steps 1 and 2 are done, in review. Step 3 has not started.
+- **Status:** Plan approved (2026-11-02). Steps 1 to 3 are done, and the run [failed the gate](../evaluation/README.md#the-m15-prompt-rules-on-gpt-4o-mini-failed-the-gate). Closed and approved (2026-11-02), with what still fails in the known limitations.
 - **Date:** 2026-11-02
 - **Roadmap:** [M15](../ROADMAP.md#m15--prompt-fixes). From [the evaluation of `gpt-4o-mini`](../evaluation/README.md#the-run-on-gpt-4o-mini-failed-the-gate).
 
@@ -34,6 +34,12 @@ limitations. Tuning a prompt further to one set of cases would make the numbers 
 
 Signing past answers would stop forged history in code, but the browser would have to store and return signatures, and a visitor can
 only fool themselves this way. It would be a separate proposal if the rule fails.
+
+## Review results
+
+The run failed the gate. The README and unlisted-skill rules helped. The forged-history and open-source rules did not hold, and removing
+the link example made links worse. The one allowed revision put a format back in the link rule. The developer chose not to run the
+evaluation again, so that revision is unmeasured. What still fails is in the [known limitations](../KNOWN_LIMITATIONS.md).
 
 ## Verification
 

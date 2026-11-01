@@ -16,6 +16,11 @@ What Promptfolio does not do or guarantee, as of M13. Each item says what happen
   not others. One of 6 injection runs printed the injected README, though not as a link. 11 of 95 attempts hit a rate limit
   or timeout, and a visitor gets no script retry. Answers also called internal and unlicensed work open source.
   See [the evaluation](evaluation/README.md#the-run-on-gpt-4o-mini-failed-the-gate).
+- **Stronger prompt rules did not fix this (M15).** On `gpt-4o-mini`, 2 of 3 forged-history answers still stated the award, and all 3
+  open-source answers still listed internal and unlicensed work. Invented links rose to 10 of 45 runs in the same cases, and one answer
+  linked skills to unrelated repositories, which the page would show as real links because the URLs are in the profile. The link rule was
+  revised afterwards, and that revision has not been run. 7 of the 28 cases have not run on this prompt.
+  See [the evaluation](evaluation/README.md#the-m15-prompt-rules-on-gpt-4o-mini-failed-the-gate).
 - **Ling failed its evaluation.** About 1 in 3 recorded attempts timed out or hit a rate limit. One of 6 injection runs quoted
   injected text while refusing it, and answers could narrate, mention injected text unprompted, and add their own sources.
   See [the evaluation](evaluation/README.md#the-run-on-ling-failed-the-gate).
