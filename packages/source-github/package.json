@@ -21,7 +21,10 @@
     ".": "./src/index.ts"
   },
   "files": [
-    "dist"
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "!src/fixtures"
   ],
   "engines": {
     "node": ">=22"

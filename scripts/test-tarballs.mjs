@@ -20,8 +20,16 @@ const MODULE_MODES = [
   { module: "NodeNext", moduleResolution: "NodeNext" },
   { module: "ESNext", moduleResolution: "Bundler" },
 ];
-const UNWANTED_IN_TARBALL = /\.test\.|fixtures|package\/src\/|tsconfig/;
-const REQUIRED_IN_TARBALL = ["package/package.json", "package/README.md", "package/LICENSE"];
+const UNWANTED_IN_TARBALL = /\.test\.|fixtures|tsconfig/;
+const REQUIRED_IN_TARBALL = [
+  "package/package.json",
+  "package/README.md",
+  "package/LICENSE",
+  // Source and the maps that point at it, for consumers' stack traces and "Go to Definition".
+  "package/src/index.ts",
+  "package/dist/index.js.map",
+  "package/dist/index.d.ts.map",
+];
 
 const repo = path.resolve(import.meta.dirname, "..");
 const root = mkdtempSync(path.join(tmpdir(), "promptfolio-tarballs-"));

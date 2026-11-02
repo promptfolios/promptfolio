@@ -1,9 +1,12 @@
 {
   // What a publishable package's build adds to its own tsconfig.json. Published files run in Node
   // without a bundler, so they are checked by Node's rules, and `.ts` in relative imports becomes `.js`.
+  // The maps point back at the `src` each package ships, for stack traces and "Go to Definition".
   "compilerOptions": {
     "noEmit": false,
     "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "rewriteRelativeImportExtensions": true

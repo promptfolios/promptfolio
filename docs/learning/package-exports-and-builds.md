@@ -24,7 +24,11 @@ flowchart LR
 - **Each package has one `tsconfig.build.json`,** on top of its `tsconfig.json` and the root's shared build options. Tests
   are excluded.
 - **`pnpm -r build` follows dependencies,** so `core` builds before the packages that use its declarations.
-- **`files: ["dist"]` is an allowlist.** npm always adds `package.json`, `README`, and `LICENSE` from the package's folder.
+- **`files` is an allowlist.** It names `dist` and `src`, and `!` entries drop tests and fixtures. npm always adds
+  `package.json`, `README`, and `LICENSE` from the package's folder.
+- **Maps lead back to the source.** `sourceMap` writes `x.js.map` beside each `x.js`, so stack traces name lines in `src/x.ts`.
+  `declarationMap` writes `x.d.ts.map`, so an editor's "Go to Definition" opens `src/x.ts` instead of the declaration. Both
+  only work because `src` ships too.
 - **Before the first release, `private: true` stopped anyone publishing by accident.** `contact` and the apps keep it.
 
 ## 4. Where it lives in the code
@@ -39,6 +43,8 @@ flowchart LR
 - **Passing workspace tests say nothing about the tarball.** The workspace never loads `dist`, so `pnpm test:tarballs` installs
   the packed tarballs in a separate project (M13.4).
 - **A stale `dist` can hide a missing file,** which is why the build deletes it first.
+- **A map without its source is useless,** and a `!` pattern that misses a test file ships it. `pnpm test:tarballs` checks
+  both.
 - **`types` comes first in each `exports` entry,** because conditions are read in order and the first match wins.
 - **Publish through pnpm (`pnpm changeset publish`), not `npm publish`.** Only pnpm rewrites `workspace:*`, `catalog:`, and `publishConfig.exports`.
 

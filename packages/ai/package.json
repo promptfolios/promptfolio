@@ -24,7 +24,9 @@
     "./evaluation": "./src/evaluation/evaluation.ts"
   },
   "files": [
-    "dist"
+    "dist",
+    "src",
+    "!src/**/*.test.ts"
   ],
   "engines": {
     "node": ">=22"

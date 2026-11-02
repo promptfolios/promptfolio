@@ -34,3 +34,10 @@ its no-build convenience, because apps and tests see a source change immediately
 - The workspace never runs the published entry points, so only a test of the packed tarball can show they work:
   `pnpm test:tarballs`, in CI on each supported Node version.
 - `packages/contact` keeps extensionless imports, because it is not being packaged.
+
+## Amendment: source maps and shipped source
+
+Each package also ships its `src` (without tests or fixtures), with source maps and declaration maps in `dist/` that point at
+it. Consumers get stack traces and "Go to Definition" in the original TypeScript, as the AI SDK packages do. Because `dist/`
+mirrors `src/`, a map's `sources` is a plain relative path such as `../src/index.ts`. The cost is a larger tarball. Shipped
+`.ts` files are never resolved by `exports`, which still point only at `dist`.
