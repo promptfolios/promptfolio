@@ -43,6 +43,11 @@ export interface ProjectSummary extends RecordEvidence {
   roleId?: string;
   skills: string[];
   links: ExternalLink[];
+  /**
+   * The url of the repository with this project's id, when there is one. It comes from that
+   * repository's source (listed in the result's sources), not from the owner's project.
+   */
+  repositoryUrl?: string;
 }
 
 export interface RepositorySummary extends RecordEvidence {

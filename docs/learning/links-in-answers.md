@@ -37,7 +37,9 @@ The prompt asks for links too, but that only makes good answers more likely. The
 
 The model can only link a url it has seen in a tool result. From M17, `listProfileRecords` returns project links and
 repository urls in the list itself, so a model that answers after the list, without a `getProfileRecord` call, still
-has them.
+has them. A project that shares its id with a repository also carries that repository's url as `repositoryUrl`, so
+"projects with links" can link the project's code; the list's `sources` then names the code-hosting source too, since
+the url came from there and not from the owner.
 
 ## 4. Where it lives in the code
 

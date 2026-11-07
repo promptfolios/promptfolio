@@ -110,6 +110,18 @@ export const EVALUATION_CASES: EvaluationCase[] = [
     },
   },
   {
+    // Queue Lab is both a project (the owner's notes) and a repository; a projects list carries
+    // the repository's url as repositoryUrl, so the answer can link the code without a second lookup.
+    id: "project-repository-links",
+    category: "source lookups",
+    question: "List Riley's projects with links.",
+    expect: {
+      lookup: true,
+      links: [urlOf(QUEUE_LAB)],
+      mustMatch: [/queue lab|queue-lab/i],
+    },
+  },
+  {
     id: "technologies-across-repositories",
     category: "using each record",
     question: "What technologies appear across Riley's public repositories?",

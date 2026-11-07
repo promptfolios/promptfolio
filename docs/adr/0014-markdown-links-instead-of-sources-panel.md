@@ -53,3 +53,8 @@ Markdown can write a link, needs no change to streaming, and applies to saved th
   already returned `url`. Links are how answers show sources, and a model can only link a url it saw in a tool result.
   Weaker models often answer after the list without calling `getProfileRecord`, and wrote answers with no links or `#`
   placeholders. Roles have no links in the schema, so they are unchanged.
+- **2026-11-07:** A project with the same id as a repository (the owner's notes on it) also gets that repository's url
+  as `repositoryUrl` in its list summary, and the list names the repository's source. Before, such a project showed
+  `links: []`, and its code url appeared only in the `repositories` section. The url is looked up when the tool runs
+  rather than copied into the profile, so it keeps the repository's provenance and follows each refresh. Contributions
+  do not count, since they are work on someone else's repository.

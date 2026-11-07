@@ -119,7 +119,8 @@ export function createProfileTools(
     listProfileRecords: tool({
       description:
         "List the owner's records in one profile section, with ids, descriptions, and dates. " +
-        "Projects include their links and repositories their url. Use getProfileRecord with " +
+        "Projects include their links, and repositoryUrl when a repository has their id; " +
+        "repositories include their url. Use getProfileRecord with " +
         "an id only for highlights, responsibilities, outcomes, or a repository's README.",
       inputSchema: listInputSchema,
       execute: async (input) => (withinBudget() ? listRecords(profile, input) : LIMIT_REACHED),
@@ -139,17 +140,24 @@ function listRecords(profile: Profile, input: z.infer<typeof listInputSchema>) {
     status: "listed" as const,
     section: input.section,
     records: records.map((record) => record.summary),
-    sources: sourcesFor(profile, records),
+    // A project's repositoryUrl comes from its repository's source, so that source is listed too.
+    sources: sourcesFor(
+      profile,
+      records.flatMap((record) => [record, ...(record.related ?? [])]),
+    ),
   };
   if (input.skill === undefined) return result;
   return { ...result, skillInProfile: recordsUsingSkill(profile, input.skill).inProfile };
 }
 
-/** Summaries of one section, each with the provenance it came from. */
+/**
+ * Summaries of one section, each with the provenance it came from, and `related` records whose
+ * fields the summary also carries (a project's repository, for its url).
+ */
 function selectSection(
   profile: Profile,
   { section, skill }: z.infer<typeof listInputSchema>,
-): Array<{ summary: RecordSummary; provenance: Provenance }> {
+): Array<{ summary: RecordSummary; provenance: Provenance; related?: Repository[] }> {
   const usage = skill === undefined ? undefined : recordsUsingSkill(profile, skill);
   switch (section) {
     case "experience":
@@ -158,10 +166,14 @@ function selectSection(
         provenance: role.provenance,
       }));
     case "projects":
-      return (usage?.projects ?? profile.projects).map((project) => ({
-        summary: summarizeProject(project),
-        provenance: project.provenance,
-      }));
+      return (usage?.projects ?? profile.projects).map((project) => {
+        const repository = repositoryFor(profile, project.id);
+        return {
+          summary: summarizeProject(project, repository),
+          provenance: project.provenance,
+          ...(repository !== undefined && { related: [repository] }),
+        };
+      });
     case "repositories":
       return (usage?.repositories ?? profile.repositories).map((repository) => ({
         summary: summarizeRepository(repository, profile),
@@ -238,6 +250,11 @@ function getRecord(profile: Profile, id: string) {
  * Project links are the exception: answers show sources as Markdown links to tool-result urls
  * (ADR 0014), and weaker models often answer straight after the list without a get. So a
  * project's links come with its summary, as a repository's url already does.
+ *
+ * A project with a repository's id (the owner's notes on that repository) also carries the
+ * repository's url as repositoryUrl. It is looked up here, not copied into the profile, so it
+ * keeps the repository's provenance and cannot go stale after a refresh. Contributions do not
+ * count: they are work on someone else's repository, not the project's own code.
  */
 
 function summarizeRole(role: Role): RoleSummary {
@@ -252,7 +269,7 @@ function summarizeRole(role: Role): RoleSummary {
   };
 }
 
-function summarizeProject(project: Project): ProjectSummary {
+function summarizeProject(project: Project, repository: Repository | undefined): ProjectSummary {
   return {
     id: project.id,
     name: project.name,
@@ -260,8 +277,14 @@ function summarizeProject(project: Project): ProjectSummary {
     ...(project.roleId !== undefined && { roleId: project.roleId }),
     skills: project.skills,
     links: project.links,
+    ...(repository !== undefined && { repositoryUrl: repository.url }),
     ...evidence(project.provenance),
   };
+}
+
+/** The repository that a project with the same id describes, if the profile has one. */
+function repositoryFor(profile: Profile, projectId: string): Repository | undefined {
+  return profile.repositories.find((repository) => repository.id === projectId);
 }
 
 function summarizeRepository(repository: Repository, profile: Profile): RepositorySummary {

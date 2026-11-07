@@ -85,6 +85,14 @@ only in the full record, a "with links" question got no links or a `#` placehold
 descriptions and the system prompt no longer send the model to `getProfileRecord` for links. Roles
 have no links in the profile schema, so nothing changes for them.
 
+A project whose id is a repository's id (the owner's notes on that repository) also gets
+`repositoryUrl` in its summary. It is derived in
+[profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts) each time the tool runs, the
+way `hasOwnerNotes` points the other way, instead of being written into the profile: the profile
+keeps owner-written and source-observed fields apart, and a derived value cannot go stale after a
+refresh. Because the url is source-observed while the project summary's evidence says
+`self-reported`, the list's `sources` also includes the repository's source.
+
 ## 4. Where it lives in the code
 
 - Tools, input schemas, call budget: [packages/ai/src/grounding/profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts),
