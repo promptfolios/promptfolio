@@ -101,7 +101,7 @@ works differently from OpenRouter's adapter:
   at its default level, under the 2,000-token cap.
 
 Each finished reply logs its token usage on the server, for example
-`[chat 691a183c] finished { finishReason: 'stop', usage: { inputTokens: 42, outputTokens: 12, … } }`.
+`[chat 691a183c] finished { model: 'gpt-4o-mini', finishReason: 'stop', usage: { inputTokens: 42, outputTokens: 12, … } }`.
 
 ## 4. Where it lives in the code
 

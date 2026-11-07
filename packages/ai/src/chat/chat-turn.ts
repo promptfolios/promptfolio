@@ -70,6 +70,8 @@ export async function runChatTurn(
 ): Promise<ChatTurn> {
   const { model, profile, providerOptions, additionalInstructions, logger = console } = options;
   const errorText = unavailableMessage(text, requestId);
+  // Model ids are the application's configuration, not visitor text, so they are safe to log.
+  const configuredModelId = typeof model === "string" ? model : model.modelId;
 
   const result = streamText({
     model,
@@ -89,10 +91,18 @@ export async function runChatTurn(
     abortSignal: signal,
     onError: ({ error }) => {
       // Visitors only see the generic message, and the log only a summary (see below).
-      logger.error(`[chat ${requestId}] model error`, modelErrorSummary(error));
+      // No response says which model failed, so this is the configured one. For a failover model
+      // that is every label; its own log names the model that failed.
+      logger.error(`[chat ${requestId}] model error`, {
+        model: configuredModelId,
+        ...modelErrorSummary(error),
+      });
     },
     onEnd: (event) => {
       logger.info(`[chat ${requestId}] finished`, {
+        // The model that answered the last step, as its provider reports it. A provider that
+        // does not report one leaves the configured id (for a failover model, every label).
+        model: event.finalStep.response.modelId || configuredModelId,
         finishReason: event.finishReason,
         steps: event.stepNumber + 1,
         // Aggregated across all steps (v7 renamed `totalUsage` to `usage`).

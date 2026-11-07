@@ -60,7 +60,8 @@ PROMPTFOLIO_MODEL=gateway:openai/gpt-4o-mini,google:gemini-3.5-flash-lite
   answers, raise `limits.maxOutputTokens`.
 - **A fallback is another company reading the conversation.** Its training and data terms apply, which is why a list is always
   written out and never built from whichever keys are set.
-- **It can hide a dead provider.** Answers keep working, so read the `[failover]` lines in the log.
+- **It can hide a dead provider.** Answers keep working, so read the `[failover]` lines in the log. `continuing with <label>`
+  names the model that answered; the `finished` line's `model` is the provider's own id, or every label when it reports none.
 - **Fallbacks on one host can share its limits.** AI Gateway advertised 5 requests a minute per model, and one question takes at
   least 2 calls. A few questions at once used up two gateway models within seconds, so keep one fallback on another host.
 - **Check that a fallback actually works.** A hanging last model turned rate limits into 55-second failures. Try each entry alone first.

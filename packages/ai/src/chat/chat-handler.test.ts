@@ -235,6 +235,31 @@ describe("handleChatRequest: valid requests", () => {
       expect.objectContaining({ finishReason: "stop" }),
     );
   });
+
+  it("names the model in the finished log", async () => {
+    const { response, logger } = await handle({ messages: [userMessage("Hi")] });
+    await response.text();
+
+    // A mock stream sends no response metadata, so this is the configured model's id.
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("finished"),
+      expect.objectContaining({ model: "mock-model-id" }),
+    );
+  });
+
+  it("prefers the model id the provider reports for its response", async () => {
+    const model = mockModel([
+      { type: "response-metadata", modelId: "provider-model-2026-10-01" },
+      ...textChunks("Hi."),
+    ]);
+    const { response, logger } = await handle({ messages: [userMessage("Hi")] }, model);
+    await response.text();
+
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("finished"),
+      expect.objectContaining({ model: "provider-model-2026-10-01" }),
+    );
+  });
 });
 
 describe("handleChatRequest: a tool call written as text", () => {
@@ -1254,6 +1279,7 @@ describe("handleChatRequest: what the log keeps of a model error", () => {
     await response.text();
 
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining("model error"), {
+      model: "mock-model-id",
       name: "TypeError",
     });
     expect(everythingLogged(logger)).not.toContain(VISITOR_TEXT);

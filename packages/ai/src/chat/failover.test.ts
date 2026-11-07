@@ -145,6 +145,38 @@ describe("createFailoverModel: moving on before the first content", () => {
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain(SECRET);
   });
 
+  it("names the model it continues with, and only after moving on", async () => {
+    const { logger } = await ask([throwing(), replying("Second.")]);
+
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("continuing with model-2"));
+
+    const { logger: firstWorked } = await ask([replying("First."), replying("Second.")]);
+    expect(JSON.stringify(firstWorked.info.mock.calls)).not.toContain("continuing");
+  });
+
+  it("names the answering model in the finished log when its provider reports it", async () => {
+    const second = sending([
+      { type: "response-metadata", modelId: "upstream-second" },
+      ...text("Second."),
+    ]);
+    const { answer, logger } = await ask([throwing(), second]);
+
+    expect(answer).toBe("Second.");
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("finished"),
+      expect.objectContaining({ model: "upstream-second" }),
+    );
+  });
+
+  it("falls back to every label in the finished log when the provider reports no id", async () => {
+    const { logger } = await ask([throwing(), replying("Second.")]);
+
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("finished"),
+      expect.objectContaining({ model: "model-1,model-2" }),
+    );
+  });
+
   it("moves on when a stream reports an error before any content", async () => {
     const { answer } = await ask([
       sending([
@@ -263,6 +295,7 @@ describe("createFailoverModel: a model that never responds", () => {
     expect(Date.now() - started).toBeLessThan(2_000);
     expect(body).toContain("The assistant could not answer right now");
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining("model error"), {
+      model: "model-1,model-2",
       name: "AttemptTimedOut",
     });
   });
@@ -317,6 +350,7 @@ describe("createFailoverModel: what must not move on", () => {
       /^The assistant could not answer right now\./,
     );
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining("model error"), {
+      model: "model-1,model-2",
       name: "TypeError",
     });
     expect(JSON.stringify(chunks)).not.toContain(SECRET);

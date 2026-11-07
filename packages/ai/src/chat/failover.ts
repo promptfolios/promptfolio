@@ -68,17 +68,22 @@ export function createFailoverModel({
     params: CallOptions,
     call: (entry: FailoverEntry, isLast: boolean) => Promise<T>,
   ): Promise<T> {
+    let movedOn = false;
     for (;;) {
       const entry = models[current] ?? firstEntry;
       const isLast = current >= models.length - 1;
       try {
-        return await call(entry, isLast);
+        const result = await call(entry, isLast);
+        // Names the model that answered, by its label, because the response may not.
+        if (movedOn) logger.info(`[failover] continuing with ${entry.label}`);
+        return result;
       } catch (error) {
         // A stop by the visitor, or a limit on the whole call, must end the call.
         if (isLast || params.abortSignal?.aborted) throw error;
         // Only a summary, because the error can repeat the visitor's conversation.
         logger.error(`[failover] ${entry.label} failed, moving on`, modelErrorSummary(error));
         current += 1;
+        movedOn = true;
       }
     }
   }
