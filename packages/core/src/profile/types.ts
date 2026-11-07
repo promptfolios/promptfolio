@@ -194,9 +194,17 @@ export interface Profile {
   projects: Project[];
   skills: Skill[];
   education: Education[];
-  /** Repositories observed in code-hosting sources; empty when none is configured. */
+  /**
+   * Repositories observed in code-hosting sources such as
+   * [source-github](https://www.npmjs.com/package/@promptfolio/source-github);
+   * empty when none is configured.
+   */
   repositories: Repository[];
-  /** Changes in other owners' repositories, from code-hosting sources; empty when none. */
+  /**
+   * Changes in other owners' repositories, from code-hosting sources such as
+   * [source-github](https://www.npmjs.com/package/@promptfolio/source-github);
+   * empty when none.
+   */
   contributions: Contribution[];
   sources: SourceRef[];
 }
