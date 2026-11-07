@@ -36,6 +36,7 @@ since been corrected, so a rerun would score those answers differently.
 | [m13-gpt-4o-mini](2026-11-01-m13-gpt-4o-mini.md) | `openai/gpt-4o-mini`, AI Gateway | As of M13.1 | 28 × 3 | 67 of 84 | 0 after retries; see below |
 | [m15-gpt-4o-mini](2026-11-01-m15-gpt-4o-mini.md) | `openai/gpt-4o-mini`, AI Gateway | As of M15 | 15 × 3, stopped early | 32 of 45 | 0 |
 | [m15-gpt-4o-mini-rest](2026-11-01-m15-gpt-4o-mini-rest.md) | `openai/gpt-4o-mini`, AI Gateway | As of M15 | 6 × 3, the affected cases left | 11 of 18 | 0 |
+| [m17-repo-url](2026-11-07-m17-repo-url.md) | `openai/gpt-4o-mini`, AI Gateway | As of M17 | 1 × 3, `project-repository-links` only | 0 of 3 | 0 |
 
 ## What the runs show
 
@@ -178,6 +179,16 @@ No provider failures in 63 runs at 12 seconds a call, against 11 of 95 attempts 
 
 **Changed after these runs, and not measured:** the link rule got a format back, `[record name](the url from the tool result)`, with no
 address. The developer chose not to run the evaluation again, so nothing shows whether this restores the commit links or reduces `#`.
+
+## The M17 repository url on gpt-4o-mini
+
+A targeted run of the one new case, `project-repository-links` ("List Riley's projects with links."), after project summaries
+gained `repositoryUrl`. Not the full set.
+
+- **The change worked:** all 3 runs linked Queue Lab to its repository url, after only `listProfileRecords`.
+- **All 3 failed on `#`:** each wrote `[Route Planner](#)` for the internal service, which has no url, despite the prompt's rule
+  against placeholder addresses. A prompt rule has not stopped this; removing links to urls outside the tool results in code
+  would. Not addressed yet.
 
 ## What the checks got wrong
 
