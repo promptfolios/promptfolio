@@ -121,6 +121,8 @@ refresh. Because the url is source-observed while the project summary's evidence
 - Counting a model's per-step limits as per-request limits: `maxOutputTokens` applies to each step,
   and a lookup turn makes two or three model calls, which also counts against provider rate
   limits.
+- Logging tool arguments "for debugging". A schema-valid string, such as a skill or an id that
+  was not found, can still be a visitor's words; log fixed values or a flag instead.
 - A tool result is not proof. The model can still write something the result does not say, and since M12.7 nothing
   records which result a sentence relies on. The evaluation can only check which records were returned.
 

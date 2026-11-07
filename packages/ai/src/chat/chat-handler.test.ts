@@ -813,6 +813,80 @@ describe("handleChatRequest: grounded lookups with server-side tools", () => {
     );
     expect(JSON.stringify(logger.info.mock.calls)).not.toContain("nasa-rover");
   });
+
+  /** Every `tool call` log line's details, in order. */
+  function toolCallLogs(logger: ReturnType<typeof silentLogger>) {
+    return logger.info.mock.calls
+      .filter(([message]) => String(message).includes("tool call"))
+      .map(([, details]) => details);
+  }
+
+  it("logs the section of each list call, so calls for different sections differ", async () => {
+    const model = stepsModel(
+      toolCallChunks(
+        { id: "c1", toolName: "listProfileRecords", input: { section: "experience" } },
+        { id: "c2", toolName: "listProfileRecords", input: { section: "projects" } },
+      ),
+      textChunks("Done."),
+    );
+    const { response, logger } = await handle({ messages: [userMessage("All?")] }, model);
+    await response.text();
+
+    expect(toolCallLogs(logger)).toEqual([
+      { tool: "listProfileRecords", outcome: "listed", section: "experience" },
+      { tool: "listProfileRecords", outcome: "listed", section: "projects" },
+    ]);
+  });
+
+  it("logs that a list call used a skill filter, but not the skill", async () => {
+    const model = stepsModel(
+      toolCallChunks({
+        id: "c1",
+        toolName: "listProfileRecords",
+        input: { section: "projects", skill: "secret-visitor-skill" },
+      }),
+      textChunks("Done."),
+    );
+    const { response, logger } = await handle({ messages: [userMessage("Skill?")] }, model);
+    await response.text();
+
+    expect(toolCallLogs(logger)).toEqual([
+      { tool: "listProfileRecords", outcome: "listed", section: "projects", skillFilter: true },
+    ]);
+    const allLogs = JSON.stringify([logger.info.mock.calls, logger.error.mock.calls]);
+    expect(allLogs).not.toContain("secret-visitor-skill");
+  });
+
+  it("logs the id of a record that was found", async () => {
+    const model = stepsModel(
+      toolCallChunks({ id: "c1", toolName: "getProfileRecord", input: { id: "service-catalog" } }),
+      textChunks("Done."),
+    );
+    const { response, logger } = await handle({ messages: [userMessage("Catalog?")] }, model);
+    await response.text();
+
+    expect(toolCallLogs(logger)).toEqual([
+      { tool: "getProfileRecord", outcome: "found", id: "service-catalog" },
+    ]);
+  });
+
+  it("logs an invalid call once, without its arguments", async () => {
+    const model = stepsModel(
+      toolCallChunks({
+        id: "c1",
+        toolName: "listProfileRecords",
+        input: { section: "salary", skill: "secret-visitor-skill" },
+      }),
+      textChunks("Done."),
+    );
+    const { response, logger } = await handle({ messages: [userMessage("Salary?")] }, model);
+    await response.text();
+
+    expect(toolCallLogs(logger)).toEqual([{ tool: "listProfileRecords", outcome: "invalid" }]);
+    const allLogs = JSON.stringify([logger.info.mock.calls, logger.error.mock.calls]);
+    expect(allLogs).not.toContain("secret-visitor-skill");
+    expect(allLogs).not.toContain("salary");
+  });
 });
 
 describe("handleChatRequest: provider errors are not leaked", () => {

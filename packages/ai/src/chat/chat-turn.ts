@@ -10,7 +10,11 @@ import {
   type UIMessage,
   type UIMessageChunk,
 } from "ai";
-import { createProfileTools, type ProfileTools } from "../grounding/profile-tools.ts";
+import {
+  createProfileTools,
+  listInputSchema,
+  type ProfileTools,
+} from "../grounding/profile-tools.ts";
 import type { ChatLimitOverrides, ChatLimits } from "./limits.ts";
 import { type ChatMessages, unavailableMessage } from "./messages.ts";
 import { withoutRawToolCalls } from "./raw-tool-calls.ts";
@@ -199,23 +203,32 @@ function withoutProviderMetadata(chunk: UIMessageChunk): UIMessageChunk {
 
 /**
  * Logs each tool call's name and outcome on the server, and passes every chunk through.
- * Arguments are not logged, because they may echo visitor text.
+ *
+ * Arguments are written by the model and may echo visitor text, so they are not logged as
+ * they are. Only values that cannot carry free text are added, so that calls can be told apart:
+ *
+ * - `listProfileRecords`: `section`, which is one of the schema's fixed values, and
+ *   `skillFilter: true` when a skill was given (never the skill itself);
+ * - `getProfileRecord`: `id`, only when the outcome is `found`, because the id then matched one
+ *   of the profile's own records. A `not_found` id is whatever the model wrote.
  *
  * An invalid call (unknown tool or arguments that fail the schema) arrives as a
- * `tool-input-error` followed by a `tool-output-error`; it is logged once, as `invalid`.
- * A `tool-output-error` on its own means `execute` threw, which is a bug.
+ * `tool-input-error` followed by a `tool-output-error`; it is logged once, as `invalid`, with
+ * no details. A `tool-output-error` on its own means `execute` threw, which is a bug.
  */
 function logToolCalls(
   requestId: string,
   logger: ChatLogger,
 ): TransformStream<UIMessageChunk, UIMessageChunk> {
   const toolNames = new Map<string, string>();
+  const inputs = new Map<string, unknown>();
   const invalidCalls = new Set<string>();
   return new TransformStream({
     transform(chunk, controller) {
       switch (chunk.type) {
         case "tool-input-available":
           toolNames.set(chunk.toolCallId, chunk.toolName);
+          inputs.set(chunk.toolCallId, chunk.input);
           break;
         case "tool-input-error":
           invalidCalls.add(chunk.toolCallId);
@@ -224,12 +237,16 @@ function logToolCalls(
             outcome: "invalid",
           });
           break;
-        case "tool-output-available":
+        case "tool-output-available": {
+          const tool = toolNames.get(chunk.toolCallId);
+          const outcome = outcomeOf(chunk.output);
           logger.info(`[chat ${requestId}] tool call`, {
-            tool: toolNames.get(chunk.toolCallId),
-            outcome: outcomeOf(chunk.output),
+            tool,
+            outcome,
+            ...safeCallDetails(tool, inputs.get(chunk.toolCallId), outcome),
           });
           break;
+        }
         case "tool-output-error":
           if (!invalidCalls.has(chunk.toolCallId)) {
             logger.error(`[chat ${requestId}] tool failed`, {
@@ -241,6 +258,30 @@ function logToolCalls(
       controller.enqueue(chunk);
     },
   });
+}
+
+/**
+ * The parts of a call's input that are safe to log (see `logToolCalls`). The input is read by
+ * shape and checked against the tool's own schema values, so nothing else gets through.
+ */
+function safeCallDetails(
+  tool: string | undefined,
+  input: unknown,
+  outcome: string,
+): Record<string, string | boolean> {
+  if (typeof input !== "object" || input === null) return {};
+  if (tool === "listProfileRecords") {
+    const section =
+      "section" in input ? listInputSchema.shape.section.safeParse(input.section) : undefined;
+    return {
+      ...(section?.success && { section: section.data }),
+      ...("skill" in input && input.skill !== undefined && { skillFilter: true }),
+    };
+  }
+  if (tool === "getProfileRecord" && outcome === "found" && "id" in input) {
+    return typeof input.id === "string" ? { id: input.id } : {};
+  }
+  return {};
 }
 
 function outcomeOf(output: unknown): string {
