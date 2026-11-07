@@ -49,3 +49,7 @@ Markdown can write a link, needs no change to streaming, and applies to saved th
 - Links to the visitor are stricter than before. Until now, any `http` link the model wrote was clickable.
 - Threads saved earlier keep their messages. Their stored sources are dropped, and old answers show raw `[record-id]` text.
 - A consumer with its own UI has to apply the same rule to links. `profileLinkUrls` gives it the list.
+- **2026-11-07:** `listProfileRecords` now returns each project's `links` in its summary, as repository summaries
+  already returned `url`. Links are how answers show sources, and a model can only link a url it saw in a tool result.
+  Weaker models often answer after the list without calling `getProfileRecord`, and wrote answers with no links or `#`
+  placeholders. Roles have no links in the schema, so they are unchanged.

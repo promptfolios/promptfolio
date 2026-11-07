@@ -35,6 +35,10 @@ flowchart LR
 
 The prompt asks for links too, but that only makes good answers more likely. The component is the rule.
 
+The model can only link a url it has seen in a tool result. From M17, `listProfileRecords` returns project links and
+repository urls in the list itself, so a model that answers after the list, without a `getProfileRecord` call, still
+has them.
+
 ## 4. Where it lives in the code
 
 - The list: `profileLinkUrls` in [packages/core/src/profile/query.ts](../../packages/core/src/profile/query.ts)

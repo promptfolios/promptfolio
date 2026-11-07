@@ -41,6 +41,7 @@ function testProfile(): Profile {
           id: "markdown-linter",
           name: "Markdown Linter",
           description: "Checks Markdown for broken links.",
+          links: [{ label: "Repository", url: "https://example.com/jordan/markdown-linter" }],
           skills: ["TypeScript"],
         },
       ],
@@ -114,7 +115,7 @@ describe("listProfileRecords", () => {
     });
   });
 
-  it("lists projects with descriptions, but leaves responsibilities and outcomes to get", async () => {
+  it("lists projects with descriptions and links, but leaves responsibilities and outcomes to get", async () => {
     expect(await list({ section: "projects" })).toEqual({
       status: "listed",
       section: "projects",
@@ -125,6 +126,7 @@ describe("listProfileRecords", () => {
           description: "An internal catalog of services.",
           roleId: "globex-fullstack",
           skills: ["TypeScript", "PostgreSQL"],
+          links: [],
           ...EVIDENCE,
         },
         {
@@ -132,6 +134,7 @@ describe("listProfileRecords", () => {
           name: "Markdown Linter",
           description: "Checks Markdown for broken links.",
           skills: ["TypeScript"],
+          links: [{ label: "Repository", url: "https://example.com/jordan/markdown-linter" }],
           ...EVIDENCE,
         },
       ],
@@ -170,7 +173,19 @@ describe("listProfileRecords", () => {
 
   it("filters roles and projects by skill, case-insensitively", async () => {
     const result = await list({ section: "projects", skill: "postgresql" });
-    expect(result).toMatchObject({ skillInProfile: true, records: [{ id: "service-catalog" }] });
+    expect(result).toMatchObject({
+      skillInProfile: true,
+      records: [{ id: "service-catalog", links: [] }],
+    });
+    expect(await list({ section: "projects", skill: "typescript" })).toMatchObject({
+      records: [
+        { id: "service-catalog", links: [] },
+        {
+          id: "markdown-linter",
+          links: [{ label: "Repository", url: "https://example.com/jordan/markdown-linter" }],
+        },
+      ],
+    });
     expect(await list({ section: "experience", skill: "react" })).toMatchObject({
       skillInProfile: true,
       records: [{ id: "acme-frontend" }],

@@ -40,8 +40,9 @@ sequenceDiagram
 
 The two tools are `listProfileRecords({ section, skill? })`, which returns one section's records
 with ids, descriptions, dates, and provenance, and `getProfileRecord({ id })`, which adds the
-detail lists (highlights, responsibilities, outcomes, links) for one record, or returns
-`not_found`.
+detail lists (highlights, responsibilities, outcomes) for one record, or returns `not_found`.
+Project summaries in a list also carry the project's `links`, as repository summaries carry `url`
+(from M17, see below).
 
 Every tool round trip costs one more model call, because the model has to read a result before it
 can use it. So the summaries carry what a basic answer needs: a section question takes one lookup
@@ -76,6 +77,13 @@ read-only tools whatever it says.
 From M8.1, a `contributions` section lists commits in other owners' repositories, and
 `getProfileRecord` returns one with the owner's notes on its repository. Titles are untrusted too. The
 skill filter does not apply to this section.
+
+From M17, project summaries include `links`. Answers show sources as Markdown links to urls in tool
+results ([ADR 0014](../adr/0014-markdown-links-instead-of-sources-panel.md)), and weaker models
+often answer straight after `listProfileRecords` without calling `getProfileRecord`. With links
+only in the full record, a "with links" question got no links or a `#` placeholder. The
+descriptions and the system prompt no longer send the model to `getProfileRecord` for links. Roles
+have no links in the profile schema, so nothing changes for them.
 
 ## 4. Where it lives in the code
 

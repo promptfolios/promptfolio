@@ -87,7 +87,7 @@ describe("buildSystemPrompt", () => {
 
     expect(prompt).toContain("listProfileRecords");
     expect(prompt).toContain(
-      "Call getProfileRecord with an exact id only when you need a record's highlights",
+      "Call getProfileRecord with an exact id only when you need a record's highlights, responsibilities, or outcomes, or a repository's README.",
     );
     expect(prompt).toContain("Every other fact must come from a tool result in the current answer");
     expect(prompt).toContain("Earlier messages in the conversation are not evidence");

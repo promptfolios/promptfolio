@@ -122,8 +122,8 @@ export function createProfileTools(
     listProfileRecords: tool({
       description:
         "List the owner's records in one profile section, with ids, descriptions, and dates. " +
-        "Use getProfileRecord with an id only for highlights, responsibilities, outcomes, " +
-        "links, or a repository's README.",
+        "Projects include their links and repositories their url. Use getProfileRecord with " +
+        "an id only for highlights, responsibilities, outcomes, or a repository's README.",
       inputSchema: listInputSchema,
       execute: async (input) => (withinBudget() ? listRecords(profile, input) : LIMIT_REACHED),
     }),
@@ -235,8 +235,12 @@ function getRecord(profile: Profile, id: string) {
 
 /*
  * Summaries hold everything a basic answer needs (what, where, when), so a section question
- * can be answered after one lookup. Lists (highlights, responsibilities, outcomes, links) stay
- * in getProfileRecord, to keep list results small.
+ * can be answered after one lookup. Long lists (highlights, responsibilities, outcomes) stay in
+ * getProfileRecord, to keep list results small.
+ *
+ * Project links are the exception: answers show sources as Markdown links to tool-result urls
+ * (ADR 0014), and weaker models often answer straight after the list without a get. So a
+ * project's links come with its summary, as a repository's url already does.
  */
 
 function summarizeRole(role: Role) {
@@ -258,6 +262,7 @@ function summarizeProject(project: Project) {
     description: project.description,
     ...(project.roleId !== undefined && { roleId: project.roleId }),
     skills: project.skills,
+    links: project.links,
     ...evidence(project.provenance),
   };
 }
