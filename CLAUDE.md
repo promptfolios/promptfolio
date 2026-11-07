@@ -32,7 +32,9 @@ For AI-related work, explain relevant concepts in context, such as model request
 
 Explanations given in chat are lost after the session; durable ones live in `docs/learning/`.
 
-- When a milestone introduces a concept, add a note in `docs/learning/` (one file per concept) and a row in its `README.md` index. When a milestone changes how an existing concept works or where it lives, update that note and its status.
+- Notes cover AI concepts and other hard or non-obvious concepts (for example tool calling, streaming, provenance, prompt-injection exposure, idempotency), not implementation details. A new field, a log line, a renamed option, or a small behavior change does not get a note or a new section; the code, its doc comments, tests, and the changeset describe it.
+- When a milestone introduces such a concept, add a note in `docs/learning/` (one file per concept) and a row in its `README.md` index. Update an existing note only when the milestone changes how the concept works or where it lives, and then with the smallest edit that keeps it accurate (usually a sentence or a pitfall, not a history of milestone changes).
+- If a milestone introduces no new concept and does not change one, it needs no learning-note change; say so in the plan.
 - Follow the template used by the existing notes: what it is, why it matters in Promptfolio, how it works, where it lives in the code, common pitfalls and misconceptions, and further reading (official documentation only).
 - Keep notes short and specific to this codebase; link to the actual files and mark code that is not built yet as "planned". Do not write generic theory.
 - Notes for concepts described in an approved plan may be written ahead of implementation, marked "planned", and updated when the milestone lands.

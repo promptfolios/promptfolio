@@ -4,6 +4,9 @@ Short notes on the concepts behind Promptfolio, each tied to where it appears in
 They complement the [architecture overview](../ARCHITECTURE.md) (what the structure is) and the
 [ADRs](../adr/) (why a decision was made) by explaining *how a concept works here*.
 
+Notes are for AI concepts and other hard or non-obvious ideas, not a log of implementation
+changes: a new field, log line, or option is described by the code, its tests, and the changeset.
+
 Every note follows the same template: what it is, why it matters in Promptfolio, how it works,
 where it lives in the code, common pitfalls, and further reading (official docs only).
 
