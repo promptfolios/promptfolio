@@ -1,18 +1,31 @@
 import {
-  type ClaimBasis,
   type Contribution,
   type Education,
   findRecordById,
   isRecordId,
   type Profile,
+  type ProfileLink,
   type Project,
   type Provenance,
   type Repository,
   type Role,
   recordsUsingSkill,
+  type Skill,
 } from "@promptfolio/core";
 import { type Tool, tool } from "ai";
 import { z } from "zod";
+import type {
+  ContributionSummary,
+  EducationSummary,
+  LinkSummary,
+  ProjectSummary,
+  RecordEvidence,
+  RecordSummary,
+  RepositorySummary,
+  RoleSummary,
+  SkillSummary,
+  SourceSummary,
+} from "./record-summaries.ts";
 
 /**
  * Read-only lookup tools over the validated profile. The model can only ask for a call;
@@ -65,22 +78,6 @@ export const getInputSchema = z.strictObject({
       "The exact id of a role, project, education entry, repository, or contribution, as returned by a list.",
     ),
 });
-
-/**
- * The full provenance every returned record carries, flattened onto the record, so an answer
- * can say whose claim it is and when it was observed without another lookup.
- */
-export interface RecordEvidence {
-  basis: ClaimBasis;
-  sourceId: string;
-  observedAt: string;
-}
-
-export interface SourceSummary {
-  id: string;
-  kind: string;
-  label: string;
-}
 
 const LIMIT_REACHED = {
   status: "limit_reached",
@@ -152,7 +149,7 @@ function listRecords(profile: Profile, input: z.infer<typeof listInputSchema>) {
 function selectSection(
   profile: Profile,
   { section, skill }: z.infer<typeof listInputSchema>,
-): Array<{ summary: object; provenance: Provenance }> {
+): Array<{ summary: RecordSummary; provenance: Provenance }> {
   const usage = skill === undefined ? undefined : recordsUsingSkill(profile, skill);
   switch (section) {
     case "experience":
@@ -181,14 +178,14 @@ function selectSection(
         provenance: entry.provenance,
       }));
     case "skills":
-      return profile.skills.map(({ provenance, ...skill }) => ({
-        summary: { ...skill, ...evidence(provenance) },
-        provenance,
+      return profile.skills.map((skill) => ({
+        summary: summarizeSkill(skill),
+        provenance: skill.provenance,
       }));
     case "links":
-      return profile.links.map(({ provenance, ...link }) => ({
-        summary: { ...link, ...evidence(provenance) },
-        provenance,
+      return profile.links.map((link) => ({
+        summary: summarizeLink(link),
+        provenance: link.provenance,
       }));
   }
 }
@@ -243,7 +240,7 @@ function getRecord(profile: Profile, id: string) {
  * project's links come with its summary, as a repository's url already does.
  */
 
-function summarizeRole(role: Role) {
+function summarizeRole(role: Role): RoleSummary {
   return {
     id: role.id,
     organization: role.organization,
@@ -255,7 +252,7 @@ function summarizeRole(role: Role) {
   };
 }
 
-function summarizeProject(project: Project) {
+function summarizeProject(project: Project): ProjectSummary {
   return {
     id: project.id,
     name: project.name,
@@ -267,7 +264,7 @@ function summarizeProject(project: Project) {
   };
 }
 
-function summarizeRepository(repository: Repository, profile: Profile) {
+function summarizeRepository(repository: Repository, profile: Profile): RepositorySummary {
   return {
     id: repository.id,
     name: repository.name,
@@ -283,13 +280,20 @@ function summarizeRepository(repository: Repository, profile: Profile) {
   };
 }
 
-function summarizeContribution(contribution: Contribution, profile: Profile) {
-  const { provenance, repositoryId, ...fields } = contribution;
+function summarizeContribution(contribution: Contribution, profile: Profile): ContributionSummary {
   return {
-    ...fields,
-    repositoryId,
-    hasOwnerNotes: profile.projects.some((project) => project.id === repositoryId),
-    ...evidence(provenance),
+    id: contribution.id,
+    title: contribution.title,
+    url: contribution.url,
+    repositoryId: contribution.repositoryId,
+    repository: contribution.repository,
+    repositoryUrl: contribution.repositoryUrl,
+    ...(contribution.repositoryDescription !== undefined && {
+      repositoryDescription: contribution.repositoryDescription,
+    }),
+    authored: contribution.authored,
+    hasOwnerNotes: profile.projects.some((project) => project.id === contribution.repositoryId),
+    ...evidence(contribution.provenance),
   };
 }
 
@@ -299,7 +303,7 @@ function projectDetails(project: Project) {
   return { ...fields, ...evidence(provenance) };
 }
 
-function summarizeEducation(entry: Education) {
+function summarizeEducation(entry: Education): EducationSummary {
   return {
     id: entry.id,
     institution: entry.institution,
@@ -308,6 +312,22 @@ function summarizeEducation(entry: Education) {
     ...(entry.start !== undefined && { start: entry.start }),
     ...(entry.end !== undefined && { end: entry.end }),
     ...evidence(entry.provenance),
+  };
+}
+
+function summarizeSkill(skill: Skill): SkillSummary {
+  return {
+    name: skill.name,
+    ...(skill.category !== undefined && { category: skill.category }),
+    ...evidence(skill.provenance),
+  };
+}
+
+function summarizeLink(link: ProfileLink): LinkSummary {
+  return {
+    label: link.label,
+    url: link.url,
+    ...evidence(link.provenance),
   };
 }
 
