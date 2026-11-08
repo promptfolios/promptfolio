@@ -1,6 +1,7 @@
 import { type ProfileIssue, profileLinkUrls } from "@promptfolio/core";
 import { ChatWorkspace } from "@/components/chat/chat-workspace";
 import { loadStarterQuestions } from "@/server/chat/starters";
+import { chatRetentionDays } from "@/server/chat/history";
 import { isContactEnabled } from "@/server/contact/contact";
 import { loadAppProfile } from "@/server/profile/profile";
 
@@ -25,6 +26,7 @@ export default async function HomePage() {
       profileLinks={profileLinkUrls(result.profile)}
       // Generated while the page is prerendered, so no visitor causes a model call.
       starters={await loadStarterQuestions(result.profile)}
+      retentionDays={chatRetentionDays()}
     />
   );
 }

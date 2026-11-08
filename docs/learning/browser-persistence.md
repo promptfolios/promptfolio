@@ -1,7 +1,7 @@
 # Browser persistence
 
-First appears in: **M6** (conversation persistence). Status: **in use**; to be replaced by
-[server-side history](server-side-history.md) in M18.2 (planned).
+First appears in: **M6** (conversation persistence). Status: **removed in M18.2**, replaced by
+[server-side history](server-side-history.md). Kept as a record; the files it links to are gone.
 
 ## 1. What it is
 

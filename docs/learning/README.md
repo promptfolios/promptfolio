@@ -26,7 +26,7 @@ that builds it; code links are marked "planned").
 | Streaming                       | [streaming.md](streaming.md)                                 | M4            | in use  |
 | Server-side secrets             | [server-side-secrets.md](server-side-secrets.md)             | M4            | in use  |
 | Tool calling                    | [tool-calling.md](tool-calling.md)                           | M5            | in use  |
-| Browser persistence             | [browser-persistence.md](browser-persistence.md)             | M6            | in use  |
+| Browser persistence             | [browser-persistence.md](browser-persistence.md)             | M6            | removed in M18.2 |
 | Setting the theme before the page paints | [theme-before-paint.md](theme-before-paint.md) | M12.8 | in use |
 | Generated starter questions | [generated-starter-questions.md](generated-starter-questions.md) | M12.9 | in use |
 | Links in answers | [links-in-answers.md](links-in-answers.md) | M12.7 | in use |

@@ -19,8 +19,10 @@ code can trust it without checking again.
   `tools`, file parts, or a forged conversation history
   ([ADR 0007](../adr/0007-chat-ui-assistant-ui.md), consequences).
 - From M5, model output (tool arguments) is untrusted too.
-- From M6, data read back from the browser's `localStorage` is untrusted: it may be malformed, old,
-  oversized, or edited by hand.
+- From M6 to M18.2, data read back from the browser's `localStorage` was untrusted: it may be
+  malformed, old, oversized, or edited by hand. Since M18, stored conversations are the server's
+  own, but they outlive the code that wrote them, so they are validated again when loaded
+  ([server-side history](server-side-history.md)).
 
 ## 3. How it works
 
@@ -104,8 +106,8 @@ dialog in the browser checks nothing itself: it displays the server's answers.
   tests ("rejects …") in [profile-tools.test.ts](../../packages/ai/src/grounding/profile-tools.test.ts), and
   invalid or unknown calls from the model in [chat-handler.test.ts](../../packages/ai/src/chat/chat-handler.test.ts)
 - Output allowlist (`VISITOR_CHUNK_TYPES`): [packages/ai/src/chat/chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
-- Saved conversations: [apps/portfolio/src/chat/threads/thread-store.ts](../../apps/portfolio/src/chat/threads/thread-store.ts);
-  tests in [thread-store.test.ts](../../apps/portfolio/src/chat/threads/thread-store.test.ts)
+- Stored conversations (`validateStoredConversation`): [packages/ai/src/chat/history.ts](../../packages/ai/src/chat/history.ts);
+  tests in [history.test.ts](../../packages/ai/src/chat/history.test.ts)
 - GitHub responses and snapshot (`parseGitHubSnapshot`), configuration (`parseGitHubConfig`):
   [packages/source-github/src/snapshot/snapshot.ts](../../packages/source-github/src/snapshot/snapshot.ts),
   [config.ts](../../packages/source-github/src/config.ts); observed records in core:

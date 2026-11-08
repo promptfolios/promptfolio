@@ -15,8 +15,10 @@ form's. The [free plan](https://upstash.com/docs/redis/overall/pricing) allows 5
 each command in a transaction, which its pricing page does not settle, a live answer uses 4 and a request refused
 for the visitor's limit 2.
 
-It holds a keyed hash of each visitor's IP address and two counters, which expire 24 hours after their first
-count. It holds no conversation text.
+For the limits it holds a keyed hash of each visitor's IP address and two counters, which expire 24 hours after their first
+count. Since M18 it also holds visitors' conversations, under a random owner id from a cookie, for `CHAT_HISTORY_DAYS`
+(30 by default) after the last message. A live answer adds 3 commands for its conversation, or 6 if each command
+in a transaction counts, and opening the page or a conversation 1 or 2 more.
 
 ## 2. Set the environment variables
 

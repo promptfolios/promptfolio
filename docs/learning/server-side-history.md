@@ -1,6 +1,6 @@
 # Server-side conversation history
 
-First appears in: **M18.1** (library). Status: **in use** in `@promptfolio/ai`; the reference app moves to it in M18.2 (planned).
+First appears in: **M18.1** (library) and **M18.2** (reference app). Status: **in use**.
 
 ## 1. What it is
 
@@ -52,7 +52,10 @@ sequenceDiagram
 - The request shape: [packages/ai/src/chat/request.ts](../../packages/ai/src/chat/request.ts)
 - Load, check, and save around a turn: [packages/ai/src/chat/chat-handler.ts](../../packages/ai/src/chat/chat-handler.ts) and
   `persisted` in [chat-turn.ts](../../packages/ai/src/chat/chat-turn.ts)
-- A Redis store, the owner cookie, and the thread list: `apps/portfolio` (planned, [M18.2](../plans/m18-2-server-history-in-app.md))
+- The reference app's Redis store, owner cookie, and retention:
+  [apps/portfolio/src/server/chat/history.ts](../../apps/portfolio/src/server/chat/history.ts); its routes in
+  [api/chat](../../apps/portfolio/src/app/api/chat/route.ts) and [api/chats](../../apps/portfolio/src/app/api/chats/route.ts);
+  the browser's side in [server-thread-list-adapter.ts](../../apps/portfolio/src/chat/threads/server-thread-list-adapter.ts)
 
 ## 5. Common pitfalls and misconceptions
 
@@ -66,6 +69,9 @@ sequenceDiagram
   `maxTotalChars` count the stored history, but `maxTotalChars` counts text only, not tool results.
 - **A stopped reply is saved as far as it got.** Stop also cancels the model, as before; it is not left running in the
   background to finish.
+- **Each list read must expire what retention dropped.** Redis expires the conversation's key, but
+  not its entry in the visitor's list, so the reference app drops old entries whenever it reads
+  the list.
 - **The validator keeps calls to removed tools.** The AI SDK turns a finished call to a tool that no longer exists into a dynamic
   tool part instead of rejecting it; only arguments or results that no longer match a tool fail.
 

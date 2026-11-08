@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { handleChatRequest } from "@promptfolio/ai";
+import { createMemoryChatStore, handleChatRequest } from "@promptfolio/ai";
 import { loadStructuredProfile, type Profile } from "@promptfolio/core";
 import { mergeGitHubSnapshot } from "@promptfolio/source-github";
 import { simulateReadableStream } from "ai";
@@ -110,15 +110,16 @@ async function askAboutRepository() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        messages: [
-          { id: "u1", role: "user", parts: [{ type: "text", text: "What is markdown-linter?" }] },
-        ],
+        id: "chat-1",
+        message: { id: "u1", role: "user", parts: [{ type: "text", text: "What is markdown-linter?" }] },
+        parentId: null,
       }),
     }),
     {
       model,
       profile: profileWithInjectedReadme(),
       limit: null,
+      history: { store: createMemoryChatStore(), identifyOwner: async () => "owner" },
       logger: { info: vi.fn(), error: vi.fn() },
     },
   );

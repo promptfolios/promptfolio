@@ -8,12 +8,13 @@ import {
   useRemoteThreadListRuntime,
 } from "@assistant-ui/react";
 import type { StarterQuestion } from "@promptfolio/ai";
-import { DefaultChatTransport } from "ai";
 import { MenuIcon, MessagesSquareIcon, PanelLeftIcon, XIcon } from "lucide-react";
 import { type FC, useEffect, useMemo, useState } from "react";
-import { openBrowserStorage } from "@/chat/threads/browser-storage";
-import { createBrowserThreadListAdapter } from "@/chat/threads/browser-thread-list-adapter";
-import { ThreadStore } from "@/chat/threads/thread-store";
+import {
+  createChatTransport,
+  createServerThreadListAdapter,
+  useStableThread,
+} from "@/chat/threads/server-thread-list-adapter";
 import { Thread } from "@/components/assistant-ui/elements/thread.aui";
 import { ThreadList } from "@/components/assistant-ui/elements/thread-list.aui";
 import { ProfileLinksProvider } from "@/components/chat/profile-link";
@@ -24,22 +25,14 @@ import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 /**
- * Posts `{ messages }` to our server route. Unlike assistant-ui's
- * `AssistantChatTransport`, it sends no `system` prompt or `tools`: the server owns both.
- */
-const transport = new DefaultChatTransport({
-  api: "/api/chat",
-  prepareSendMessagesRequest: ({ messages }) => ({
-    body: { messages },
-  }),
-});
-
-/**
  * Runtime for a single thread, called by the thread-list runtime once per thread:
  * an AI SDK chat, adapted for assistant-ui. (`useChatRuntime` would bundle this, but it
- * manages its own thread list and cannot use our titled adapter.)
+ * manages its own thread list and cannot use our adapter.) Its transport names this
+ * thread, because the server holds the conversation.
  */
 function useThreadRuntime() {
+  const getThread = useStableThread();
+  const transport = useMemo(() => createChatTransport(getThread), [getThread]);
   const chat = useChat({ transport });
   // The runtime offers file attachments by default, but the server accepts only text.
   return useAISDKRuntime(chat, { adapters: { attachments: undefined } });
@@ -60,12 +53,14 @@ export interface ChatWorkspaceProps {
   profileLinks: string[];
   /** Written by the model when the page was built. */
   starters: StarterQuestion[];
+  /** How many days the server keeps a conversation after its last message. */
+  retentionDays: number;
 }
 
 /**
  * The chat workspace: a list of conversations and the active conversation.
- * Thread state and switching are managed by assistant-ui; threads are saved in this
- * browser's localStorage (in memory when storage is unavailable).
+ * Thread state and switching are managed by assistant-ui; conversations are kept on the
+ * server, under this browser's owner cookie.
  */
 export function ChatWorkspace({
   ownerName,
@@ -73,12 +68,10 @@ export function ChatWorkspace({
   contactEnabled,
   profileLinks,
   starters,
+  retentionDays,
 }: ChatWorkspaceProps) {
-  // The adapter must stay stable across renders. During server rendering there is no
-  // localStorage, so this falls back to memory; the browser creates its own on hydration.
-  const [threadListAdapter] = useState(() =>
-    createBrowserThreadListAdapter(new ThreadStore({ storage: openBrowserStorage() })),
-  );
+  // The adapter must stay stable across renders.
+  const [threadListAdapter] = useState(createServerThreadListAdapter);
   const runtime = useRemoteThreadListRuntime({
     runtimeHook: useThreadRuntime,
     adapter: threadListAdapter,
@@ -160,7 +153,8 @@ export function ChatWorkspace({
                 <ThreadList />
               </div>
               <p className="text-muted-foreground border-t px-4 py-3 text-xs">
-                Conversations are saved only in this browser. You can delete them from this list.
+                Conversations are kept on this site's server for {retentionDays} days after the
+                last message, for this browser only. You can delete them from this list.
               </p>
             </nav>
             <main className="flex min-w-0 flex-1 flex-col">

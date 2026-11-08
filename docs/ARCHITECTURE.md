@@ -271,33 +271,35 @@ Promptfolio code wires the runtime and supplies adapters and configuration.
 flowchart TD
     ws["ChatWorkspace<br/>use client, src/components/chat/chat-workspace.tsx"]
     list["useRemoteThreadListRuntime"]
-    adapter["createBrowserThreadListAdapter (src/chat/)<br/>thread list and per-thread history,<br/>titled from the first message"]
-    store["ThreadStore (src/chat/)<br/>validate on read, sanitize and limit on write"]
-    ls[("localStorage<br/>promptfolio:v1:*<br/>(memory if unavailable)")]
+    adapter["createServerThreadListAdapter (src/chat/)<br/>thread list and per-thread history load"]
+    routes["/api/chats, /api/chats/[id]<br/>list, open (text only), rename, archive, delete"]
+    store[("RedisChatStore (src/server/chat/)<br/>by owner cookie, retention CHAT_HISTORY_DAYS")]
     thread["useThreadRuntime(), once per thread<br/>useAISDKRuntime(useChat({ transport }))"]
-    transport["DefaultChatTransport({ api: /api/chat })<br/>sends id, messages: no system, no tools"]
+    transport["DefaultChatTransport({ api: /api/chat })<br/>sends id, message, parentId: no history, system, or tools"]
+    chat["/api/chat: handleChatRequest<br/>loads, answers, saves"]
     ui["ThreadList in the sidebar, Thread in the main area<br/>vendored: src/components/assistant-ui/, src/components/ui/, src/hooks/"]
 
     ws --> list
     list -- adapter --> adapter
     list -- runtimeHook --> thread
     adapter -- "unstable_useAdapters: history" --> thread
-    adapter --> store --> ls
-    thread --> transport
+    adapter --> routes --> store
+    thread --> transport --> chat --> store
     ws --> config
     ws -- renders --> ui
 ```
 
 `useChatRuntime` from `@assistant-ui/ai-sdk` would bundle the per-thread part, but it builds its
-own thread list and cannot use the titled adapter, so the workspace composes `useChat` (AI SDK)
+own thread list and cannot use this adapter, so the workspace composes `useChat` (AI SDK)
 and `useAISDKRuntime` (assistant-ui) itself. Messages have `parts`; the browser only ever receives
-text, step boundaries, and sources, because tool activity stays on the server (M5).
+text and step boundaries, because tool activity stays on the server (M5).
 
-Conversations are saved only in the visitor's browser (M6): the server stores no history and still
-validates every request, so saved history is as untrusted as typed history. The store keeps only
-the shape the server accepts, validates what it reads back, and enforces thread, size, and 30-day
-retention limits. See [browser persistence](learning/browser-persistence.md) and the
-[M6 plan](plans/m6-browser-conversation-persistence.md).
+Conversations are kept on the server (M18, [ADR 0018](adr/0018-server-side-conversation-history.md)),
+under a random owner id in an `HttpOnly` cookie. The browser sends only the new question and the
+id of the message it follows, so it cannot send earlier answers, and the model keeps its earlier
+lookups. Conversations expire `CHAT_HISTORY_DAYS` (30 by default) after the last message, and a
+visitor keeps at most 50. Without Redis, `next dev` keeps them in memory. See
+[server-side history](learning/server-side-history.md).
 
 ## Contact flow
 
