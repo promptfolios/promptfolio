@@ -9,6 +9,8 @@ export interface ChatMessages {
   /** `{maxChars}` becomes the limit. */
   messageTooLong: string;
   conversationTooLong: string;
+  /** The request continues from a message the stored conversation does not have. */
+  unknownConversation: string;
   noQuestion: string;
   visitorLimit: string;
   siteLimit: string;
@@ -29,6 +31,7 @@ export const CHAT_MESSAGES = {
   invalidConversation: "The request does not contain a valid conversation.",
   messageTooLong: "A message is longer than {maxChars} characters.",
   conversationTooLong: "The conversation is too long. Please start a new chat.",
+  unknownConversation: "This conversation can't be continued. Please start a new chat.",
   noQuestion: "The conversation must end with a question.",
   visitorLimit: "You've reached the daily limit of live answers. Please try again tomorrow.",
   siteLimit:

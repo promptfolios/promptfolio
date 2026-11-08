@@ -1,6 +1,6 @@
 # @promptfolio/ai
 
-The server side of chat: validates a request, runs a model turn with read-only profile tools, and streams the reply. Server-only, because the model you pass carries your provider key.
+The server side of chat: validates a request, continues the stored conversation, runs a model turn with read-only profile tools, streams the reply, and saves the conversation. Server-only, because the model you pass carries your provider key.
 
 ## Install
 
@@ -18,6 +18,9 @@ The [AI SDK](https://ai-sdk.dev), `ai`, is a peer dependency, version 7: you cre
 | ------ | ------- |
 | `handleChatRequest` | Takes a web `Request`, returns a streaming `Response` |
 | `ChatLimit`, `ChatTurnLimiter` | The daily limit you implement. `limit` is required; `null` turns it off on purpose |
+| `ChatHistory`, `ChatStore` | Where conversations are kept between turns, which you implement. `history` is required |
+| `loadVisitorChat` | One of the visitor's stored conversations as the browser may see it: text only |
+| `createMemoryChatStore` | A `ChatStore` in memory, for tests and local development |
 | `generateStarterQuestions`, `STARTER_LIMITS` | Starters written by the model from a profile; generate once per profile, such as at build time |
 | `CHAT_LIMITS`, `CHAT_MESSAGES` | The default limits and visitor text |
 | `createFailoverModel` | A model that moves to the next one when a model fails before its answer starts |
@@ -28,7 +31,7 @@ The [AI SDK](https://ai-sdk.dev), `ai`, is a peer dependency, version 7: you cre
 | ------ | ------- |
 | `evaluateQuestion`, `scoreEvaluationTurn` | Run a question through the live turn and check what code can check |
 
-You supply any AI SDK `LanguageModel`, the `Profile`, and the limiter. This package names no provider or store.
+You supply any AI SDK `LanguageModel`, the `Profile`, the limiter, and the conversation store. This package names no provider or store.
 
 ## Example
 
@@ -42,16 +45,39 @@ handleChatRequest(request, {
   profile,
   additionalInstructions: "This page has a Contact button at the top.",
   limit: { limiter, identifyVisitor },
+  history: { store, identifyOwner },
 });
 ```
 
 ## Options
 
 - **`additionalInstructions`:** text added after the base rules, for what only your site knows, such as a Contact button or the language to answer in. The model cannot see your page, so name a page element only when it exists. Write it in your server code and never take it from a request. It cannot replace the base rules, and a change to it calls for a new evaluation.
-- **`limits`:** changes to `CHAT_LIMITS`, such as `{ maxMessages: 30, timeouts: { totalMs: 25_000 } }`. On a serverless host, keep `timeouts.totalMs` plus `limiterTimeoutMs` under the function's time limit. Daily allowances are not here: your limiter applies its own.
+- **`limits`:** changes to `CHAT_LIMITS`, such as `{ maxMessages: 30, timeouts: { totalMs: 25_000 } }`. On a serverless host, keep `timeouts.totalMs` plus `limiterTimeoutMs` and twice `historyTimeoutMs` under the function's time limit. Daily allowances are not here: your limiter applies its own.
 - **`visitorMessages`:** changes to `CHAT_MESSAGES`, the text a visitor sees when a request is refused or fails. `{ref}` and `{maxChars}` are filled in.
 
 An invalid limit or message is logged by name, and the visitor gets the generic error.
+
+## Conversation history
+
+The browser sends only the new question, and the server keeps the conversation, following the AI SDK's [message persistence](https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence) pattern. A visitor cannot send earlier answers or tool results, and the model keeps its earlier lookups.
+
+The request body is `{ id, message, parentId }`: the conversation's id, the visitor's message (text only), and the id of the message it follows, or `null` for the first. A browser using the AI SDK's `useChat` sends it with:
+
+```ts
+new DefaultChatTransport({
+  api: "/api/chat",
+  prepareSendMessagesRequest: ({ id, messages }) => ({
+    body: { id, message: messages.at(-1), parentId: messages.at(-2)?.id ?? null },
+  }),
+});
+```
+
+What followed `parentId` is replaced, so an edited question or a regenerated answer works. The store keeps one branch: after an edit, the replaced messages are gone. A `parentId` the store does not have answers 409.
+
+- **`store`:** `load` and `save` by owner and chat id. Store each conversation under both, so one visitor's chat id never finds another's. Set your own retention.
+- **`identifyOwner`:** whose conversations a request may use, such as a random id in an `HttpOnly` cookie. It is the only key to a visitor's conversations, so it must be hard to guess.
+
+The conversation is saved when the reply ends, including one the visitor stopped, before the stream closes. A failed save is logged, and the visitor still gets the answer. A failed load answers 503 without calling the model. `loadVisitorChat` returns a stored conversation with text only, for showing it again: tool calls and their results stay on the server.
 
 ## Failover
 
@@ -70,6 +96,7 @@ handleChatRequest(request, {
   model,
   profile,
   limit,
+  history,
   limits: { maxRetries: 0, timeouts: { firstChunkMs: 23_000 } },
 });
 ```

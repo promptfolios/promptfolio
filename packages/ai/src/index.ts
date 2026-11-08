@@ -16,6 +16,13 @@ export {
   type FailoverModelOptions,
 } from "./chat/failover.ts";
 export {
+  type ChatHistory,
+  type ChatStore,
+  createMemoryChatStore,
+  type LoadVisitorChatOptions,
+  loadVisitorChat,
+} from "./chat/history.ts";
+export {
   CHAT_LIMITS,
   type ChatLimitOverrides,
   type ChatLimits,

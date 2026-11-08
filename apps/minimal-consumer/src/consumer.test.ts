@@ -77,9 +77,9 @@ function post(url: string, body: unknown): Request {
 
 function chatRequest(): Request {
   return post("/chat", {
-    messages: [
-      { id: "u1", role: "user", parts: [{ type: "text", text: "What has Avery built?" }] },
-    ],
+    id: "chat-1",
+    message: { id: "u1", role: "user", parts: [{ type: "text", text: "What has Avery built?" }] },
+    parentId: null,
   });
 }
 
@@ -101,6 +101,17 @@ describe("a second consumer, through public APIs only", () => {
     const text = chunks.flatMap((chunk) => (chunk.type === "text-delta" ? [chunk.delta] : []));
     expect(text.join("")).toContain("Avery wrote reports");
     expect(chunks.some((chunk) => String(chunk.type).startsWith("tool-"))).toBe(false);
+  });
+
+  it("keeps the conversation on the server, and shows it again as text only", async () => {
+    const { consumer } = setup();
+    await (await consumer.chat(chatRequest())).text();
+
+    const shown = await consumer.openChat(post("/chats/chat-1", {}), "chat-1");
+
+    expect(shown?.map((message) => message.role)).toEqual(["user", "assistant"]);
+    expect(JSON.stringify(shown)).not.toContain("tool-");
+    expect(JSON.stringify(shown)).toContain("Avery wrote reports");
   });
 
   it("applies its own limiter before any model call", async () => {

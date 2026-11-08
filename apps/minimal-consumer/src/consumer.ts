@@ -1,4 +1,10 @@
-import { type ChatTurnLimiter, handleChatRequest } from "@promptfolio/ai";
+import {
+  type ChatHistory,
+  type ChatTurnLimiter,
+  createMemoryChatStore,
+  handleChatRequest,
+  loadVisitorChat,
+} from "@promptfolio/ai";
 import {
   type ContactOptions,
   type ContactSender,
@@ -74,9 +80,11 @@ export interface ConsumerOptions {
   contact: Pick<ContactOptions, "limiter" | "tokenSecret"> & { sender: ContactSender };
 }
 
-/** Three web handlers, which any server that speaks `Request` and `Response` can mount. */
+/** Web handlers, which any server that speaks `Request` and `Response` can mount. */
 export function createConsumer({ model, profile, limiter, contact }: ConsumerOptions) {
   const identifyVisitor = async (request: Request) => request.headers.get("x-visitor") ?? undefined;
+  // Conversations in memory, owned by the same visitor key. A real deployment needs a shared store.
+  const history: ChatHistory = { store: createMemoryChatStore(), identifyOwner: identifyVisitor };
   const contactOptions: ContactOptions = {
     ...contact,
     recipient: { name: profile.identity.name, address: "avery@example.test" },
@@ -84,12 +92,15 @@ export function createConsumer({ model, profile, limiter, contact }: ConsumerOpt
     identifyVisitor,
   };
   return {
+    /** A stored conversation as the browser may see it, for showing it again when it is opened. */
+    openChat: (request: Request, chatId: string) => loadVisitorChat(request, chatId, { history }),
     chat: (request: Request) =>
       handleChatRequest(request, {
         model,
         profile,
         additionalInstructions: "This page has a Contact button at the top.",
         limit: { limiter, identifyVisitor },
+        history,
       }),
     prepareContact: (request: Request) => handleContactPrepare(request, contactOptions),
     sendContact: (request: Request) => handleContactSend(request, contactOptions),

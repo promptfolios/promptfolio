@@ -40,6 +40,8 @@ Use **assistant-ui** with its shadcn-based styled components, which brings **Tai
   `createLocalStorageAdapter` was not used: it is exported only from `@assistant-ui/core`, does not
   validate stored AI SDK messages, and has no size or retention limits (see the
   [M6 plan](../plans/m6-browser-conversation-persistence.md)).
+  *Update (M18):* conversations move to the server ([ADR 0018](0018-server-side-conversation-history.md)), and the browser
+  sends only its new question. The reference app's thread list follows in M18.2.
 - **Starters:** `Suggestions(...)` from `src/config/starters.ts`, shown on the welcome screen;
   selecting one sends its prompt as the first message.
   *Update (M12.5):* the starters were removed. *Update (M12.10):* a model now writes them at build time

@@ -4,35 +4,52 @@ import type { ChatLimits } from "./limits.ts";
 import type { ChatMessages } from "./messages.ts";
 
 /**
- * The only message parts accepted from the browser. `step-start` is a content-free
- * marker the AI SDK adds to assistant messages, accepted and then dropped.
- * Every other part type (files, tools, reasoning, other data) is rejected.
+ * What a chat id or a message id may look like: short, and safe in a storage key. The AI SDK's own
+ * ids (from `useChat` and `createIdGenerator`) match.
  */
-const partSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("text"), text: z.string() }),
-  z.object({ type: z.literal("step-start") }),
-]);
+const idSchema = z.string().regex(/^[A-Za-z0-9_-]{1,100}$/);
 
+/**
+ * The only message the browser sends: the visitor's new question, as text. Earlier messages come
+ * from the server's store, so the browser cannot send answers, tool results, or instructions.
+ * Every other role and part type (files, tools, reasoning, data) is rejected.
+ */
 const messageSchema = z.object({
-  id: z.string().max(200),
-  // "system" is deliberately not accepted: the server owns the instructions.
-  role: z.enum(["user", "assistant"]),
-  parts: z.array(partSchema),
+  id: idSchema,
+  role: z.literal("user"),
+  parts: z.array(z.object({ type: z.literal("text"), text: z.string() })).min(1),
 });
 
 /**
- * The accepted request body. Only `messages` is read; every other field the client sends (such as
- * `system`, `tools`, or `messageId`) is stripped by zod.
+ * The accepted request body. Every other field the client sends (such as `system`, `tools`,
+ * `messages`, or `trigger`) is stripped by zod.
+ *
+ * - `id`: the conversation.
+ * - `message`: the new question.
+ * - `parentId`: the message it follows, or `null` for the first one. An edited question or a
+ *   regenerated answer names an earlier message, and what came after it is replaced.
  */
-function bodySchema(maxMessages: number) {
-  return z.object({
-    messages: z.array(messageSchema).min(1).max(maxMessages),
-  });
+const bodySchema = z.object({
+  id: idSchema,
+  message: messageSchema,
+  parentId: idSchema.nullable(),
+});
+
+/** A validated request: which conversation, and the question that follows `parentId`. */
+export interface ChatRequest {
+  chatId: string;
+  message: UIMessage;
+  parentId: string | null;
 }
 
 export type ParseChatRequestResult =
-  | { ok: true; messages: UIMessage[] }
+  | ({ ok: true } & ChatRequest)
   | { ok: false; status: number; message: string };
+
+/** Whether a string can be a chat id. For routes that take one from a URL. */
+export function isChatId(value: string): boolean {
+  return idSchema.safeParse(value).success;
+}
 
 /**
  * Reads and validates an incoming chat request. Never throws for bad input: failures
@@ -72,35 +89,25 @@ export async function parseChatRequest(
     return reject(400, text.invalidJson);
   }
 
-  const parsed = bodySchema(limits.maxMessages).safeParse(data);
+  const parsed = bodySchema.safeParse(data);
   if (!parsed.success) return reject(400, text.invalidConversation);
 
-  let totalChars = 0;
-  let lastText = "";
-  const messages: UIMessage[] = [];
-  for (const message of parsed.data.messages) {
-    const textParts = message.parts.flatMap((part) =>
-      part.type === "text" ? [{ type: "text" as const, text: part.text }] : [],
-    );
-    const messageText = textParts.map((part) => part.text).join("");
-    if (message.role === "user" && messageText.length > limits.maxMessageChars) {
-      const maxChars = String(limits.maxMessageChars);
-      return reject(413, text.messageTooLong.replaceAll("{maxChars}", maxChars));
-    }
-    totalChars += messageText.length;
-    lastText = messageText;
-    messages.push({ id: message.id, role: message.role, parts: textParts });
+  const { id, message, parentId } = parsed.data;
+  // Rebuilt from the validated fields only, so nothing else the client sent is kept.
+  const parts = message.parts.map((part) => ({ type: "text" as const, text: part.text }));
+  const messageText = textOf(parts);
+  if (messageText.length > limits.maxMessageChars) {
+    const maxChars = String(limits.maxMessageChars);
+    return reject(413, text.messageTooLong.replaceAll("{maxChars}", maxChars));
   }
+  if (messageText.trim() === "") return reject(400, text.noQuestion);
 
-  if (totalChars > limits.maxTotalChars) {
-    return reject(413, text.conversationTooLong);
-  }
+  return { ok: true, chatId: id, message: { id: message.id, role: "user", parts }, parentId };
+}
 
-  if (messages.at(-1)?.role !== "user" || lastText.trim() === "") {
-    return reject(400, text.noQuestion);
-  }
-
-  return { ok: true, messages };
+/** The text a message part list holds; other parts count for nothing. */
+export function textOf(parts: UIMessage["parts"]): string {
+  return parts.map((part) => (part.type === "text" ? part.text : "")).join("");
 }
 
 function reject(status: number, message: string): ParseChatRequestResult {

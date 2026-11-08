@@ -37,19 +37,22 @@ export async function checkChatLimit(
   timeoutMs: number,
 ): Promise<ChatLimitCheck> {
   try {
-    const visitor = await withinLimiterTimeout(limit.identifyVisitor(request), timeoutMs);
+    const visitor = await withinTimeout(limit.identifyVisitor(request), timeoutMs);
     if (visitor === undefined) return "unavailable";
-    return await withinLimiterTimeout(limit.limiter.take(visitor), timeoutMs);
+    return await withinTimeout(limit.limiter.take(visitor), timeoutMs);
   } catch {
     return "unavailable";
   }
 }
 
-/** Rejects if `work` takes too long. The work may still finish, which is why callers fail closed. */
-async function withinLimiterTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
+/**
+ * Rejects if `work` takes too long. The work may still finish, which is why callers fail closed.
+ * Used for the application's stores: the limiter and the conversation history.
+ */
+export async function withinTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => reject(new Error("limiter timeout")), timeoutMs);
+    timer = setTimeout(() => reject(new Error("store timeout")), timeoutMs);
   });
   try {
     return await Promise.race([work, timeout]);

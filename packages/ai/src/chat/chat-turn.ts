@@ -2,6 +2,8 @@ import type { Profile } from "@promptfolio/core";
 import {
   APICallError,
   convertToModelMessages,
+  createIdGenerator,
+  createUIMessageStream,
   isStepCount,
   type LanguageModel,
   RetryError,
@@ -57,7 +59,16 @@ export interface ChatTurnContext {
   signal: AbortSignal;
   limits: ChatLimits;
   text: ChatMessages;
+  /**
+   * Receives the whole conversation, the new answer included, once the reply ends, including a
+   * reply the visitor stopped or one that failed part way. The stream closes only after it settles,
+   * so a serverless host does not stop the function before the save.
+   */
+  onEnd?: (messages: UIMessage[]) => Promise<void>;
 }
+
+/** Ids for the assistant's messages, made on the server so the stored and shown message agree. */
+const generateMessageId = createIdGenerator({ prefix: "msg", size: 16 });
 
 /**
  * Runs one model turn over already validated messages: the server-owned system prompt, the
@@ -66,7 +77,7 @@ export interface ChatTurnContext {
 export async function runChatTurn(
   messages: UIMessage[],
   options: ChatTurnOptions,
-  { requestId, signal, limits, text }: ChatTurnContext,
+  { requestId, signal, limits, text, onEnd }: ChatTurnContext,
 ): Promise<ChatTurn> {
   const { model, profile, providerOptions, additionalInstructions, logger = console } = options;
   const errorText = unavailableMessage(text, requestId);
@@ -117,7 +128,7 @@ export async function runChatTurn(
   });
 
   let rawToolCallBlocked = false;
-  const stream = toUIMessageStream({
+  const filtered = toUIMessageStream({
     stream: result.stream,
     sendReasoning: false,
     onError: () => errorText,
@@ -131,9 +142,33 @@ export async function runChatTurn(
           logger.error(`[chat ${requestId}] raw tool call blocked`);
         },
       }),
-    )
-    .pipeThrough(forVisitor(signal, errorText));
+    );
+  const stream = (onEnd ? persisted(filtered, messages, onEnd, errorText) : filtered).pipeThrough(
+    forVisitor(signal, errorText),
+  );
   return { result, stream, wasRawToolCallBlocked: () => rawToolCallBlocked };
+}
+
+/**
+ * Builds the answer as a `UIMessage` from the stream and hands the whole conversation to `onEnd`.
+ * It sits after the raw tool call filter, so a blocked call's text is not saved either, and before
+ * `forVisitor`, so the saved answer keeps its tool calls and results. The AI SDK's
+ * `createUIMessageStream` does the building, as its persistence guide does with `toUIMessageStream`;
+ * that option sits before the filters, so it cannot be used here.
+ */
+function persisted(
+  stream: ReadableStream<UIMessageChunk>,
+  originalMessages: UIMessage[],
+  onEnd: (messages: UIMessage[]) => Promise<void>,
+  errorText: string,
+): ReadableStream<UIMessageChunk> {
+  return createUIMessageStream({
+    execute: ({ writer }) => writer.merge(stream),
+    originalMessages,
+    generateId: generateMessageId,
+    onError: () => errorText,
+    onEnd: ({ messages }) => onEnd(messages),
+  });
 }
 
 /**

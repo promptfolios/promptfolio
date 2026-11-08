@@ -20,6 +20,7 @@ export interface ChatLimits {
   timeouts: ChatTimeouts;
   maxRetries: number;
   limiterTimeoutMs: number;
+  historyTimeoutMs: number;
 }
 
 /** What a consumer may change. Anything left out, or `undefined`, keeps its default. */
@@ -37,6 +38,7 @@ export type ChatLimitOverrides = Partial<Omit<ChatLimits, "timeouts">> & {
 export const CHAT_LIMITS = {
   /** Raw request body size, checked before JSON parsing. */
   maxBodyBytes: 100_000,
+  /** Messages in the conversation: the stored history and the new message together. */
   maxMessages: 50,
   /**
    * Text characters in a single visitor message (all of its text parts together). Assistant
@@ -44,7 +46,7 @@ export const CHAT_LIMITS = {
    * thread must still accept follow-ups. `maxTotalChars` bounds them.
    */
   maxMessageChars: 4_000,
-  /** Text characters across the whole conversation. */
+  /** Text characters across the whole conversation, stored history included. */
   maxTotalChars: 20_000,
   /**
    * Cap on generated tokens per model call (step), including any thinking tokens the model uses.
@@ -75,6 +77,12 @@ export const CHAT_LIMITS = {
   maxRetries: 1,
   /** A limiter slower than this counts as unavailable, and the model is not called. */
   limiterTimeoutMs: 2_000,
+  /**
+   * Each call to the conversation store. A load slower than this answers 503 without calling the
+   * model; a save slower than this is logged as failed. A save runs before the reply's stream closes,
+   * so on a serverless host it adds to the function's time.
+   */
+  historyTimeoutMs: 2_000,
 } as const satisfies ChatLimits;
 
 /**

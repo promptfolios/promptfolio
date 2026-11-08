@@ -58,7 +58,7 @@ Rules the code enforces, whatever the model or the prompt says:
 | A bounded loop | `stopWhen: isStepCount(4)`; on the last step `prepareStep` sets `toolChoice: "none"`, so the answer ends in text |
 | A tool call written as text is stopped | some models write the call as text instead of making it. `raw-tool-calls.ts` drops `<tool_call` and `<function=`, and the visitor gets the generic error |
 | A bounded number of calls | at most 8 per request, counted in the tool set's closure; later calls return `limit_reached` |
-| Tool activity stays on the server | the stream to the browser is an allowlist of text chunks; tool calls and results never reach it, so the browser has no tool parts to send back (the request allowlist rejects them) |
+| Tool activity stays on the server | the stream to the browser is an allowlist of text chunks; tool calls and results never reach it. Since M18.1 they are saved with the answer, and the model gets them again on later turns ([server-side history](server-side-history.md)); the browser sends only its new question |
 
 Expected outcomes are **results, not exceptions**: `not_found`, `skillInProfile: false`, and
 `limit_reached` are normal values the model reads and explains. `execute` throws only on a bug.

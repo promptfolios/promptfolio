@@ -5,6 +5,11 @@ import { describe, expect, it, vi } from "vitest";
 import { generateStarterQuestions } from "../starters/starters.ts";
 import { handleChatRequest } from "./chat-handler.ts";
 import { createFailoverModel, type FailoverEntry } from "./failover.ts";
+import { type ChatHistory, createMemoryChatStore } from "./history.ts";
+
+function testHistory(): ChatHistory {
+  return { store: createMemoryChatStore(), identifyOwner: async () => "owner" };
+}
 
 type StreamResult = Awaited<ReturnType<MockLanguageModelV4["doStream"]>>;
 type StreamPart = StreamResult["stream"] extends ReadableStream<infer P> ? P : never;
@@ -91,7 +96,9 @@ async function ask(
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        messages: [{ id: "u", role: "user", parts: [{ type: "text", text: SECRET }] }],
+        id: "c1",
+        message: { id: "u", role: "user", parts: [{ type: "text", text: SECRET }] },
+        parentId: null,
       }),
       ...(signal && { signal }),
     }),
@@ -99,6 +106,7 @@ async function ask(
       model: createFailoverModel({ models: entries(...models), attemptFirstChunkMs, logger }),
       profile: profile(),
       limit: null,
+      history: testHistory(),
       limits: { maxRetries: 0 },
       logger,
     },
@@ -274,7 +282,9 @@ describe("createFailoverModel: a model that never responds", () => {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          messages: [{ id: "u", role: "user", parts: [{ type: "text", text: "Hi" }] }],
+          id: "c1",
+          message: { id: "u", role: "user", parts: [{ type: "text", text: "Hi" }] },
+          parentId: null,
         }),
       }),
       {
@@ -286,6 +296,7 @@ describe("createFailoverModel: a model that never responds", () => {
         }),
         profile: profile(),
         limit: null,
+        history: testHistory(),
         limits: { maxRetries: 0 },
         logger,
       },

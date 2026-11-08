@@ -46,6 +46,7 @@ that builds it; code links are marked "planned").
 | Versioning and releases | [versioning-and-releases.md](versioning-and-releases.md) | M13.4 | in use |
 | Continuous integration | [continuous-integration.md](continuous-integration.md) | M13.4 | in use |
 | Provider failover | [provider-failover.md](provider-failover.md) | M14 | in use |
+| Server-side conversation history | [server-side-history.md](server-side-history.md) | M18.1 | in use |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").
