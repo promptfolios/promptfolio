@@ -16,6 +16,7 @@ import {
   groupPartByType,
   MessagePrimitive,
   ThreadPrimitive,
+  type ToolCallMessagePartComponent,
   useAuiState,
 } from "@assistant-ui/react";
 import {
@@ -24,8 +25,10 @@ import {
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CircleAlertIcon,
   CopyIcon,
   DownloadIcon,
+  LoaderCircleIcon,
   MoreHorizontalIcon,
   PencilIcon,
   RefreshCwIcon,
@@ -34,8 +37,9 @@ import {
 import { type ComponentType, type FC, type ReactNode } from "react";
 
 /*
- * Promptfolio change: only what this app can show. The server sends visitors text alone, so the
- * registry's tool, reasoning, attachment, image, file, voice, suggestion, feedback,
+ * Promptfolio change: only what this app can show. The server sends visitors text, a summary of
+ * each profile lookup, and the model's name (`replyDetails` in `@promptfolio/ai`), so the
+ * registry's generic tool, reasoning, attachment, image, file, voice, suggestion, feedback,
  * resume, and load-earlier UI is removed. See `VISITOR_CHUNK_TYPES` in `@promptfolio/ai`.
  */
 
@@ -257,6 +261,11 @@ const AssistantMessage: FC = () => {
             switch (part.type) {
               case "text":
                 return <MarkdownText />;
+              case "tool-call": {
+                // Promptfolio change: one component per server tool; any other name shows nothing.
+                const Lookup = LOOKUP_UI_BY_NAME[part.toolName];
+                return Lookup ? <Lookup {...part} /> : <></>;
+              }
               case "indicator":
                 return (
                   <span
@@ -281,8 +290,93 @@ const AssistantMessage: FC = () => {
       >
         <BranchPicker />
         <AssistantActionBar />
+        <AnsweringModel />
       </div>
     </MessagePrimitive.Root>
+  );
+};
+
+/*
+ * Promptfolio change: profile lookups and the answering model. The server sends each lookup's
+ * section and `{ status, title? }` only, never the arguments or results the model saw, so the
+ * labels are fixed text. `status` is assistant-ui's view of the AI SDK part's `state`: running
+ * until the output arrives, complete after it, incomplete when the reply stopped first.
+ */
+
+type LookupArgs = { section?: string; skillFilter?: true };
+type LookupResult = { status?: string; title?: string };
+
+const LookupLine: FC<{ state: "running" | "done" | "problem"; children: ReactNode }> = ({
+  state,
+  children,
+}) => (
+  <div
+    data-slot="aui_lookup"
+    className="text-muted-foreground my-1 flex items-center gap-1.5 text-xs"
+    {...(state === "running" && { role: "status" })}
+  >
+    {state === "running" && <LoaderCircleIcon className="size-3.5 animate-spin" />}
+    {state === "done" && <CheckIcon className="size-3.5" />}
+    {state === "problem" && <CircleAlertIcon className="size-3.5" />}
+    <span>{children}</span>
+  </div>
+);
+
+/** The label for a lookup that did not end with a record list or a record. */
+function lookupProblem(result: LookupResult | undefined): string {
+  switch (result?.status) {
+    case "not_found":
+      return "Record not found";
+    case "limit_reached":
+      return "Lookup limit reached";
+    case undefined:
+      return "Lookup stopped";
+    default:
+      return "Lookup failed";
+  }
+}
+
+const ListLookup: ToolCallMessagePartComponent<LookupArgs, LookupResult> = ({
+  args,
+  result,
+  status,
+}) => {
+  const what = `${args.section ?? "the profile"}${args.skillFilter ? " by skill" : ""}`;
+  if (result === undefined && status.type === "running") {
+    return <LookupLine state="running">Looking up {what}…</LookupLine>;
+  }
+  if (result?.status === "listed") return <LookupLine state="done">Looked up {what}</LookupLine>;
+  return <LookupLine state="problem">{lookupProblem(result)}</LookupLine>;
+};
+
+const RecordLookup: ToolCallMessagePartComponent<LookupArgs, LookupResult> = ({
+  result,
+  status,
+}) => {
+  if (result === undefined && status.type === "running") {
+    return <LookupLine state="running">Looking up a record…</LookupLine>;
+  }
+  if (result?.status === "found") {
+    return <LookupLine state="done">Looked up {result.title ?? "a record"}</LookupLine>;
+  }
+  return <LookupLine state="problem">{lookupProblem(result)}</LookupLine>;
+};
+
+const LOOKUP_UI_BY_NAME: Record<string, ToolCallMessagePartComponent | undefined> = {
+  listProfileRecords: ListLookup,
+  getProfileRecord: RecordLookup,
+};
+
+/** The model's name, as the server chose to show it, once the answer is done. */
+const AnsweringModel: FC = () => {
+  const model = useAuiState((s) =>
+    s.message.status?.type === "running" ? undefined : s.message.metadata.custom?.model,
+  );
+  if (typeof model !== "string") return null;
+  return (
+    <span data-slot="aui_answering-model" className="text-muted-foreground ms-auto me-2 text-xs">
+      {model}
+    </span>
   );
 };
 

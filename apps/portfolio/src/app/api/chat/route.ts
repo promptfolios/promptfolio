@@ -1,8 +1,9 @@
 import { handleChatRequest } from "@promptfolio/ai";
-import { createAppChatHistory, newOwnerId, ownerCookie, readOwner } from "@/server/chat/history";
 import { createChatLimit } from "@/server/chat/chat-limit";
+import { createAppChatHistory, newOwnerId, ownerCookie, readOwner } from "@/server/chat/history";
 import { chatInstructions } from "@/server/chat/instructions";
 import { createChatModel } from "@/server/chat/model";
+import { CHAT_REPLY_DETAILS } from "@/server/chat/reply-details";
 import { isContactEnabled } from "@/server/contact/contact";
 import { loadAppProfile } from "@/server/profile/profile";
 
@@ -41,6 +42,7 @@ export async function POST(request: Request): Promise<Response> {
     additionalInstructions: chatInstructions(isContactEnabled()),
     limit: createChatLimit(),
     history: { store, identifyOwner: async () => owner },
+    replyDetails: CHAT_REPLY_DETAILS,
   });
   // Sent again on every answer too, so the cookie lasts as long as the conversations it names.
   response.headers.append("set-cookie", ownerCookie(owner, retentionSeconds, secureCookie));

@@ -8,26 +8,37 @@ import {
   json,
   readSmallJson,
 } from "@/server/chat/history-routes";
+import { CHAT_REPLY_DETAILS } from "@/server/chat/reply-details";
+import { loadAppProfile } from "@/server/profile/profile";
 
 interface Context {
   params: Promise<{ id: string }>;
 }
 
 /**
- * One of the visitor's conversations: its summary and its messages, as text only. A conversation
- * of another visitor, or one that does not exist, is a 404 either way.
+ * One of the visitor's conversations: its summary and its messages, as the chat showed them (text,
+ * lookups, and the model's name). A conversation of another visitor, or one that does not exist, is
+ * a 404 either way.
  */
 export async function GET(request: Request, { params }: Context): Promise<Response> {
   const { id } = await params;
   const owner = isChatId(id) ? readOwner(request) : undefined;
   if (owner === undefined) return emptyResponse(404);
   const { store } = createAppChatHistory();
+  const history = { store, identifyOwner: async () => owner };
   try {
+    // Lookup titles come from the profile. Without it the chat cannot answer either, so the
+    // messages are shown as text only.
+    const { result } = await loadAppProfile();
     const [thread, messages] = await Promise.all([
       store.summary(owner, id),
-      loadVisitorChat(request, id, {
-        history: { store, identifyOwner: async () => owner },
-      }),
+      loadVisitorChat(
+        request,
+        id,
+        result.ok
+          ? { history, replyDetails: CHAT_REPLY_DETAILS, profile: result.profile }
+          : { history },
+      ),
     ]);
     if (thread === undefined || messages === undefined) return emptyResponse(404);
     return json({ thread, messages });

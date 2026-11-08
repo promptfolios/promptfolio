@@ -58,7 +58,7 @@ Rules the code enforces, whatever the model or the prompt says:
 | A bounded loop | `stopWhen: isStepCount(4)`; on the last step `prepareStep` sets `toolChoice: "none"`, so the answer ends in text |
 | A tool call written as text is stopped | some models write the call as text instead of making it. `raw-tool-calls.ts` drops `<tool_call` and `<function=`, and the visitor gets the generic error |
 | A bounded number of calls | at most 8 per request, counted in the tool set's closure; later calls return `limit_reached` |
-| Tool activity stays on the server | the stream to the browser is an allowlist of text chunks; tool calls and results never reach it. Since M18.1 they are saved with the answer, and the model gets them again on later turns ([server-side history](server-side-history.md)); the browser sends only its new question |
+| Tool activity stays on the server | the stream to the browser is an allowlist of text chunks; tool calls and results as the model saw them never reach it. Since M18.1 they are saved with the answer, and the model gets them again on later turns ([server-side history](server-side-history.md)); the browser sends only its new question. Since M19 a consumer can opt in to a server-written summary of each call (`replyDetails.tools`, [ADR 0019](../adr/0019-lookups-and-model-shown-to-visitors.md)) |
 
 Expected outcomes are **results, not exceptions**: `not_found`, `skillInProfile: false`, and
 `limit_reached` are normal values the model reads and explains. `execute` throws only on a bug.
@@ -115,6 +115,12 @@ refresh. Because the url is source-observed while the project summary's evidence
   still model output (here they are only lookup keys, so the worst case is `not_found`).
 - Trusting tool results sent back by the browser. The AI SDK's default stream sends tool parts to
   the client, which stores and resends them; anything resent can be forged.
+- Treating a display summary as tool context. The lookups visitors see (M19) are summaries the
+  server writes for the page, `{ status, title? }` in
+  [reply-details.ts](../../packages/ai/src/chat/reply-details.ts); the model's context is the full
+  results in the store. Showing a tool part is safe only because the browser can no longer send it
+  back, and the summary must stay built from fixed values and profile data, never copied from the
+  model's arguments or the raw result.
 - Throwing for "not found". The model then sees an error instead of a fact it can explain.
 - Assuming `toolChoice: "none"` means no tool-call text. It forbids a real call, but a model can still write one as
   text. Reports now record steps, so a run can show whether this happens on the last step.

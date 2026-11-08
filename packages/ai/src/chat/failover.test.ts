@@ -176,13 +176,39 @@ describe("createFailoverModel: moving on before the first content", () => {
     );
   });
 
-  it("falls back to every label in the finished log when the provider reports no id", async () => {
+  it("reports the answering entry's label when the provider reports no id", async () => {
     const { logger } = await ask([throwing(), replying("Second.")]);
 
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining("finished"),
-      expect.objectContaining({ model: "model-1,model-2" }),
+      expect.objectContaining({ model: "model-2" }),
     );
+
+    const { logger: firstWorked } = await ask([replying("First."), replying("Second.")]);
+    expect(firstWorked.info).toHaveBeenCalledWith(
+      expect.stringContaining("finished"),
+      expect.objectContaining({ model: "model-1" }),
+    );
+  });
+
+  it("reports the answering label from a non-streaming call when the provider reports no id", async () => {
+    const result = await createFailoverModel({
+      models: entries(
+        throwing(),
+        new MockLanguageModelV4({
+          doGenerate: async () => ({
+            content: [{ type: "text", text: "Second." }],
+            finishReason: stop,
+            usage,
+            warnings: [],
+          }),
+        }),
+      ),
+      attemptFirstChunkMs: 1_000,
+      logger: silentLogger(),
+    }).doGenerate({ prompt: [] });
+
+    expect(result.response?.modelId).toBe("model-2");
   });
 
   it("moves on when a stream reports an error before any content", async () => {

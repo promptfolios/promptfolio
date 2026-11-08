@@ -61,6 +61,8 @@ Files copied by the shadcn and assistant-ui CLIs are treated as vendored:
   attachment, image, file, voice, suggestion, feedback, resume, and load-earlier UI was removed
   ([plan](../plans/m12-6-code-cleanup.md)). This is larger than the "minimal" rule above: a registry
   update to this file needs a manual merge, and turning a feature on means adding its component again.
+  *Update (M19):* visitors also receive a server-written summary of each profile lookup and the answering model's name
+  ([ADR 0019](0019-lookups-and-model-shown-to-visitors.md)), shown by per-tool components and a model line in the same file.
   Spacing, corners, and the send button's shape follow assistant-ui's own demo (M12.10). In `thread-list.aui.tsx` (M12.8): an outlined New Thread button. In `markdown-text.tsx` (M12.7): the link check.
 - The CLI placed assistant-ui files directly in `src/components/`; they were moved to the layout
   their own imports expect (`components/assistant-ui/elements` and `.../utils`).

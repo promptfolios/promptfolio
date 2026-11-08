@@ -29,6 +29,13 @@ export {
   type ChatTimeouts,
 } from "./chat/limits.ts";
 export { CHAT_MESSAGES, type ChatMessages } from "./chat/messages.ts";
+export type {
+  ReplyDetails,
+  VisitorReplyMetadata,
+  VisitorToolInput,
+  VisitorToolOutput,
+  VisitorToolStatus,
+} from "./chat/reply-details.ts";
 export { isChatId } from "./chat/request.ts";
 export type { SystemPromptOptions } from "./chat/system-prompt.ts";
 export {

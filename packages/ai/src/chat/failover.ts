@@ -93,15 +93,43 @@ export function createFailoverModel({
     modelId: models.map((entry) => entry.label).join(","),
     middleware: {
       wrapStream: ({ params }) =>
-        withFailover(params, ({ model }, isLast) =>
-          startStream(
+        withFailover(params, async ({ model, label }, isLast) => {
+          const result = await startStream(
             model,
             current === 0 ? params : withoutReasoning(params),
             isLast ? lastAttemptFirstChunkMs : attemptFirstChunkMs,
-          ),
-        ),
+          );
+          return { ...result, stream: result.stream.pipeThrough(withModelId(label)) };
+        }),
       wrapGenerate: ({ params }) =>
-        withFailover(params, async ({ model }) => model.doGenerate(params)),
+        withFailover(params, async ({ model, label }) => {
+          const result = await model.doGenerate(params);
+          return result.response?.modelId
+            ? result
+            : { ...result, response: { ...result.response, modelId: label } };
+        }),
+    },
+  });
+}
+
+/**
+ * Names the answering entry by its label when its provider reports no model id. Otherwise the AI
+ * SDK would report the failover model's own id, which lists every label.
+ */
+function withModelId(label: string): TransformStream<StreamPart, StreamPart> {
+  let reported = false;
+  return new TransformStream({
+    transform(part, controller) {
+      if (part.type === "response-metadata") {
+        reported = true;
+        controller.enqueue(part.modelId ? part : { ...part, modelId: label });
+        return;
+      }
+      if (part.type === "finish" && !reported) {
+        reported = true;
+        controller.enqueue({ type: "response-metadata", modelId: label });
+      }
+      controller.enqueue(part);
     },
   });
 }

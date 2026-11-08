@@ -272,7 +272,7 @@ flowchart TD
     ws["ChatWorkspace<br/>use client, src/components/chat/chat-workspace.tsx"]
     list["useRemoteThreadListRuntime"]
     adapter["createServerThreadListAdapter (src/chat/)<br/>thread list and per-thread history load"]
-    routes["/api/chats, /api/chats/[id]<br/>list, open (text only), rename, archive, delete"]
+    routes["/api/chats, /api/chats/[id]<br/>list, open (text and lookup summaries), rename, archive, delete"]
     store[("RedisChatStore (src/server/chat/)<br/>by owner cookie, retention CHAT_HISTORY_DAYS")]
     thread["useThreadRuntime(), once per thread<br/>useAISDKRuntime(useChat({ transport }))"]
     transport["DefaultChatTransport({ api: /api/chat })<br/>sends id, message, parentId: no history, system, or tools"]
@@ -291,8 +291,10 @@ flowchart TD
 
 `useChatRuntime` from `@assistant-ui/ai-sdk` would bundle the per-thread part, but it builds its
 own thread list and cannot use this adapter, so the workspace composes `useChat` (AI SDK)
-and `useAISDKRuntime` (assistant-ui) itself. Messages have `parts`; the browser only ever receives
-text and step boundaries, because tool activity stays on the server (M5).
+and `useAISDKRuntime` (assistant-ui) itself. Messages have `parts`; the browser receives text, step
+boundaries, and since M19 a server-written summary of each lookup and the answering model's name
+([ADR 0019](adr/0019-lookups-and-model-shown-to-visitors.md)). Tool arguments and results as the
+model saw them stay on the server (M5).
 
 Conversations are kept on the server (M18, [ADR 0018](adr/0018-server-side-conversation-history.md)),
 under a random owner id in an `HttpOnly` cookie. The browser sends only the new question and the

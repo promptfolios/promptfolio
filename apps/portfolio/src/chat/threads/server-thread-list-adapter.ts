@@ -31,13 +31,31 @@ const summarySchema = z.object({
 
 const listSchema = z.object({ threads: z.array(summarySchema) });
 
+/**
+ * A finished lookup, as the server summarizes it (`replyDetails.tools` in `@promptfolio/ai`): the
+ * same parts the live stream builds, never the arguments or results the model saw.
+ */
+const lookupPartSchema = z.object({
+  type: z.enum(["tool-listProfileRecords", "tool-getProfileRecord"]),
+  toolCallId: z.string(),
+  state: z.literal("output-available"),
+  input: z.object({ section: z.string().optional(), skillFilter: z.literal(true).optional() }),
+  output: z.object({
+    status: z.enum(["listed", "found", "not_found", "limit_reached", "failed"]),
+    title: z.string().optional(),
+  }),
+});
+
 const chatSchema = z.object({
   thread: summarySchema,
   messages: z.array(
     z.object({
       id: z.string(),
       role: z.enum(["user", "assistant"]),
-      parts: z.array(z.object({ type: z.literal("text"), text: z.string() })),
+      metadata: z.object({ model: z.string() }).optional(),
+      parts: z.array(
+        z.union([z.object({ type: z.literal("text"), text: z.string() }), lookupPartSchema]),
+      ),
     }),
   ),
 });
@@ -45,7 +63,8 @@ const chatSchema = z.object({
 async function getJson<T>(url: string, schema: z.ZodType<T>): Promise<T | undefined> {
   const response = await fetch(url, { cache: "no-store" });
   if (response.status === 404) return undefined;
-  if (!response.ok) throw new Error(`Conversations are not available right now (${response.status}).`);
+  if (!response.ok)
+    throw new Error(`Conversations are not available right now (${response.status}).`);
   return schema.parse(await response.json());
 }
 
@@ -90,13 +109,17 @@ export function createServerThreadHistory(getThread: () => ThreadHandle): Thread
           if (remoteId === undefined) return { messages: [] };
           const messages = await loadServerMessages(remoteId);
           return {
-            messages: messages.map(({ id, role, parts }, index) =>
+            messages: messages.map(({ id, role, metadata, parts }, index) =>
               formatAdapter.decode({
                 id,
                 parent_id: index === 0 ? null : (messages[index - 1]?.id ?? null),
                 format: AI_SDK_FORMAT,
                 // The AI SDK format stores a `UIMessage` without its id.
-                content: { role, parts } as unknown as TStorageFormat,
+                content: {
+                  role,
+                  ...(metadata !== undefined && { metadata }),
+                  parts,
+                } as unknown as TStorageFormat,
               }),
             ),
           };
@@ -115,7 +138,9 @@ export function createServerThreadHistory(getThread: () => ThreadHandle): Thread
  * conversation. Unlike assistant-ui's `AssistantChatTransport`, it sends no `system` prompt or
  * `tools`: the server owns both.
  */
-export function createChatTransport(getThread: () => ThreadHandle): DefaultChatTransport<UIMessage> {
+export function createChatTransport(
+  getThread: () => ThreadHandle,
+): DefaultChatTransport<UIMessage> {
   return new DefaultChatTransport({
     api: "/api/chat",
     prepareSendMessagesRequest: async ({ messages }) => {
@@ -187,8 +212,7 @@ export function createServerThreadListAdapter(): RemoteThreadListAdapter {
       };
     },
 
-    initialize: () =>
-      Promise.resolve({ remoteId: crypto.randomUUID(), externalId: undefined }),
+    initialize: () => Promise.resolve({ remoteId: crypto.randomUUID(), externalId: undefined }),
 
     rename: (remoteId, title) => send(chatUrl(remoteId), "PATCH", { title }),
     archive: (remoteId) => send(chatUrl(remoteId), "PATCH", { status: "archived" }),

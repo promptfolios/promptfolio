@@ -1,6 +1,6 @@
 # M19 plan: tool calls and model shown in replies
 
-- **Status:** Draft, decisions settled (2026-11-08); waiting for approval. Starts after [M18.2](m18-2-server-history-in-app.md).
+- **Status:** Plan approved (2026-11-08). Implemented; waiting for review. Starts after [M18.2](m18-2-server-history-in-app.md).
 - **Date:** 2026-11-08
 - **Roadmap:** not listed yet. From a consumer app's review: visitors should see that answers come from real lookups, live,
   as modern chat apps show them.
@@ -52,3 +52,13 @@ A pitfall in `tool-calling.md`: a display summary is not tool context.
 ## Verification
 
 `pnpm verify`, then a browser preview screenshot taken mid-stream showing a running lookup.
+
+## Implementation notes
+
+- **Reload:** `loadVisitorChat` returned text only since M18.1, so it now takes `replyDetails` and the profile and uses the
+  same summary functions; the app's history route loads the profile for it.
+- **Errors:** an invalid call or a failed tool becomes `tool-output-available` with `{ status: "failed" }`, so every visitor
+  result has one shape. A call to an unknown tool is dropped entirely, since it is not a lookup.
+- **UI:** the vendored thread renders through `MessagePrimitive.GroupedParts`, which has no `components` prop, so its
+  `tool-call` case picks the component from a by-name map. assistant-ui gives tool parts a `status` (running, complete,
+  incomplete) converted from the AI SDK's `state`, so the components switch on that.

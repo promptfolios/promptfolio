@@ -19,7 +19,8 @@ The [AI SDK](https://ai-sdk.dev), `ai`, is a peer dependency, version 7: you cre
 | `handleChatRequest` | Takes a web `Request`, returns a streaming `Response` |
 | `ChatLimit`, `ChatTurnLimiter` | The daily limit you implement. `limit` is required; `null` turns it off on purpose |
 | `ChatHistory`, `ChatStore` | Where conversations are kept between turns, which you implement. `history` is required |
-| `loadVisitorChat` | One of the visitor's stored conversations as the browser may see it: text only |
+| `loadVisitorChat` | One of the visitor's stored conversations as the browser may see it: text, and with `replyDetails` the same lookups and model name as the live reply |
+| `ReplyDetails` | Opt-in lookups and model name shown with a reply (see below) |
 | `createMemoryChatStore` | A `ChatStore` in memory, for tests and local development |
 | `generateStarterQuestions`, `STARTER_LIMITS` | Starters written by the model from a profile; generate once per profile, such as at build time |
 | `CHAT_LIMITS`, `CHAT_MESSAGES` | The default limits and visitor text |
@@ -77,7 +78,16 @@ What followed `parentId` is replaced, so an edited question or a regenerated ans
 - **`store`:** `load` and `save` by owner and chat id. Store each conversation under both, so one visitor's chat id never finds another's. Set your own retention.
 - **`identifyOwner`:** whose conversations a request may use, such as a random id in an `HttpOnly` cookie. It is the only key to a visitor's conversations, so it must be hard to guess.
 
-The conversation is saved when the reply ends, including one the visitor stopped, before the stream closes. A failed save is logged, and the visitor still gets the answer. A failed load answers 503 without calling the model. `loadVisitorChat` returns a stored conversation with text only, for showing it again: tool calls and their results stay on the server.
+The conversation is saved when the reply ends, including one the visitor stopped, before the stream closes. A failed save is logged, and the visitor still gets the answer. A failed load answers 503 without calling the model. `loadVisitorChat` returns a stored conversation for showing it again: text only, or with `replyDetails` and the `profile`, what the live reply showed. Tool calls and their results as the model saw them stay on the server.
+
+## Reply details
+
+With `replyDetails`, visitors also see how an answer was made ([ADR 0019](../../docs/adr/0019-lookups-and-model-shown-to-visitors.md)):
+
+- **`tools: true`:** each profile lookup arrives as an AI SDK tool part (`tool-listProfileRecords`, `tool-getProfileRecord`) whose input is only `{ section?, skillFilter? }` and whose output is `{ status, title? }`, written by the server. The model's arguments and the full results never reach the browser.
+- **`model(id)`:** the name to show for the model that answered, sent as `messageMetadata: { model }` on `finish`; return `undefined` to show none. Strip what visitors need not see, such as the provider or a failover list.
+
+Pass the same value, and the profile, to `loadVisitorChat`, so a reloaded chat looks the same.
 
 ## Failover
 

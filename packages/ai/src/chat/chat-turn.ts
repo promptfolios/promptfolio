@@ -20,6 +20,12 @@ import {
 import type { ChatLimitOverrides, ChatLimits } from "./limits.ts";
 import { type ChatMessages, unavailableMessage } from "./messages.ts";
 import { withoutRawToolCalls } from "./raw-tool-calls.ts";
+import {
+  type ReplyDetails,
+  type StoredReplyMetadata,
+  visitorReplyMetadata,
+  visitorToolChunks,
+} from "./reply-details.ts";
 import { buildSystemPrompt, type SystemPromptOptions } from "./system-prompt.ts";
 
 type StreamTextOptions = Parameters<typeof streamText>[0];
@@ -40,6 +46,8 @@ export interface ChatTurnOptions extends SystemPromptOptions {
   limits?: ChatLimitOverrides;
   /** Changes to `CHAT_MESSAGES`. Anything left out keeps its default. */
   visitorMessages?: Partial<ChatMessages>;
+  /** What visitors may see besides the text: lookups and the model's name. Off by default. */
+  replyDetails?: ReplyDetails;
   logger?: ChatLogger;
 }
 
@@ -128,10 +136,18 @@ export async function runChatTurn(
   });
 
   let rawToolCallBlocked = false;
+  // The model that answered the last step, saved with the answer (see `StoredReplyMetadata`).
+  let answeringModelId: string | undefined;
   const filtered = toUIMessageStream({
     stream: result.stream,
     sendReasoning: false,
     onError: () => errorText,
+    // Called for every part; only `start` and `finish` carry its value in the stream.
+    messageMetadata: ({ part }): StoredReplyMetadata | undefined => {
+      if (part.type === "finish-step") answeringModelId = part.response.modelId || undefined;
+      if (part.type !== "finish" || answeringModelId === undefined) return undefined;
+      return { modelId: answeringModelId };
+    },
   })
     .pipeThrough(logToolCalls(requestId, logger))
     .pipeThrough(
@@ -144,7 +160,10 @@ export async function runChatTurn(
       }),
     );
   const stream = (onEnd ? persisted(filtered, messages, onEnd, errorText) : filtered).pipeThrough(
-    forVisitor(signal, errorText),
+    forVisitor(signal, errorText, {
+      ...(options.replyDetails?.tools === true && { toolChunks: visitorToolChunks(profile) }),
+      model: options.replyDetails?.model,
+    }),
   );
   return { result, stream, wasRawToolCallBlocked: () => rawToolCallBlocked };
 }
@@ -193,12 +212,13 @@ export function modelErrorSummary(error: unknown) {
 }
 
 /**
- * The only chunk types the browser receives: enough to render a streamed text answer.
+ * The only chunk types the browser receives as they are: enough to render a streamed text answer.
  * Everything else is dropped, including:
  *
- * - tool calls, results, and errors: tool activity stays on the server, so the browser
- *   never learns tool names, schemas, or result fields, and never has tool parts to send
- *   back (the request allowlist rejects them);
+ * - tool calls, results, and errors as the AI SDK writes them, so the browser never learns
+ *   arguments, schemas, or result fields. With `replyDetails.tools`, it receives the chunks
+ *   `visitorToolChunks` writes instead (ADR 0019). Either way it has no tool parts to send back:
+ *   the request accepts one user message, and the model's context comes from the store;
  * - `custom` chunks: provider-specific metadata such as Anthropic's message id and usage;
  * - any chunk type a future AI SDK version adds, until it is allowed here on purpose.
  */
@@ -222,20 +242,49 @@ const VISITOR_CHUNK_TYPES: ReadonlySet<UIMessageChunk["type"]> = new Set([
  *   provider data, such as Gemini's encrypted `thoughtSignature` on every `text-delta`; the
  *   browser does not need it, and the request allowlist would drop it on the way back anyway;
  * - turns an `abort` the visitor did not cause (a timeout) into the generic error. The browser
- *   treats `abort` like pressing Stop, so the reply would otherwise end silently.
+ *   treats `abort` like pressing Stop, so the reply would otherwise end silently;
+ * - replaces message metadata: `start` carries none, and `finish` carries only the model's
+ *   display name, when `details.model` gives one;
+ * - sends tool chunks only through `details.toolChunks`, which writes each one itself. Without
+ *   it, no `tool-*` chunk passes.
  */
 export function forVisitor(
   clientSignal: AbortSignal,
   errorText: string,
+  details: {
+    toolChunks?: (chunk: UIMessageChunk) => UIMessageChunk[];
+    model?: ReplyDetails["model"];
+  } = {},
 ): TransformStream<UIMessageChunk, UIMessageChunk> {
   return new TransformStream({
     transform(chunk, controller) {
-      if (!VISITOR_CHUNK_TYPES.has(chunk.type)) return;
-      if (chunk.type === "abort" && !clientSignal.aborted) {
-        controller.enqueue({ type: "error", errorText });
+      if (chunk.type.startsWith("tool-")) {
+        for (const shown of details.toolChunks?.(chunk) ?? []) controller.enqueue(shown);
         return;
       }
-      controller.enqueue(withoutProviderMetadata(chunk));
+      if (!VISITOR_CHUNK_TYPES.has(chunk.type)) return;
+      switch (chunk.type) {
+        case "abort":
+          controller.enqueue(clientSignal.aborted ? chunk : { type: "error", errorText });
+          return;
+        case "start":
+          controller.enqueue({
+            type: "start",
+            ...(chunk.messageId !== undefined && { messageId: chunk.messageId }),
+          });
+          return;
+        case "finish": {
+          const metadata = visitorReplyMetadata(chunk.messageMetadata, details.model);
+          controller.enqueue({
+            type: "finish",
+            ...(chunk.finishReason !== undefined && { finishReason: chunk.finishReason }),
+            ...(metadata !== undefined && { messageMetadata: metadata }),
+          });
+          return;
+        }
+        default:
+          controller.enqueue(withoutProviderMetadata(chunk));
+      }
     },
   });
 }

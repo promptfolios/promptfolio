@@ -1,8 +1,16 @@
+import type { Profile } from "@promptfolio/core";
 import { safeValidateUIMessages, type ToolSet, type UIMessage } from "ai";
 import { z } from "zod";
 import { withinTimeout } from "./chat-limit.ts";
 import type { ChatLogger } from "./chat-turn.ts";
 import { CHAT_LIMITS } from "./limits.ts";
+import {
+  isVisitorToolName,
+  type ReplyDetails,
+  visitorReplyMetadata,
+  visitorToolInput,
+  visitorToolOutput,
+} from "./reply-details.ts";
 import { isChatId, textOf } from "./request.ts";
 
 /**
@@ -98,44 +106,105 @@ export function conversationChars(messages: UIMessage[]): number {
   return messages.reduce((sum, message) => sum + textOf(message.parts).length, 0);
 }
 
-/** What the browser may hold of a stored message: its text. */
+/** The fields of a stored message that are read. */
 const visitorMessageSchema = z.object({
   id: z.string(),
   role: z.enum(["user", "assistant"]),
+  metadata: z.unknown().optional(),
   parts: z.array(z.unknown()),
 });
 
+/** What the reload needs to show the same reply details as the live stream. */
+export interface VisitorReplyDetails {
+  replyDetails: ReplyDetails;
+  /** The profile the chat answers from: record titles are looked up in it again. */
+  profile: Profile;
+}
+
 /**
- * Stored messages as the browser may see them: user and assistant text only, the same as the live
- * stream sends. Tool calls and results, reasoning, provider metadata, and anything else stay on the
- * server. Read by shape, so a stored entry this code does not understand is left out, not passed on.
+ * Stored messages as the browser may see them, the same as the live stream sends: user and
+ * assistant text, and with `details`, each finished lookup as `visitorToolChunks` summarizes it
+ * and the model's display name. Arguments and results as stored, reasoning, provider metadata, and
+ * anything else stay on the server. Read by shape, so a stored entry this code does not
+ * understand is left out, not passed on.
+ *
+ * A lookup still running when the reply stopped is left out, because it has no result to show.
  */
-export function visitorMessages(stored: unknown): UIMessage[] {
+export function visitorMessages(stored: unknown, details?: VisitorReplyDetails): UIMessage[] {
   if (!Array.isArray(stored)) return [];
-  return stored.flatMap((entry) => {
+  return stored.flatMap((entry): UIMessage[] => {
     const parsed = visitorMessageSchema.safeParse(entry);
     if (!parsed.success) return [];
-    const parts = parsed.data.parts.flatMap((part) =>
-      typeof part === "object" &&
-      part !== null &&
-      "type" in part &&
-      part.type === "text" &&
-      "text" in part &&
-      typeof part.text === "string"
-        ? [{ type: "text" as const, text: part.text }]
-        : [],
-    );
-    return parts.length === 0 ? [] : [{ id: parsed.data.id, role: parsed.data.role, parts }];
+    const { id, role } = parsed.data;
+    const parts = parsed.data.parts.flatMap((part) => visitorPart(part, details));
+    if (parts.length === 0) return [];
+    const metadata =
+      role === "assistant"
+        ? visitorReplyMetadata(parsed.data.metadata, details?.replyDetails.model)
+        : undefined;
+    return [{ id, role, ...(metadata !== undefined && { metadata }), parts }];
   });
 }
 
-export interface LoadVisitorChatOptions {
+function visitorPart(part: unknown, details: VisitorReplyDetails | undefined): UIMessagePart[] {
+  if (typeof part !== "object" || part === null || !("type" in part)) return [];
+  if (part.type === "text") {
+    return "text" in part && typeof part.text === "string"
+      ? [{ type: "text", text: part.text }]
+      : [];
+  }
+  if (details?.replyDetails.tools !== true || typeof part.type !== "string") return [];
+  // A tool's stored part is named after it, except an invalid call, which the AI SDK stores as a
+  // dynamic tool part. A call to a tool the server does not have is left out.
+  const toolName =
+    part.type === "dynamic-tool"
+      ? "toolName" in part
+        ? part.toolName
+        : undefined
+      : part.type.startsWith("tool-")
+        ? part.type.slice("tool-".length)
+        : undefined;
+  if (!isVisitorToolName(toolName)) return [];
+  if (!("toolCallId" in part) || typeof part.toolCallId !== "string") return [];
+  if (!("state" in part) || (part.state !== "output-available" && part.state !== "output-error")) {
+    return [];
+  }
+  const input = "input" in part ? part.input : undefined;
+  return [
+    {
+      type: `tool-${toolName}`,
+      toolCallId: part.toolCallId,
+      state: "output-available",
+      input: visitorToolInput(toolName, input),
+      output:
+        part.state === "output-available"
+          ? visitorToolOutput(
+              toolName,
+              input,
+              "output" in part ? part.output : undefined,
+              details.profile,
+            )
+          : { status: "failed" },
+    },
+  ];
+}
+
+type UIMessagePart = UIMessage["parts"][number];
+
+interface LoadVisitorChatBaseOptions {
   history: ChatHistory;
   /** Defaults to `CHAT_LIMITS.historyTimeoutMs`. */
   timeoutMs?: number;
   /** Defaults to `console`. */
   logger?: ChatLogger;
 }
+
+/**
+ * With `replyDetails`, pass the same value as to `handleChatRequest`, and the profile, so a
+ * reloaded chat shows what the live one did.
+ */
+export type LoadVisitorChatOptions = LoadVisitorChatBaseOptions &
+  ({ replyDetails?: undefined; profile?: undefined } | VisitorReplyDetails);
 
 /**
  * One of the requesting visitor's conversations, as the browser may see it (see `visitorMessages`),
@@ -147,8 +216,9 @@ export interface LoadVisitorChatOptions {
 export async function loadVisitorChat(
   request: Request,
   chatId: string,
-  { history, timeoutMs = CHAT_LIMITS.historyTimeoutMs, logger = console }: LoadVisitorChatOptions,
+  options: LoadVisitorChatOptions,
 ): Promise<UIMessage[] | undefined> {
+  const { history, timeoutMs = CHAT_LIMITS.historyTimeoutMs, logger = console } = options;
   if (!isChatId(chatId)) return undefined;
   let stored: UIMessage[] | undefined;
   try {
@@ -162,5 +232,11 @@ export async function loadVisitorChat(
     });
     throw new Error("history unavailable");
   }
-  return stored === undefined ? undefined : visitorMessages(stored);
+  if (stored === undefined) return undefined;
+  return visitorMessages(
+    stored,
+    options.replyDetails === undefined
+      ? undefined
+      : { replyDetails: options.replyDetails, profile: options.profile },
+  );
 }
