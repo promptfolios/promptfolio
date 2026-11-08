@@ -111,7 +111,11 @@ async function askAboutRepository() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         id: "chat-1",
-        message: { id: "u1", role: "user", parts: [{ type: "text", text: "What is markdown-linter?" }] },
+        message: {
+          id: "u1",
+          role: "user",
+          parts: [{ type: "text", text: "What is markdown-linter?" }],
+        },
         parentId: null,
       }),
     }),

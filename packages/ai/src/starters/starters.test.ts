@@ -40,7 +40,8 @@ describe("parseStarterQuestions", () => {
   it("reads a JSON array, also inside a code fence or a sentence", () => {
     const json = JSON.stringify(GOOD);
     expect(parseStarterQuestions(json)).toEqual(GOOD);
-    expect(parseStarterQuestions("```json\n" + json + "\n```")).toEqual(GOOD);
+    const fence = "```";
+    expect(parseStarterQuestions(`${fence}json\n${json}\n${fence}`)).toEqual(GOOD);
     expect(parseStarterQuestions(`Here you go: ${json}`)).toEqual(GOOD);
   });
 

@@ -153,8 +153,8 @@ export function ChatWorkspace({
                 <ThreadList />
               </div>
               <p className="text-muted-foreground border-t px-4 py-3 text-xs">
-                Conversations are kept on this site's server for {retentionDays} days after the
-                last message, for this browser only. You can delete them from this list.
+                Conversations are kept on this site's server for {retentionDays} days after the last
+                message, for this browser only. You can delete them from this list.
               </p>
             </nav>
             <main className="flex min-w-0 flex-1 flex-col">

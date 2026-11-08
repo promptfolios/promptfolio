@@ -294,8 +294,7 @@ const REFUSING_STORE: AppChatStore = {
 export function createAppChatHistory(env: AppEnv = process.env): AppChatHistory {
   const development = env.NODE_ENV === "development";
   const config = loadChatHistoryConfig(env);
-  const retentionDays =
-    config.status === "ok" ? config.retentionDays : DEFAULT_RETENTION_DAYS;
+  const retentionDays = config.status === "ok" ? config.retentionDays : DEFAULT_RETENTION_DAYS;
   if (config.status === "invalid") console.error(`[chat] ${config.problem}`);
   const retentionSeconds = retentionDays * 24 * 60 * 60;
   const secureCookie = !development;

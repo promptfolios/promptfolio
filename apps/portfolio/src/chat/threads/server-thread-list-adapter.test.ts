@@ -15,7 +15,10 @@ type Stored = Omit<UIMessage, "id">;
 const aiSdkFormat: MessageFormatAdapter<UIMessage, Stored> = {
   format: AI_SDK_FORMAT,
   encode: ({ message: { id: _id, ...message } }) => message,
-  decode: (stored) => ({ parentId: stored.parent_id, message: { id: stored.id, ...stored.content } }),
+  decode: (stored) => ({
+    parentId: stored.parent_id,
+    message: { id: stored.id, ...stored.content },
+  }),
   getId: (message) => message.id,
 };
 
@@ -48,7 +51,11 @@ describe("createChatTransport", () => {
         trigger: "submit-message",
         messageId: undefined,
         abortSignal: undefined,
-        messages: [text("u1", "user", "Hi"), text("a1", "assistant", "Hello"), text("u2", "user", "More?")],
+        messages: [
+          text("u1", "user", "Hi"),
+          text("a1", "assistant", "Hello"),
+          text("u2", "user", "More?"),
+        ],
       })
       .catch(() => {});
 
@@ -112,7 +119,9 @@ describe("createServerThreadListAdapter", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        respond(200, { threads: [{ id: "t1", title: "Hi", status: "archived", lastMessageAt: 5 }] }),
+        respond(200, {
+          threads: [{ id: "t1", title: "Hi", status: "archived", lastMessageAt: 5 }],
+        }),
       ),
     );
 

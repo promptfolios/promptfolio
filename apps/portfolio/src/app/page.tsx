@@ -1,7 +1,7 @@
 import { type ProfileIssue, profileLinkUrls } from "@promptfolio/core";
 import { ChatWorkspace } from "@/components/chat/chat-workspace";
-import { loadStarterQuestions } from "@/server/chat/starters";
 import { chatRetentionDays } from "@/server/chat/history";
+import { loadStarterQuestions } from "@/server/chat/starters";
 import { isContactEnabled } from "@/server/contact/contact";
 import { loadAppProfile } from "@/server/profile/profile";
 

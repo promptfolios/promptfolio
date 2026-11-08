@@ -100,7 +100,10 @@ export async function handleChatRequest(
       logger.error(`[chat ${requestId}] stored conversation invalid, starting again`);
       messages = [message];
     }
-    if (messages.length > limits.maxMessages || conversationChars(messages) > limits.maxTotalChars) {
+    if (
+      messages.length > limits.maxMessages ||
+      conversationChars(messages) > limits.maxTotalChars
+    ) {
       return textResponse(413, text.conversationTooLong);
     }
 
@@ -126,7 +129,10 @@ export async function handleChatRequest(
       // does not have the message it follows.
       onEnd: async (all) => {
         try {
-          await withinTimeout(history.store.save(historyOwner, chatId, all), limits.historyTimeoutMs);
+          await withinTimeout(
+            history.store.save(historyOwner, chatId, all),
+            limits.historyTimeoutMs,
+          );
         } catch (error) {
           logger.error(`[chat ${requestId}] history not saved`, {
             name: error instanceof Error ? error.name : "unknown",

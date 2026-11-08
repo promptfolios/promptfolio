@@ -342,10 +342,15 @@ describe("conversations kept on the server", () => {
     };
     expect(threads[0]).toMatchObject({ title: "About Jordan", status: "archived" });
 
-    const deleted = await chat.DELETE(change("/api/chats/chat-1", "DELETE", cookie), params("chat-1"));
+    const deleted = await chat.DELETE(
+      change("/api/chats/chat-1", "DELETE", cookie),
+      params("chat-1"),
+    );
     expect(deleted.status).toBe(204);
     expect((await chat.GET(get("/api/chats/chat-1", cookie), params("chat-1"))).status).toBe(404);
-    expect([...fakeRedis.strings.keys()].some((key) => key.startsWith("chat:history:"))).toBe(false);
+    expect([...fakeRedis.strings.keys()].some((key) => key.startsWith("chat:history:"))).toBe(
+      false,
+    );
   });
 
   it("refuses a change from another site, and a change it does not allow", async () => {

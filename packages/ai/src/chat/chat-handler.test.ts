@@ -4,8 +4,8 @@ import { APICallError, createGateway, simulateReadableStream, type UIMessage } f
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
 import { type ChatLogger, handleChatRequest } from "./chat-handler.ts";
-import { type ChatHistory, type ChatStore, createMemoryChatStore } from "./history.ts";
 import type { ChatLimit, ChatTurnLimiter } from "./chat-limit.ts";
+import { type ChatHistory, type ChatStore, createMemoryChatStore } from "./history.ts";
 import { CHAT_LIMITS, type ChatLimitOverrides } from "./limits.ts";
 import { CHAT_MESSAGES, unavailableMessage } from "./messages.ts";
 import { buildSystemPrompt } from "./system-prompt.ts";
@@ -619,11 +619,7 @@ describe("handleChatRequest: rejected input never reaches the model", () => {
       },
       400,
     ],
-    [
-      "a request without parentId",
-      { id: "chat-x", message: userMessage("hi") },
-      400,
-    ],
+    ["a request without parentId", { id: "chat-x", message: userMessage("hi") }, 400],
     [
       "a chat id that is not safe in a storage key",
       { id: "chat:1/../2", message: userMessage("hi"), parentId: null },
@@ -675,7 +671,10 @@ describe("handleChatRequest: rejected input never reaches the model", () => {
         message: {
           id: "u1",
           role: "user",
-          parts: [{ type: "text", text: "hi" }, { type: "tool-lookup", toolCallId: "c1" }],
+          parts: [
+            { type: "text", text: "hi" },
+            { type: "tool-lookup", toolCallId: "c1" },
+          ],
         },
         parentId: null,
       },
