@@ -36,7 +36,7 @@ import type {
  * explain, not exceptions. `execute` throws only on a bug.
  */
 
-const SECTIONS = [
+export const SECTIONS = [
   "experience",
   "projects",
   "repositories",
@@ -45,6 +45,37 @@ const SECTIONS = [
   "skills",
   "links",
 ] as const;
+export type ProfileSection = (typeof SECTIONS)[number];
+
+/**
+ * What each section holds, in words the model reads twice: in the system prompt, and in the
+ * `section` argument's description when it picks one. Without them, a question that says
+ * "projects" picks the projects section even when it asks about contributions.
+ */
+export const SECTION_MEANINGS: Readonly<Record<ProfileSection, string>> = {
+  experience: "roles the owner has held: title, organization, and dates",
+  projects: "work the owner describes in their own profile (self-reported), with or without code",
+  repositories: "public code repositories under the owner's own account, as the source shows them",
+  contributions: "recent commits the owner made to repositories owned by someone else",
+  education: "degrees, courses, and certifications",
+  skills: "skills the owner lists",
+  links: "the owner's public profiles and websites",
+};
+
+/** The sections that can each hold work, so an empty one is not a reason to say there is none. */
+const WORK_SECTIONS = ["projects", "repositories", "contributions"] as const;
+type WorkSection = (typeof WORK_SECTIONS)[number];
+
+const isWorkSection = (section: ProfileSection): section is WorkSection =>
+  (WORK_SECTIONS as readonly string[]).includes(section);
+
+/** Written by code for an empty work section, so a small model does not stop at it. */
+function emptyWorkSectionNote(section: WorkSection, filtered: boolean): string {
+  const others = WORK_SECTIONS.filter((other) => other !== section).join(" and ");
+  const found = filtered ? `No records in ${section} use that skill.` : `No records in ${section}.`;
+  return `${found} Work can also be in ${others}, which are separate sections: list them before saying there is none.`;
+}
+
 const SKILL_FILTER_SECTIONS: ReadonlySet<string> = new Set([
   "experience",
   "projects",
@@ -53,7 +84,11 @@ const SKILL_FILTER_SECTIONS: ReadonlySet<string> = new Set([
 
 export const listInputSchema = z
   .strictObject({
-    section: z.enum(SECTIONS).describe("Which part of the profile to list."),
+    section: z
+      .enum(SECTIONS)
+      .describe(
+        `Which part of the profile to list: ${SECTIONS.map((name) => `${name} (${SECTION_MEANINGS[name]})`).join("; ")}.`,
+      ),
     skill: z
       .string()
       .min(1)
@@ -145,6 +180,10 @@ function listRecords(profile: Profile, input: z.infer<typeof listInputSchema>) {
       profile,
       records.flatMap((record) => [record, ...(record.related ?? [])]),
     ),
+    ...(records.length === 0 &&
+      isWorkSection(input.section) && {
+        note: emptyWorkSectionNote(input.section, input.skill !== undefined),
+      }),
   };
   if (input.skill === undefined) return result;
   return { ...result, skillInProfile: recordsUsingSkill(profile, input.skill).inProfile };

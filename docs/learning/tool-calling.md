@@ -122,6 +122,12 @@ refresh. Because the url is source-observed while the project summary's evidence
   back, and the summary must stay built from fixed values and profile data, never copied from the
   model's arguments or the raw result.
 - Throwing for "not found". The model then sees an error instead of a fact it can explain.
+- Reading an empty list as the answer. A small model asked about contributions listed the empty
+  `projects` section and said there were none, although the prompt said to check all three work
+  sections. Since M20 the prompt and the `section` argument say what each section holds, and an
+  empty work section's result carries a `note` naming the other two
+  ([profile-tools.ts](../../packages/ai/src/grounding/profile-tools.ts)): written by code, read by
+  the model at the moment it decides.
 - Assuming `toolChoice: "none"` means no tool-call text. It forbids a real call, but a model can still write one as
   text. Reports now record steps, so a run can show whether this happens on the last step.
 - Counting a model's per-step limits as per-request limits: `maxOutputTokens` applies to each step,

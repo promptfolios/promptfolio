@@ -37,6 +37,7 @@ since been corrected, so a rerun would score those answers differently.
 | [m15-gpt-4o-mini](2026-11-01-m15-gpt-4o-mini.md) | `openai/gpt-4o-mini`, AI Gateway | As of M15 | 15 × 3, stopped early | 32 of 45 | 0 |
 | [m15-gpt-4o-mini-rest](2026-11-01-m15-gpt-4o-mini-rest.md) | `openai/gpt-4o-mini`, AI Gateway | As of M15 | 6 × 3, the affected cases left | 11 of 18 | 0 |
 | [m17-repo-url](2026-11-07-m17-repo-url.md) | `openai/gpt-4o-mini`, AI Gateway | As of M17 | 1 × 3, `project-repository-links` only | 0 of 3 | 0 |
+| [m20-gpt-4o-mini](2026-11-08-m20-gpt-4o-mini.md) | `openai/gpt-4o-mini`, AI Gateway | As of M20 | 7 × 3, the affected cases | 11 of 21 | 0 after one retry |
 
 ## What the runs show
 
@@ -189,6 +190,26 @@ gained `repositoryUrl`. Not the full set.
 - **All 3 failed on `#`:** each wrote `[Route Planner](#)` for the internal service, which has no url, despite the prompt's rule
   against placeholder addresses. A prompt rule has not stopped this; removing links to urls outside the tool results in code
   would. Not addressed yet.
+
+## The M20 section definitions on gpt-4o-mini: failed the gate, section choice fixed
+
+A targeted run of the 7 cases M20 affects, at 4.5 seconds a call, after the prompt and the `section` argument gained what each
+section holds, an empty work section gained a `note`, and the history rules were corrected for server-side history.
+
+- **Section choice worked:** in all 6 runs of `contributions-on-github` and `work-overview`, the model listed projects,
+  repositories, and contributions, found the parser commit, and never said there were none.
+- **Both failed on `#`:** every run wrote `[Route Planner](#)` for the internal service, as in M17. The new cases list projects,
+  so they meet this known problem.
+- **Lists are too wide:** asked what Riley contributed to on GitHub, all 3 answers also listed Riley's own projects and
+  repositories under "contributed", including the internal service. One said "they have worked on the following public
+  repositories", which no authorship check catches.
+- **`visitor-stated-fact` declined without a lookup:** all 3 answered "This information is not available here." The answer is
+  right; the check requires a lookup. No section holds awards, which the prompt now says, so the model may have reasoned that none
+  could help. The check was left as it is, so as not to tune it to this run.
+- **No regressions:** `repository-list` and both follow-ups passed 3 of 3; `contribution` passed 2 of 3, with one run linking the
+  repository instead of the commit.
+
+The developer chose to close M20 with these as known limitations.
 
 ## What the checks got wrong
 

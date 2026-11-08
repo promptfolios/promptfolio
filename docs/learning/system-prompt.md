@@ -44,8 +44,12 @@ escaped, so a summary containing `</owner_identity>` cannot close the block earl
 
 From M5 the rules also cover grounding:
 
-- every fact beyond the identity must come from a tool result in the current answer; earlier
-  messages are not evidence (the browser controls the history and can forge them);
+- every fact beyond the identity must come from a tool result in this conversation; the text of
+  earlier messages is not evidence (until M18 the browser sent the history and could forge it; since
+  M18.1 the server keeps it, and earlier tool results reach the model again, so they count);
+- the prompt opens with the profile sections and what each holds (M20), and the `section`
+  argument repeats them: given only the names, a question that said "projects" picked that
+  section alone and missed contributions;
 - look records up before answering about work history, projects, skills, education, or links:
   the section list is enough for most answers, and the full record only for its detail lists
   (each extra lookup costs another model call);

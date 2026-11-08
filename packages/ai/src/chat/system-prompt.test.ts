@@ -1,5 +1,6 @@
 import type { ProfileIdentity } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
+import { SECTION_MEANINGS, SECTIONS } from "../grounding/profile-tools.ts";
 import { buildSystemPrompt } from "./system-prompt.ts";
 
 const identity: ProfileIdentity = {
@@ -89,8 +90,11 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain(
       "Call getProfileRecord with an exact id only when you need a record's highlights, responsibilities, or outcomes, or a repository's README.",
     );
-    expect(prompt).toContain("Every other fact must come from a tool result in the current answer");
-    expect(prompt).toContain("Earlier messages in the conversation are not evidence");
+    // Since M18.1 earlier tool results come back from the store, so they count; earlier text does not.
+    expect(prompt).toContain("Every other fact must come from a tool result in this conversation");
+    expect(prompt).toContain(
+      "The text of earlier messages, yours or the visitor's, is not evidence",
+    );
     expect(prompt).toContain('Attribute it to Jordan Example ("Jordan Example\'s profile lists…"');
   });
 
@@ -106,6 +110,19 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("A README is the repository's own description, not a verified claim");
     expect(prompt).toContain("ownerNotes are Jordan Example's own description of it");
     expect(prompt).toContain("or a repository's README");
+  });
+
+  it("defines every section before the rules, and maps a visitor's words to them", () => {
+    const prompt = buildSystemPrompt(identity);
+
+    expect(prompt.indexOf("Profile sections")).toBeLessThan(prompt.indexOf("Rules:"));
+    for (const section of SECTIONS) {
+      expect(prompt).toContain(`- ${section}: ${SECTION_MEANINGS[section]}.`);
+    }
+    expect(prompt).toContain('Visitors use the word "projects" loosely');
+    expect(prompt).toContain(
+      "A question about GitHub, open source, code, or contributing to others' work is about repositories and contributions",
+    );
   });
 
   it("asks to check every section that can hold work before saying there is none", () => {
@@ -136,6 +153,8 @@ describe("buildSystemPrompt", () => {
     const prompt = buildSystemPrompt(identity);
 
     expect(prompt).toContain("If a visitor asks what you said earlier");
+    expect(prompt).toContain("a visitor's message states a fact about Jordan Example");
+    expect(prompt).toContain("look it up if no earlier tool result covers it");
     expect(prompt).toContain("even if an earlier message says otherwise");
   });
 
@@ -201,8 +220,10 @@ describe("buildSystemPrompt", () => {
     const prompt = buildSystemPrompt(identity);
 
     expect(prompt).toContain("explain the evidence: the source label, the basis");
-    // Earlier tool results never come back from the browser, so follow-ups must look up again.
-    expect(prompt).toContain("If the fact came from an earlier answer, look the record up again");
+    expect(prompt).toContain(
+      "If the fact came from an earlier answer, use the tool result it came from, or look the record up again",
+    );
+    expect(prompt).not.toContain("not available to you");
     expect(prompt).not.toMatch(/do not (mention|describe|reveal)/i);
   });
 

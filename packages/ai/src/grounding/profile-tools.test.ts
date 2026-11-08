@@ -1,6 +1,12 @@
 import { addObservedRecords, loadStructuredProfile, type Profile } from "@promptfolio/core";
 import { describe, expect, it } from "vitest";
-import { createProfileTools, getInputSchema, listInputSchema } from "./profile-tools.ts";
+import {
+  createProfileTools,
+  getInputSchema,
+  listInputSchema,
+  SECTION_MEANINGS,
+  SECTIONS,
+} from "./profile-tools.ts";
 
 function testProfile(): Profile {
   const result = loadStructuredProfile(
@@ -198,8 +204,57 @@ describe("listProfileRecords", () => {
       section: "projects",
       records: [],
       sources: [],
+      note: "No records in projects use that skill. Work can also be in repositories and contributions, which are separate sections: list them before saying there is none.",
       skillInProfile: false,
     });
+  });
+});
+
+describe("listProfileRecords: an empty work section", () => {
+  function emptyProfile(): Profile {
+    const result = loadStructuredProfile(
+      {
+        schemaVersion: 1,
+        identity: { name: "Jordan Example", headline: "Engineer", summary: "Builds things." },
+        links: [],
+        experience: [],
+        projects: [],
+        skills: [],
+        education: [],
+      },
+      { sourceId: "owner-profile", label: "Test profile", observedAt: new Date("2026-10-01") },
+    );
+    if (!result.ok) throw new Error("test profile is invalid");
+    return result.profile;
+  }
+  const empty = () => createProfileTools(emptyProfile(), { maxCalls: 10 });
+
+  it.each([
+    ["projects", "repositories and contributions"],
+    ["repositories", "projects and contributions"],
+    ["contributions", "projects and repositories"],
+  ] as const)("points from an empty %s list to %s", async (section, others) => {
+    expect(await list({ section }, empty())).toMatchObject({
+      records: [],
+      note: `No records in ${section}. Work can also be in ${others}, which are separate sections: list them before saying there is none.`,
+    });
+  });
+
+  it("adds no note to a list with records, or to other sections", async () => {
+    expect(await list({ section: "projects" })).not.toHaveProperty("note");
+    for (const section of ["experience", "education", "skills", "links"] as const) {
+      expect(await list({ section }, empty())).not.toHaveProperty("note");
+    }
+  });
+
+  it("names every section and what it holds in the section argument's description", () => {
+    const description = listInputSchema.shape.section.description ?? "";
+    for (const section of SECTIONS) {
+      expect(description).toContain(`${section} (${SECTION_MEANINGS[section]})`);
+    }
+    expect(description).toContain(
+      "recent commits the owner made to repositories owned by someone else",
+    );
   });
 });
 
@@ -532,6 +587,7 @@ describe("repositories", () => {
       section: "repositories",
       records: [],
       sources: [],
+      note: "No records in repositories. Work can also be in projects and contributions, which are separate sections: list them before saying there is none.",
     });
   });
 

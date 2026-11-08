@@ -58,8 +58,9 @@ model does follow an injection.
   from the profile become links ([links in answers](links-in-answers.md)). A repository's own homepage is on that list, and
   can point anywhere its owner likes.
 - A test with a mock model shows what reaches the model, not what a real model does with it.
-- A visitor can forge earlier assistant messages in their own request. It only affects their own answer, and the
-  prompt tells the model that earlier messages are not evidence.
+- "The visitor can forge earlier answers." Until M18 they could; since then the server keeps the history and the request
+  holds only the new question. A visitor can still state a "fact" in that question, so the prompt tells the model that the
+  text of earlier messages is not evidence, only tool results are.
 
 ## 6. Further reading
 

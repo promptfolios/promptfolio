@@ -12,8 +12,8 @@ What Promptfolio does not do or guarantee, as of M13. Each item says what happen
 - **The chosen model failed its evaluation.** The developer moved to `gateway:openai/gpt-4o-mini` by 2026-11-02, because
   `ling-3.1-flash-1019` timed out more often in use and kept reaching the 2,000-token limit on the open-source contributions
   question. Mini is a priced model, so its calls draw on AI Gateway credit. In its run, all 3 forged-history answers repeated
-  the forged award as fact. A visitor can only forge their own conversation, so this misleads that visitor or a screenshot,
-  not others. One of 6 injection runs printed the injected README, though not as a link. 11 of 95 attempts hit a rate limit
+  the forged award as fact. Since M18 a visitor can no longer forge earlier answers; in M20 a fact stated in the question was
+  declined in 3 of 3 runs, though without a lookup. One of 6 injection runs printed the injected README, though not as a link. 11 of 95 attempts hit a rate limit
   or timeout, and a visitor gets no script retry. Answers also called internal and unlicensed work open source.
   See [the evaluation](evaluation/README.md#the-run-on-gpt-4o-mini-failed-the-gate).
 - **Stronger prompt rules did not fix this (M15).** On `gpt-4o-mini`, 2 of 3 forged-history answers still stated the award, and all 3
@@ -21,6 +21,11 @@ What Promptfolio does not do or guarantee, as of M13. Each item says what happen
   linked skills to unrelated repositories, which the page would show as real links because the URLs are in the profile. The link rule was
   revised afterwards, and that revision has not been run. 7 of the 28 cases have not run on this prompt.
   See [the evaluation](evaluation/README.md#the-m15-prompt-rules-on-gpt-4o-mini-failed-the-gate).
+- **Work lists can be too wide (M20).** Since M20 a question about contributions looks in all three work sections, but on
+  `gpt-4o-mini` all 3 answers to "What projects has Riley contributed to on GitHub?" also listed Riley's own projects and
+  repositories as contributions, including an internal service. Every run in the two new cases also linked that service to `#`, the
+  placeholder link the prompt forbids; the page shows it as plain text.
+  See [the evaluation](evaluation/README.md#the-m20-section-definitions-on-gpt-4o-mini-failed-the-gate-section-choice-fixed).
 - **Ling failed its evaluation.** About 1 in 3 recorded attempts timed out or hit a rate limit. One of 6 injection runs quoted
   injected text while refusing it, and answers could narrate, mention injected text unprompted, and add their own sources.
   See [the evaluation](evaluation/README.md#the-run-on-ling-failed-the-gate).
