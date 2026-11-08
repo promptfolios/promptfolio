@@ -43,7 +43,8 @@ sequenceDiagram
   against the current tools. A conversation that no longer fits starts again from the question.
 - **Saved after the filters.** The answer is built from the stream after the raw-tool-call filter, so text the visitor never saw
   is not saved either, and before `forVisitor`, so tool calls and results are kept for the model.
-- **The visitor's view.** `loadVisitorChat` returns a stored conversation with text only, the same as the live stream shows.
+- **The visitor's view.** `loadVisitorChat` returns a stored conversation as the live stream showed it: text only, or with `replyDetails`
+  the same lookup summaries and model name ([ADR 0019](../adr/0019-lookups-and-model-shown-to-visitors.md)).
 
 ## 4. Where it lives in the code
 

@@ -157,7 +157,7 @@ sequenceDiagram
         H->>P: tool result: record with id, basis, sourceId
     end
     P-->>H: answer text, with Markdown links
-    H-->>B: UI message stream: text and step boundaries (output allowlist)
+    H-->>B: UI message stream: text, step boundaries, lookup summaries and model name (output allowlist)
     Note over B,H: Provider errors and timeouts (10 s between chunks, 55 s total; a model that never responds is stopped only by the total, or by a list's own timers) become a generic message with a ref id
     B-)H: Stop or disconnect fires request.signal
     H-)P: abortSignal cancels the model request

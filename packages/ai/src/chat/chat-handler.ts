@@ -28,7 +28,8 @@ export interface ChatHandlerOptions extends ChatTurnOptions {
  * Handles one chat turn: validates the request, continues the visitor's stored conversation and,
  * within the daily limits, lets the model look up profile records with server-side tools. It streams
  * the reply back as an AI SDK UI message stream and saves the whole conversation when the reply ends.
- * Tool activity stays on the server.
+ * Tool calls and results as the model saw them stay on the server; with `replyDetails`, the browser
+ * gets a summary of each lookup the server writes itself.
  *
  * The request is `{ id, message, parentId }`: the conversation, the new question, and the message
  * it follows (see `parseChatRequest`). Earlier messages come only from the store.
