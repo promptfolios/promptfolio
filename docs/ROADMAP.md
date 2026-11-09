@@ -49,6 +49,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M14 — Provider failover                    | Done      | `PROMPTFOLIO_MODEL` takes a list, and a failed model moves to the next before an answer starts; [plan](plans/m14-provider-failover.md) |
 | M15 — Prompt fixes                         | Done      | [results](evaluation/README.md#the-m15-prompt-rules-on-gpt-4o-mini-failed-the-gate): failed the gate, with some rules helping; [limitations](KNOWN_LIMITATIONS.md); [plan](plans/m15-prompt-fixes.md) |
 | M16 — First release                        | Done      | `npm view @promptfolio/core version`: `0.0.1`, published 2026-11-02; [the checklist](plans/m13-library-readiness.md#release-checklist) |
+| M21 — Background refresh in a store        | Done, in review | `pnpm --filter @promptfolio/source-github test`; opt-in `createBackgroundGitHubSource`; [plan](plans/m21-background-refresh-in-a-store.md) |
 
 Update this table when a milestone is approved.
 

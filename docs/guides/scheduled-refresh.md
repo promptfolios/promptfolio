@@ -145,3 +145,11 @@ Checked in the official documentation on 2026-10-30; recheck when activating.
 **Not verified, check in the first run:** whether `GITHUB_TOKEN` can read a user's pinned
 repositories through GraphQL (the refresh reports `unauthorized` for the pinned query if not);
 whether the host deploys the bot's push.
+
+## Alternative: background refresh in a store
+
+If the deployment already has a store (for chat limits or history), the snapshot can live there instead of in git, refreshed
+after visitor requests with `createBackgroundGitHubSource` from `@promptfolio/source-github`. No workflow, no data commits,
+no 60-day rule; the data is no longer reviewed in git, and a site with no visitors does not refresh. Opt-in: this guide's job
+stays the default. Decision and trade-offs: [ADR 0020](../adr/0020-background-refresh-in-a-store.md); usage: the
+[package README](../../packages/source-github/README.md#background-refresh-in-a-store-opt-in).

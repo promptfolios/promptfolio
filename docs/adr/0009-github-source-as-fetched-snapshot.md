@@ -76,3 +76,6 @@ the profile-independent reference app).
 - *Update (M8.1):* work outside the owner's repositories is covered by contribution records, from
   commits rather than forks or merged pull requests. See
   [ADR 0011](0011-contributions-as-attributed-commits.md).
+- *Update (M21):* a hosted store refreshed after visitor requests, instead of a cron route, is now
+  an opt-in mode next to the committed snapshot. See
+  [ADR 0020](0020-background-refresh-in-a-store.md).

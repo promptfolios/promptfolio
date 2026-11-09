@@ -68,6 +68,8 @@ flowchart LR
   enough.
 - Committing a status file on every run: a commit and a deployment per day for no data change.
 - Putting a deploy hook URL in the workflow file: it is a credential.
+- "A serverless app needs a cron job to refresh." Visitor requests can trigger it instead, after
+  the response: see [background work after the response](background-work-after-response.md).
 
 ## 6. Further reading
 

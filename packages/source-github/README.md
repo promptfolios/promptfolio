@@ -20,6 +20,8 @@ Requires Node.js 22 or later. ES modules only.
 | `carryForward` | Keeps earlier data for repositories a refresh could not read |
 | `mergeGitHubSnapshot` | Validates, normalizes, and adds a snapshot's records to a `Profile` |
 | `normalizeGitHubSnapshot` | The normalizing step alone, for code that merges records itself |
+| `createBackgroundGitHubSource` | Opt-in: keeps the snapshot in your store and refreshes it after responses |
+| `createMemorySnapshotStore` | A `GitHubSnapshotStore` in memory, for tests and local development |
 
 ## Example
 
@@ -38,6 +40,23 @@ Storing the snapshot, recording refresh status, and scheduling stay yours: see t
 [`refresh.ts`](https://github.com/promptfolios/promptfolio/blob/main/apps/portfolio/src/server/refresh/refresh.ts) and the
 [scheduled refresh guide](https://github.com/promptfolios/promptfolio/blob/main/docs/guides/scheduled-refresh.md). Source text
 is untrusted, and it reaches a model only as data.
+
+## Background refresh in a store (opt-in)
+
+Instead of a committed snapshot and a scheduled job, keep the snapshot in a store and refresh it after responses. You
+implement `GitHubSnapshotStore` (`get`, `set`, and a `lock` with a token); on Next.js:
+
+```ts
+import { after } from "next/server";
+import { createBackgroundGitHubSource } from "@promptfolio/source-github";
+
+const github = createBackgroundGitHubSource({ store, config, token, runAfterResponse: after });
+const profile = await github.loadProfile(ownerProfileResult); // never calls GitHub
+```
+
+A complete refresh waits 6 hours, a partial or failed one 1 hour; one run at a time. The stored snapshot is replaced only
+once the new one fits the profile. See
+[ADR 0020](https://github.com/promptfolios/promptfolio/blob/main/docs/adr/0020-background-refresh-in-a-store.md).
 
 ## License
 

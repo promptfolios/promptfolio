@@ -69,3 +69,5 @@ workflow in this repository (it would fail or idle every day on the example prof
   [scheduled jobs](../learning/scheduled-jobs.md).
 
 *Update (M12.5):* prepared answers were removed, so the reporting in decision 5 is gone. The content fingerprint remains the profile version, now in `@promptfolio/core`.
+
+*Update (M21):* an opt-in alternative to the scheduled job keeps the snapshot in a store and refreshes it after visitor requests, with no status file. See [ADR 0020](0020-background-refresh-in-a-store.md).

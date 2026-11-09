@@ -6,6 +6,8 @@
  * so the latter can run on every request without touching the network. `mergeGitHubSnapshot` does
  * those steps and adds the records to a profile.
  * `carryForward` keeps the previous data of repositories a refresh could not read.
+ * `createBackgroundGitHubSource` is the opt-in alternative to a committed snapshot file: the data
+ * lives in a store the application supplies and is refreshed after responses.
  *
  * Only what is exported here is part of the public API.
  */
@@ -23,6 +25,18 @@ export {
   type GitHubFetchErrorKind,
   type MissingRepository,
 } from "./fetch/fetch.ts";
+export {
+  type BackgroundGitHubSource,
+  type BackgroundGitHubSourceOptions,
+  type BackgroundRefreshIntervals,
+  createBackgroundGitHubSource,
+  type RefreshOutcome,
+} from "./refresh/refresh.ts";
+export {
+  createMemorySnapshotStore,
+  type GitHubSnapshotStore,
+  type SnapshotStoreKey,
+} from "./refresh/store.ts";
 export {
   type CarriedRepository,
   type CarryForwardResult,
