@@ -21,7 +21,7 @@ flowchart LR
     version --> publish["pnpm changeset publish"]
 ```
 
-- **One version.** `fixed` in the configuration moves `core`, `ai`, and `source-github` together. A patch to `core` alone took
+- **One version.** `fixed` in the configuration moves `core`, `ai`, `source-github`, and `source-remote` (from M22) together. A patch to `core` alone took
   all three from `0.0.1` to `0.0.2` in a test.
 - **What is left out.** The apps and `@promptfolio/contact` are in `ignore`, so they do not change version.
 - **`privatePackages.version` is on,** because the three packages were `private: true` when this was set up, and

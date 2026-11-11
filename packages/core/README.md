@@ -16,6 +16,7 @@ Requires Node.js 22 or later. ES modules only.
 | Export | Purpose |
 | ------ | ------- |
 | `loadStructuredProfile` | Validates owner data and returns a `Profile`, or issues with their paths |
+| `findContactDetails` | Reports text that looks like an email address or phone number, with its path. A heuristic: it narrows the risk of publishing contact details, and the caller decides what a finding means |
 | `addObservedRecords` | Adds records read from a source, keeping their provenance |
 | `findRecordById`, `recordsUsingSkill` | Look records up |
 | `profileLinkUrls` | The URLs an answer may link to; a UI should make only these clickable |

@@ -14,7 +14,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-const PACKAGES = ["core", "ai", "source-github"];
+const PACKAGES = ["core", "ai", "source-github", "source-remote"];
 /** Module settings a consumer might use: one for Node without a bundler, and one for a bundler. */
 const MODULE_MODES = [
   { module: "NodeNext", moduleResolution: "NodeNext" },

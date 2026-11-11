@@ -4,6 +4,7 @@
  * Only what is exported here is part of the public API.
  */
 export { canonicalProfileContent, profileFingerprint } from "./profile/canonical.ts";
+export { findContactDetails } from "./profile/contact-details.ts";
 export type {
   EducationInput,
   ProfileIdentityInput,

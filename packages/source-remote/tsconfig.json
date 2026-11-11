@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // The fetcher uses the global fetch, Response, and AbortSignal; Node's types declare them.
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

@@ -7,8 +7,14 @@ import {
   handleChatRequest,
 } from "@promptfolio/ai";
 import { evaluateQuestion, scoreEvaluationTurn } from "@promptfolio/ai/evaluation";
-import { loadStructuredProfile, type Profile, profileFingerprint } from "@promptfolio/core";
+import {
+  findContactDetails,
+  loadStructuredProfile,
+  type Profile,
+  profileFingerprint,
+} from "@promptfolio/core";
 import { mergeGitHubSnapshot, parseGitHubConfig } from "@promptfolio/source-github";
+import { fetchRemoteProfile } from "@promptfolio/source-remote";
 import { simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 
@@ -98,5 +104,14 @@ assert.ok(scoreEvaluationTurn(turn, {}).every((check) => check.passed));
 const config = parseGitHubConfig({ formatVersion: 1, user: "avery" });
 assert.ok(config.ok);
 assert.equal(mergeGitHubSnapshot(profile, config.config, {}).ok, false);
+
+const remote = await fetchRemoteProfile({
+  url: "https://example.com/profile.json",
+  fetch: (async () => Response.json({ note: "avery@example.com" })) as typeof fetch,
+});
+assert.ok(remote.ok);
+assert.deepEqual(findContactDetails(remote.data), [
+  { path: "note", message: "Looks like an email address" },
+]);
 
 console.log("consumer: every entry point works");

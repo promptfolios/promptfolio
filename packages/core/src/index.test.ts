@@ -6,6 +6,7 @@ describe("public API", () => {
     expect(Object.keys(core).sort()).toEqual([
       "addObservedRecords",
       "canonicalProfileContent",
+      "findContactDetails",
       "findRecordById",
       "isRecordId",
       "loadStructuredProfile",

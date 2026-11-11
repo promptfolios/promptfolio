@@ -16,6 +16,7 @@ Status: early development. See [`PROMPTFOLIO_SPEC.md`](PROMPTFOLIO_SPEC.md) for 
 | `packages/ai`            | `@promptfolio/ai`            | Server-only chat handler: validation, limits, streaming.      |
 | `packages/contact`       | `@promptfolio/contact`       | Confirmed contact messages, with no email provider or store.  |
 | `packages/source-github` | `@promptfolio/source-github` | Public GitHub data: fetching, validating, and merging.        |
+| `packages/source-remote` | `@promptfolio/source-remote` | A profile file fetched from a URL, with a timeout and size limit. |
 | `apps/portfolio`         | `portfolio`                  | Reference Next.js application; consumes the packages.         |
 | `apps/minimal-consumer`  | `minimal-consumer`           | A small test-backed consumer with no framework.               |
 | `docs/`                  | —                            | Roadmap, architecture decision records, and background notes. |
@@ -31,7 +32,7 @@ Source files are grouped by what they do:
 | `apps/portfolio/src` (browser)   | `chat/threads`, `chat/sources`, `contact`, `components`                |
 
 Dependency direction: apps depend on packages; packages never depend on apps. Each package has a README with its
-entry points and an example. `core`, `ai`, and `source-github` are published to npm. `contact` is used only from this workspace.
+entry points and an example. `core`, `ai`, `source-github`, and `source-remote` are published to npm. `contact` is used only from this workspace.
 
 The reference app's chat UI uses [assistant-ui](https://www.assistant-ui.com/) with Tailwind CSS
 and shadcn/ui, in light and dark modes. Component code copied by their CLIs lives in `apps/portfolio/src/components/ui/`,
@@ -132,8 +133,8 @@ daily quota. See [the results](docs/evaluation/README.md) and [known limitations
 
 - Packages expose their public API only through the `exports` field in `package.json`; importing
   package internals (for example, `@promptfolio/core/src/...`) is not supported.
-- In this workspace, packages are consumed from TypeScript source without a build step. `core`, `ai`, and
-  `source-github` also build to `dist/`, which is what a packed tarball exposes; see
+- In this workspace, packages are consumed from TypeScript source without a build step. `core`, `ai`,
+  `source-github`, and `source-remote` also build to `dist/`, which is what a packed tarball exposes; see
   [ADR 0016](docs/adr/0016-package-builds-with-tsc.md).
 - Shared dependency versions are defined once in the `catalog` section of `pnpm-workspace.yaml`
   and referenced as `"catalog:"`.

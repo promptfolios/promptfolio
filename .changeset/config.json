@@ -2,7 +2,14 @@
   "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [["@promptfolio/core", "@promptfolio/ai", "@promptfolio/source-github"]],
+  "fixed": [
+    [
+      "@promptfolio/core",
+      "@promptfolio/ai",
+      "@promptfolio/source-github",
+      "@promptfolio/source-remote"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

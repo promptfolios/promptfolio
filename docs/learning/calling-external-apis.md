@@ -57,6 +57,9 @@ garbage. Every response is untrusted input, exactly like a visitor's message.
 
 ## 4. Where it lives in the code
 
+- A profile file at any URL (M22): [packages/source-remote/src/fetch-remote-profile.ts](../../packages/source-remote/src/fetch-remote-profile.ts)
+  applies the same bounds (a timeout, a size limit counted while reading, a `User-Agent`, typed errors). It keeps the start
+  of an error body, because APIs such as GitHub explain failures there, and removes request header values from it first.
 - The client: [packages/source-github/src/fetch/github-client.ts](../../packages/source-github/src/fetch/github-client.ts)
   (`GitHubClient`)
 - The run: [packages/source-github/src/fetch/fetch.ts](../../packages/source-github/src/fetch/fetch.ts)

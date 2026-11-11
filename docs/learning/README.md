@@ -48,6 +48,7 @@ that builds it; code links are marked "planned").
 | Provider failover | [provider-failover.md](provider-failover.md) | M14 | in use |
 | Server-side conversation history | [server-side-history.md](server-side-history.md) | M18.1 | in use |
 | Background work after the response | [background-work-after-response.md](background-work-after-response.md) | M21 | in use |
+| Private-data checks | [private-data-checks.md](private-data-checks.md) | M22 | in use |
 
 Add or update a note whenever a milestone introduces or changes a concept (see `CLAUDE.md`,
 "Learning documentation").

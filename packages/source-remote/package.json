@@ -1,0 +1,51 @@
+{
+  "name": "@promptfolio/source-remote",
+  "version": "0.0.3",
+  "description": "Remote profile source for Promptfolio: fetches a profile file from a URL, with a timeout and a size limit.",
+  "keywords": [
+    "promptfolio",
+    "portfolio",
+    "profile"
+  ],
+  "homepage": "https://github.com/promptfolios/promptfolio/tree/main/packages/source-remote#readme",
+  "bugs": "https://github.com/promptfolios/promptfolio/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/promptfolios/promptfolio.git",
+    "directory": "packages/source-remote"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "prepack": "pnpm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
