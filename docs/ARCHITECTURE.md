@@ -342,7 +342,7 @@ Profile
  ├─ schemaVersion: 1
  ├─ identity      { name, headline, summary, location?, provenance }
  ├─ links[]       { label, url, provenance }
- ├─ experience[]  { id, organization, title, start, end?, highlights[], skills[], provenance }
+ ├─ experience[]  { id, organization, title, start, end?, highlights[], links[], skills[], provenance }
  ├─ projects[]    { id, name, description, roleId? → experience.id,
  │                  responsibilities[], outcomes[], links[], skills[] → skills.name, provenance }
  ├─ skills[]      { name (case-insensitive key), category?, provenance }

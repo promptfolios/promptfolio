@@ -34,6 +34,7 @@ export interface RoleSummary extends RecordEvidence {
   start: PartialDate;
   end?: PartialDate;
   summary?: string;
+  links: ExternalLink[];
 }
 
 export interface ProjectSummary extends RecordEvidence {

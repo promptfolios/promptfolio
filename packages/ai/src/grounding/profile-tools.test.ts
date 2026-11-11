@@ -22,6 +22,7 @@ function testProfile(): Profile {
           start: "2023-09",
           summary: "Builds internal developer tools.",
           highlights: ["Built a service catalog."],
+          links: [{ label: "Product", url: "https://example.com/globex-catalog" }],
           skills: ["TypeScript", "PostgreSQL"],
         },
         {
@@ -95,7 +96,7 @@ async function get(id: string, set = tools()) {
 }
 
 describe("listProfileRecords", () => {
-  it("lists roles with their summary, dates, and full provenance, but not highlights", async () => {
+  it("lists roles with their summary, dates, links, and full provenance, but not highlights", async () => {
     expect(await list({ section: "experience" })).toEqual({
       status: "listed",
       section: "experience",
@@ -106,6 +107,7 @@ describe("listProfileRecords", () => {
           title: "Full-stack Engineer",
           start: "2023-09",
           summary: "Builds internal developer tools.",
+          links: [{ label: "Product", url: "https://example.com/globex-catalog" }],
           ...EVIDENCE,
         },
         {
@@ -114,6 +116,7 @@ describe("listProfileRecords", () => {
           title: "Frontend Engineer",
           start: "2021-03",
           end: "2023-08",
+          links: [],
           ...EVIDENCE,
         },
       ],
@@ -280,6 +283,7 @@ describe("getProfileRecord", () => {
         title: "Full-stack Engineer",
         start: "2023-09",
         summary: "Builds internal developer tools.",
+        links: [{ label: "Product", url: "https://example.com/globex-catalog" }],
         ...EVIDENCE,
       },
       sources: SOURCES,

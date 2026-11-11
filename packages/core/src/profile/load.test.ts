@@ -27,6 +27,7 @@ function fullInput() {
         start: "2021-03",
         end: "2023-08",
         highlights: ["Led the migration to React."],
+        links: [{ label: "Product", url: "https://example.com/acme-product" }],
         skills: ["TypeScript", "react"],
       },
     ],
@@ -80,6 +81,9 @@ describe("loadStructuredProfile: valid input", () => {
     expect(result.warnings).toEqual([]);
     expect(result.profile.identity.name).toBe("Jordan Example");
     expect(result.profile.experience[0]?.id).toBe("acme-frontend");
+    expect(result.profile.experience[0]?.links).toEqual([
+      { label: "Product", url: "https://example.com/acme-product" },
+    ]);
     expect(result.profile.projects[0]?.roleId).toBe("acme-frontend");
   });
 
@@ -254,6 +258,15 @@ describe("loadStructuredProfile: invalid input", () => {
     link.url = "javascript:alert(1)";
 
     expect(issuesFor(input).map((issue) => issue.path)).toEqual(["links[0].url"]);
+  });
+
+  it("rejects non-http URLs in a role's links", () => {
+    const input = fullInput();
+    const link = input.experience[0]?.links[0];
+    if (!link) throw new Error("fixture");
+    link.url = "javascript:alert(1)";
+
+    expect(issuesFor(input).map((issue) => issue.path)).toEqual(["experience[0].links[0].url"]);
   });
 
   it("rejects ids that are not lowercase slugs", () => {

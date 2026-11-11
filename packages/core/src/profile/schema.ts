@@ -108,6 +108,7 @@ const roleSchema = z
     location: shortText.optional(),
     summary: longText.optional(),
     highlights: list(longText),
+    links: list(externalLinkSchema),
     skills: list(shortText),
   })
   .superRefine(checkDateRange);

@@ -81,6 +81,8 @@ export interface Role {
   location?: string;
   summary?: string;
   highlights: string[];
+  /** Links about the role, such as the product worked on. Empty when the input has none. */
+  links: ExternalLink[];
   /** Skill names, matched against `Profile.skills` case-insensitively. */
   skills: string[];
   provenance: Provenance;

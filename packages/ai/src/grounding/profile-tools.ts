@@ -154,7 +154,8 @@ export function createProfileTools(
     listProfileRecords: tool({
       description:
         "List the owner's records in one profile section, with ids, descriptions, and dates. " +
-        "Projects include their links, and repositoryUrl when a repository has their id; " +
+        "Roles and projects include their links; projects also include repositoryUrl when a " +
+        "repository has their id; " +
         "repositories include their url. Use getProfileRecord with " +
         "an id only for highlights, responsibilities, outcomes, or a repository's README.",
       inputSchema: listInputSchema,
@@ -286,9 +287,9 @@ function getRecord(profile: Profile, id: string) {
  * can be answered after one lookup. Long lists (highlights, responsibilities, outcomes) stay in
  * getProfileRecord, to keep list results small.
  *
- * Project links are the exception: answers show sources as Markdown links to tool-result urls
- * (ADR 0014), and weaker models often answer straight after the list without a get. So a
- * project's links come with its summary, as a repository's url already does.
+ * Role and project links are the exception: answers show sources as Markdown links to
+ * tool-result urls (ADR 0014), and weaker models often answer straight after the list without a
+ * get. So their links come with their summaries, as a repository's url already does.
  *
  * A project with a repository's id (the owner's notes on that repository) also carries the
  * repository's url as repositoryUrl. It is looked up here, not copied into the profile, so it
@@ -304,6 +305,7 @@ function summarizeRole(role: Role): RoleSummary {
     start: role.start,
     ...(role.end !== undefined && { end: role.end }),
     ...(role.summary !== undefined && { summary: role.summary }),
+    links: role.links,
     ...evidence(role.provenance),
   };
 }
