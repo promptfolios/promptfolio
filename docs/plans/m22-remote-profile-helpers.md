@@ -1,8 +1,7 @@
 # M22 plan: remote profile helpers
 
-- **Status:** Plan approved (2026-11-11). Done, in review. Ships in the next release with role links and the plain input
-  types; Changesets would make that `0.1.0` from these minor changesets, so `0.0.4` needs patch changesets or the version set
-  by hand, as `0.0.3` was.
+- **Status:** Plan approved (2026-11-11). Done, and released in `0.0.4` (2026-11-11) with role links and the plain input types.
+  Changesets turns a minor changeset on `0.0.x` into `0.1.0`, so the release used patch changesets to stay on `0.0.x`.
 - **Date:** 2026-11-11
 - **Roadmap:** not listed before. Requested by consumers that keep the profile in a remote store and
   repeat the same fetch and private-data check.

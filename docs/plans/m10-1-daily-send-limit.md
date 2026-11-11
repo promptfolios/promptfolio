@@ -3,7 +3,7 @@
 - **Status:** Done (2026-10-30). Plan approved with every recommended default; implemented and approved
   in review. The deployed checks wait for M12 (see [Review results](#review-results)).
 - **Date:** 2026-10-30
-- **Roadmap:** an addition to [M10](m10-contact-workflow.md), which is still uncommitted and in review.
+- **Roadmap:** an addition to [M10](m10-contact-workflow.md).
 
 ## Objective
 

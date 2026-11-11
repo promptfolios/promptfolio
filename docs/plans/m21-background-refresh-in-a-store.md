@@ -1,6 +1,6 @@
 # M21 plan: background GitHub refresh in a store (opt-in)
 
-- **Status:** Plan approved (2026-11-09), to be implemented now rather than after production time in the consumer app. Done, in review.
+- **Status:** Plan approved (2026-11-09), to be implemented now rather than after production time in the consumer app. Done, and released in `0.0.3`.
 - **Date:** 2026-11-09
 - **Roadmap:** not listed before. Requested by a consumer app that keeps the snapshot in Redis and refreshes it with `after()`.
 

@@ -1,6 +1,6 @@
 # M12.10 plan: build-time starters and assistant-ui styling
 
-- **Status:** Done (2026-11-01), in review.
+- **Status:** Done (2026-11-01).
 - **Date:** 2026-11-01
 - **Decision:** [ADR 0015](../adr/0015-generated-starter-questions.md). Replaces the runtime route from
   [M12.9](m12-9-generated-starter-questions.md).
