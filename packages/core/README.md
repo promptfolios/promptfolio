@@ -22,6 +22,7 @@ Requires Node.js 22 or later. ES modules only.
 | `canonicalProfileContent`, `profileFingerprint` | A stable serialization and its hash, for telling whether content changed |
 | `isRecordId` | Checks a record id's form |
 | Types | `Profile` and its records, `ProfileIssue`, `ProfileLoadResult`, `Provenance`, and others |
+| Input types | `ProfileInput` and its records (`RoleInput`, `ProjectInput`, ...): the profile file's shape before validation |
 
 ## Example
 

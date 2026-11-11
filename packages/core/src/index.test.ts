@@ -15,9 +15,12 @@ describe("public API", () => {
     ]);
   });
 
-  it("exposes no type built from zod, so a zod upgrade cannot change this API", () => {
-    // @ts-expect-error `pnpm typecheck` fails if this type comes back.
-    const input: core.ProfileInput | undefined = undefined;
-    expect(input).toBeUndefined();
+  it("exposes the authoring format as plain types, adding no runtime export", () => {
+    // A plain interface, not built from zod (see input.ts), so a zod upgrade cannot change it.
+    const input: core.ProfileInput = {
+      schemaVersion: 1,
+      identity: { name: "Jordan Example", headline: "Engineer", summary: "Builds things." },
+    };
+    expect(input.links).toBeUndefined();
   });
 });

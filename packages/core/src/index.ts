@@ -4,6 +4,14 @@
  * Only what is exported here is part of the public API.
  */
 export { canonicalProfileContent, profileFingerprint } from "./profile/canonical.ts";
+export type {
+  EducationInput,
+  ProfileIdentityInput,
+  ProfileInput,
+  ProjectInput,
+  RoleInput,
+  SkillInput,
+} from "./profile/input.ts";
 export {
   loadStructuredProfile,
   type ProfileIssue,
