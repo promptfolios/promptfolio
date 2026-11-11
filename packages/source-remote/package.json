@@ -1,6 +1,6 @@
 {
   "name": "@promptfolio/source-remote",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Remote profile source for Promptfolio: fetches a profile file from a URL, with a timeout and a size limit.",
   "keywords": [
     "promptfolio",
