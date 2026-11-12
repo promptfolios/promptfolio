@@ -275,7 +275,27 @@ describe("loadStructuredProfile: invalid input", () => {
     if (!role) throw new Error("fixture");
     role.id = "Acme Frontend";
 
-    expect(issuesFor(input).map((issue) => issue.path)).toContain("experience[0].id");
+    expect(issuesFor(input)).toContainEqual({
+      path: "experience[0].id",
+      message: expect.stringContaining("Expected a lowercase id"),
+    });
+  });
+
+  it("says an id is too long, rather than badly formatted, when only its length is wrong", () => {
+    const input = fullInput();
+    const [role] = input.experience;
+    const [project] = input.projects;
+    if (!role || !project) throw new Error("fixture");
+    role.id = "a".repeat(65);
+    project.id = `github.com/owner/${"b".repeat(190)}`;
+
+    expect(issuesFor(input)).toEqual([
+      { path: "experience[0].id", message: "Ids are at most 64 characters; this one has 65" },
+      {
+        path: "projects[0].id",
+        message: "Source keys are at most 200 characters; this one has 207",
+      },
+    ]);
   });
 
   it("accepts source keys as ids, such as a project describing a repository", () => {

@@ -52,12 +52,20 @@ export function isSourceKey(value: string): boolean {
   return value.length <= LIMITS.sourceKey && SOURCE_KEY.test(value);
 }
 
-const recordId = z
-  .string()
-  .refine(
-    isRecordId,
-    "Expected a lowercase id such as 'acme-frontend' or a source key such as 'github.com/owner/name'",
-  );
+/** Why a string is not a record id, so a too-long id is not reported as a badly formatted one. */
+function recordIdProblem(value: string): string {
+  if (SLUG_ID.test(value)) {
+    return `Ids are at most ${LIMITS.id} characters; this one has ${value.length}`;
+  }
+  if (SOURCE_KEY.test(value)) {
+    return `Source keys are at most ${LIMITS.sourceKey} characters; this one has ${value.length}`;
+  }
+  return "Expected a lowercase id such as 'acme-frontend' or a source key such as 'github.com/owner/name'";
+}
+
+const recordId = z.string().superRefine((value, ctx) => {
+  if (!isRecordId(value)) ctx.addIssue({ code: "custom", message: recordIdProblem(value) });
+});
 
 const sourceKey = z
   .string()
