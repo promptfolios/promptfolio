@@ -118,6 +118,9 @@ dialog in the browser checks nothing itself: it displays the server's answers.
 - A TypeScript type is not validation. `JSON.parse` returns `any`; the type only exists at compile
   time. That is why `loadStructuredProfile` takes `unknown`.
 - Validating in the browser is a convenience, not security. The server must validate again.
+- A JSON Schema is not the boundary either. `profileInputJsonSchema` (M23) is generated from the
+  same zod schema for editors, but rules that only code checks (unique ids, date order, id format)
+  are not in it, so a file an editor accepts can still fail `loadStructuredProfile`.
 - Strict objects (`z.strictObject`) reject unknown keys on purpose, so a typo like `hightlights`
   fails loudly instead of being silently dropped. The chat request does the opposite for unknown
   *fields* (it strips them, because clients legitimately send `id` and `trigger`), but rejects

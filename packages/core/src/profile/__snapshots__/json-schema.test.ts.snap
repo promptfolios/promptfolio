@@ -1,0 +1,321 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`profileInputJsonSchema > matches the snapshot, so a change from a zod upgrade shows in review 1`] = `
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "education": {
+      "default": [],
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "credential": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "end": {
+            "pattern": "^\\d{4}(?:-(?:0[1-9]|1[0-2]))?$",
+            "type": "string",
+          },
+          "field": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "id": {
+            "type": "string",
+          },
+          "institution": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "start": {
+            "pattern": "^\\d{4}(?:-(?:0[1-9]|1[0-2]))?$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "institution",
+          "credential",
+        ],
+        "type": "object",
+      },
+      "maxItems": 100,
+      "type": "array",
+    },
+    "experience": {
+      "default": [],
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "end": {
+            "pattern": "^\\d{4}(?:-(?:0[1-9]|1[0-2]))?$",
+            "type": "string",
+          },
+          "highlights": {
+            "default": [],
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "id": {
+            "type": "string",
+          },
+          "links": {
+            "default": [],
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "format": "uri",
+                  "maxLength": 2048,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "label",
+                "url",
+              ],
+              "type": "object",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "location": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "organization": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "skills": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "start": {
+            "pattern": "^\\d{4}(?:-(?:0[1-9]|1[0-2]))?$",
+            "type": "string",
+          },
+          "summary": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string",
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "organization",
+          "title",
+          "start",
+        ],
+        "type": "object",
+      },
+      "maxItems": 100,
+      "type": "array",
+    },
+    "identity": {
+      "additionalProperties": false,
+      "properties": {
+        "headline": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string",
+        },
+        "location": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string",
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string",
+        },
+        "summary": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "name",
+        "headline",
+        "summary",
+      ],
+      "type": "object",
+    },
+    "links": {
+      "default": [],
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "url": {
+            "format": "uri",
+            "maxLength": 2048,
+            "type": "string",
+          },
+        },
+        "required": [
+          "label",
+          "url",
+        ],
+        "type": "object",
+      },
+      "maxItems": 100,
+      "type": "array",
+    },
+    "projects": {
+      "default": [],
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string",
+          },
+          "id": {
+            "type": "string",
+          },
+          "links": {
+            "default": [],
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "format": "uri",
+                  "maxLength": 2048,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "label",
+                "url",
+              ],
+              "type": "object",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "outcomes": {
+            "default": [],
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "responsibilities": {
+            "default": [],
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "roleId": {
+            "type": "string",
+          },
+          "skills": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+        ],
+        "type": "object",
+      },
+      "maxItems": 100,
+      "type": "array",
+    },
+    "schemaVersion": {
+      "const": 1,
+      "type": "number",
+    },
+    "skills": {
+      "default": [],
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "name",
+        ],
+        "type": "object",
+      },
+      "maxItems": 100,
+      "type": "array",
+    },
+  },
+  "required": [
+    "schemaVersion",
+    "identity",
+  ],
+  "type": "object",
+}
+`;

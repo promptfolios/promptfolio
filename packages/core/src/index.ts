@@ -13,6 +13,7 @@ export type {
   RoleInput,
   SkillInput,
 } from "./profile/input.ts";
+export { profileInputJsonSchema } from "./profile/json-schema.ts";
 export {
   loadStructuredProfile,
   type ProfileIssue,

@@ -11,6 +11,7 @@ describe("public API", () => {
       "isRecordId",
       "loadStructuredProfile",
       "profileFingerprint",
+      "profileInputJsonSchema",
       "profileLinkUrls",
       "recordsUsingSkill",
     ]);

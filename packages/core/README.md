@@ -24,6 +24,7 @@ Requires Node.js 22 or later. ES modules only.
 | `isRecordId` | Checks a record id's form |
 | Types | `Profile` and its records, `ProfileIssue`, `ProfileLoadResult`, `Provenance`, and others |
 | Input types | `ProfileInput` and its records (`RoleInput`, `ProjectInput`, ...): the profile file's shape before validation |
+| `profileInputJsonSchema` | A JSON Schema (draft 7) of the profile file, for editor autocomplete or forms. Looser than `loadStructuredProfile`, which remains the validator: unique ids, date order, and id format are checked only in code |
 
 ## Example
 
