@@ -73,6 +73,35 @@ describe("profileInputJsonSchema", () => {
     }
   });
 
+  it("labels every property for forms, including nested and list-item ones", () => {
+    const unlabeled: string[] = [];
+    function visit(node: JsonObject, path: string): void {
+      const properties = (node.properties ?? {}) as { [key: string]: JsonObject };
+      for (const [key, child] of Object.entries(properties)) {
+        if (typeof child.title !== "string" || child.title === "") unlabeled.push(`${path}${key}`);
+        visit(child, `${path}${key}.`);
+        if (child.items) visit(child.items as JsonObject, `${path}${key}[].`);
+      }
+    }
+    visit(profileInputJsonSchema() as JsonObject, "");
+    expect(unlabeled).toEqual([]);
+  });
+
+  it("describes the fields whose rules a label cannot show", () => {
+    const schema = profileInputJsonSchema() as JsonObject;
+    const role = property(schema, "experience", "items");
+    // The format has fields named `title` and `description`: these read the keywords on their schemas.
+    expect(role.title).toBe("Role");
+    expect(property(role, "title").title).toBe("Title");
+    expect(property(role, "start").description).toMatch(/YYYY or YYYY-MM/);
+    expect(property(role, "end").description).toMatch(/current role/);
+    expect(property(schema, "projects", "items", "roleId").description).toMatch(
+      /role in experience/,
+    );
+    expect(property(schema, "projects", "items", "description").title).toBe("Description");
+    expect(property(schema, "education", "items", "id").description).toMatch(/Unique/);
+  });
+
   it("returns a new copy on each call", () => {
     const first = profileInputJsonSchema() as JsonObject;
     (first.properties as JsonObject).schemaVersion = "changed";

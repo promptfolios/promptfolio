@@ -93,66 +93,124 @@ function checkDateRange(
   }
 }
 
-const externalLinkSchema = z.strictObject({
-  label: shortText,
-  url: httpUrl,
-});
+/**
+ * Adds a form label (`title`) and, where it helps, hover help (`description`). They appear only in
+ * `profileInputJsonSchema()`; validation is unchanged. Applied to each field where it is used, never
+ * to the shared `shortText`, `longText`, or `partialDate` (every field would get the same label), and
+ * never with an `id` (zod would move the field into `$defs`).
+ */
+function labeled<T extends z.ZodType>(schema: T, title: string, description?: string): T {
+  return schema.meta(description === undefined ? { title } : { title, description });
+}
 
-const roleSchema = z
-  .strictObject({
-    id: recordId,
-    organization: shortText,
-    title: shortText,
-    start: partialDate,
-    end: partialDate.optional(),
-    location: shortText.optional(),
-    summary: longText.optional(),
-    highlights: list(longText),
-    links: list(externalLinkSchema),
-    skills: list(shortText),
-  })
-  .superRefine(checkDateRange);
+const ID_HELP =
+  "A lowercase slug such as 'acme-frontend', or a source key such as 'github.com/owner/name'. Unique across roles, projects, and education.";
+const DATE_HELP = "YYYY or YYYY-MM, for example 2024 or 2024-06.";
 
-const projectSchema = z.strictObject({
-  id: recordId,
-  name: shortText,
-  description: longText,
-  roleId: recordId.optional(),
-  responsibilities: list(longText),
-  outcomes: list(longText),
-  links: list(externalLinkSchema),
-  skills: list(shortText),
-});
+const idField = () => labeled(recordId, "Id", ID_HELP);
+const skillsField = () =>
+  labeled(
+    list(shortText),
+    "Skills",
+    "Skill names, matched against the profile's skills case-insensitively.",
+  );
 
-const skillSchema = z.strictObject({
-  name: shortText,
-  category: shortText.optional(),
-});
+const externalLinkSchema = labeled(
+  z.strictObject({
+    label: labeled(shortText, "Label", "The link text, for example 'GitHub' or 'Case study'."),
+    url: labeled(httpUrl, "URL", "An http or https address."),
+  }),
+  "Link",
+);
 
-const educationSchema = z
-  .strictObject({
-    id: recordId,
-    institution: shortText,
-    credential: shortText,
-    field: shortText.optional(),
-    start: partialDate.optional(),
-    end: partialDate.optional(),
-  })
-  .superRefine(checkDateRange);
+const linksField = (description: string) => labeled(list(externalLinkSchema), "Links", description);
+
+const roleSchema = labeled(
+  z
+    .strictObject({
+      id: idField(),
+      organization: labeled(shortText, "Organization"),
+      title: labeled(shortText, "Title", "The job title, for example 'Frontend Engineer'."),
+      start: labeled(partialDate, "Start", DATE_HELP),
+      end: labeled(
+        partialDate.optional(),
+        "End",
+        `${DATE_HELP} Leave it out for a current role. Not before the start.`,
+      ),
+      location: labeled(shortText.optional(), "Location"),
+      summary: labeled(longText.optional(), "Summary", "A short description of the role."),
+      highlights: labeled(list(longText), "Highlights", "Achievements in this role, one per item."),
+      links: linksField("Public links about this role."),
+      skills: skillsField(),
+    })
+    .superRefine(checkDateRange),
+  "Role",
+);
+
+const projectSchema = labeled(
+  z.strictObject({
+    id: idField(),
+    name: labeled(shortText, "Name"),
+    description: labeled(longText, "Description"),
+    roleId: labeled(
+      recordId.optional(),
+      "Role",
+      "The id of the role in experience under which the project was done, if any.",
+    ),
+    responsibilities: labeled(list(longText), "Responsibilities", "What you did, one per item."),
+    outcomes: labeled(list(longText), "Outcomes", "Results of the project, one per item."),
+    links: linksField("Public links about this project, such as a repository or a demo."),
+    skills: skillsField(),
+  }),
+  "Project",
+);
+
+const skillSchema = labeled(
+  z.strictObject({
+    name: labeled(shortText, "Name", "Unique; compared case-insensitively."),
+    category: labeled(
+      shortText.optional(),
+      "Category",
+      "A group such as 'Languages' or 'Frameworks'.",
+    ),
+  }),
+  "Skill",
+);
+
+const educationSchema = labeled(
+  z
+    .strictObject({
+      id: idField(),
+      institution: labeled(shortText, "Institution"),
+      credential: labeled(shortText, "Credential", "A degree or certificate, for example 'BSc'."),
+      field: labeled(shortText.optional(), "Field", "The field of study."),
+      start: labeled(partialDate.optional(), "Start", DATE_HELP),
+      end: labeled(partialDate.optional(), "End", `${DATE_HELP} Not before the start.`),
+    })
+    .superRefine(checkDateRange),
+  "Education",
+);
 
 export const profileInputSchema = z.strictObject({
-  schemaVersion: z.literal(1),
-  identity: z.strictObject({
-    name: shortText,
-    headline: shortText,
-    summary: longText,
-    location: shortText.optional(),
-  }),
-  links: list(externalLinkSchema),
-  experience: list(roleSchema),
-  projects: list(projectSchema),
-  skills: list(skillSchema),
-  education: list(educationSchema),
+  schemaVersion: labeled(z.literal(1), "Schema version", "The format version. Always 1."),
+  identity: labeled(
+    z.strictObject({
+      name: labeled(shortText, "Name"),
+      headline: labeled(shortText, "Headline", "One line, for example 'Frontend engineer'."),
+      summary: labeled(longText, "Summary", "A short introduction."),
+      location: labeled(
+        shortText.optional(),
+        "Location",
+        "A public location, such as a city or region.",
+      ),
+    }),
+    "Identity",
+  ),
+  links: linksField("Public links about you, such as a GitHub or LinkedIn profile."),
+  experience: labeled(list(roleSchema), "Experience"),
+  projects: labeled(list(projectSchema), "Projects"),
+  skills: labeled(list(skillSchema), "Skills"),
+  education: labeled(list(educationSchema), "Education"),
 });
 
 const repositoryInputSchema = z.strictObject({
