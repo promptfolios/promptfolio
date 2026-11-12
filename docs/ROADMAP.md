@@ -51,7 +51,7 @@ This document describes the suggested milestone sequence and future directions. 
 | M16 — First release                        | Done      | `npm view @promptfolio/core version`: `0.0.1`, published 2026-11-02; [the checklist](plans/m13-library-readiness.md#release-checklist) |
 | M21 — Background refresh in a store        | Done, released in 0.0.3 | `pnpm --filter @promptfolio/source-github test`; opt-in `createBackgroundGitHubSource`; [plan](plans/m21-background-refresh-in-a-store.md) |
 | M22 — Remote profile helpers               | Done, released in 0.0.4 | `npm view @promptfolio/source-remote version`: `0.0.4`; `findContactDetails` in `core`, `fetchRemoteProfile` in `@promptfolio/source-remote`; [plan](plans/m22-remote-profile-helpers.md) |
-| M23 — Profile input JSON Schema            | In progress | `pnpm --filter @promptfolio/core test`; `profileInputJsonSchema()` in `core`, for editor autocomplete; [plan](plans/m23-profile-input-json-schema.md) |
+| M23 — Profile input JSON Schema            | Done, not released | `pnpm --filter @promptfolio/core test`; `profileInputJsonSchema()` in `core`, for editor autocomplete; ships with the next release (changeset pending); [plan](plans/m23-profile-input-json-schema.md) |
 
 Update this table when a milestone is approved.
 

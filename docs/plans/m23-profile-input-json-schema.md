@@ -1,6 +1,8 @@
 # M23 plan: JSON Schema for the profile input format
 
-- **Status:** Plan approved (2026-11-12).
+- **Status:** Plan approved (2026-11-12). Done (2026-11-12), not released: the changeset waits for the
+  next release, which will ship it with later changes. Verified before release from a `pnpm pack`
+  tarball in a consumer app (editor autocomplete).
 - **Date:** 2026-11-12
 - **Roadmap:** not listed before. Requested by a profile editor (an app outside this repository that
   edits a profile file in a remote store), which needs autocomplete now and form generation later.
